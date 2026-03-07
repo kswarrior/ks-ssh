@@ -83,8 +83,7 @@ type TerminalSession struct {
 	id     string
 }
 
-func copyToWriter(src io.Reader, dst io.WriteCloser, bufSize int, colorCode string) {
-	defer dst.Close()
+func copyToWebsocket(src io.Reader, conn *websocket.Conn, bufSize int, colorCode string) {
 	buf := make([]byte, bufSize)
 	for {
 		n, err := src.Read(buf)
@@ -94,14 +93,15 @@ func copyToWriter(src io.Reader, dst io.WriteCloser, bufSize int, colorCode stri
 			}
 			return
 		}
+		var toSend []byte
 		if colorCode != "" {
-			var colored bytes.Buffer
-			colored.WriteString(colorCode)
-			colored.Write(buf[:n])
-			colored.WriteString("\x1b[0m")
-			dst.Write(colored.Bytes())
+			toSend = append(append([]byte(colorCode), buf[:n]...), []byte("\x1b[0m")...)
 		} else {
-			dst.Write(buf[:n])
+			toSend = buf[:n]
+		}
+		if err := conn.WriteMessage(websocket.TextMessage, toSend); err != nil {
+			log.Printf("WS write error: %v", err)
+			return
 		}
 	}
 }
@@ -170,25 +170,10 @@ func (ts *TerminalSession) HandleConnection(w http.ResponseWriter, r *http.Reque
 	}()
 
 	// Goroutine: shell stdout -> WS
-	go func() {
-		copyToWriter(stdout, conn, 1024, "")
-	}()
+	go copyToWebsocket(stdout, conn, 1024, "")
 
 	// Goroutine: shell stderr -> WS (red color)
-	go func() {
-		copyToWriter(stderr, conn, 1024, "\x1b[31m")
-	}()
-
-	// Handle WS pings/pongs
-	go func() {
-		defer conn.Close()
-		for {
-			_, _, err := conn.NextReader()
-			if err != nil {
-				break
-			}
-		}
-	}()
+	go copyToWebsocket(stderr, conn, 1024, "\x1b[31m")
 
 	// Wait for command to finish
 	if err := ts.cmd.Wait(); err != nil {
@@ -516,7 +501,7 @@ func runCloudflareTunnel(server *TerminalServer) {
 	filePath := "cloudflared"
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// Download cloudflared
-		cmd := exec.Command("wget", "-qO", filePath, "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64")
+		cmd := exec.Command("wget", "-q", "-O", filePath, "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64")
 		if err := cmd.Run(); err != nil {
 			log.Printf("Failed to download cloudflared: %v", err)
 			return
