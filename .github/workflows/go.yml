@@ -18,8 +18,10 @@ jobs:
       with:
         go-version: '1.22'
 
-    - name: Build
-      run: go build -o ks-ssh main.go
+    - name: Tidy and Build
+      run: |
+        go mod tidy
+        go build -o ks-ssh main.go
 
     - name: Test
       run: |
