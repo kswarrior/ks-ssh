@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -436,7 +436,7 @@ const PAGE = `<!DOCTYPE html>
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'url') {
-                        document.getElementById('status').innerText = \`Public URL: \${data.url}\`;
+                        document.getElementById('status').innerText = 'Public URL: ' + data.url;
                         return;
                     }
                 } catch (e) {
