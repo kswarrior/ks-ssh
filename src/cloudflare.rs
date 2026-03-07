@@ -2,10 +2,9 @@ use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
 use serde_json;
 use crate::terminal::TerminalServer;
-use tokio;
 
-pub async fn run(server: TerminalServer) {
-    let file_path = "ks-ssh-linker";
+pub fn run(server: TerminalServer) {
+    let file_path = "cloudflared";
 
     // Download cloudflared silently if missing (assumes Linux AMD64; extend for other platforms if needed)
     if !std::path::Path::new(file_path).exists() {
@@ -27,7 +26,7 @@ pub async fn run(server: TerminalServer) {
     }
 
     // Start the tunnel
-    let mut child = Command::new("./ks-ssh-linker")
+    let mut child = Command::new("./cloudflared")
         .args(["tunnel", "--url", "http://localhost:3000"])
         .stdout(Stdio::piped())
         .spawn()
