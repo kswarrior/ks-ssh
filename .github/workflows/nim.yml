@@ -15,26 +15,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Install Nim
+      # 2️⃣ Install Nim + nimble
       - name: Install Nim
         run: |
           curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y
-          export PATH="$HOME/.nimble/bin:$PATH"
+          echo "$HOME/.nimble/bin" >> $GITHUB_PATH
           nim --version
 
-      # 3️⃣ Compile ks_ssh.nim (root of repo)
-      - name: Compile ks_ssh.nim
+      # 3️⃣ Install dependencies (mummy) + Build with nimble (as recommended)
+      - name: Build with nimble
         run: |
-          export PATH="$HOME/.nimble/bin:$PATH"
-          nim c -d:ssl --threads:on ks_ssh.nim
+          nimble build -- --threads:on -d:release
+        # This automatically installs mummy from package.nimble
+        # and passes the exact flags you originally used
 
       # 4️⃣ Run the compiled KS SSH binary in background
       - name: Run KS SSH
         run: ./ks_ssh &
 
-      # 5️⃣ Install Cloudflare Tunnel and run
+      # 5️⃣ (Optional) Small wait so server is ready
+      - name: Wait for server to start
+        run: sleep 3
+
+      # 6️⃣ Install Cloudflare Tunnel and run (exposes public URL)
       - name: Run Cloudflare Tunnel
         run: |
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
           chmod +x cloudflared
-          ./cloudflared tunnel --url http://localhost:8080
+          ./cloudflared tunnel --url http://localhost:8080 --no-autoupdate
