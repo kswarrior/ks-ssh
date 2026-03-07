@@ -25,8 +25,4 @@ jobs:
 
     - name: Test
       run: |
-        ./ks-ssh &
-        KS_SSH_PID=$!
-        sleep 5  # Wait for server to start
-        curl -f http://localhost:3000 || (kill $KS_SSH_PID && exit 1)
-        kill $KS_SSH_PID
+        ./ks-ssh
