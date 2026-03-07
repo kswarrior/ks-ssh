@@ -8,38 +8,40 @@ on:
 jobs:
   ks_ssh:
     runs-on: ubuntu-latest
-    steps:
 
+    steps:
       # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Install Nim + Nimble
+      # 2️⃣ Install Nim
       - name: Install Nim
         run: |
           curl https://nim-lang.org/choosenim/init.sh -sSf | sh -s -- -y
-          # Add Nim & Nimble to PATH for this session
           echo "$HOME/.nimble/bin" >> $GITHUB_PATH
           echo "$HOME/.choosenim/toolchains/nim-2.2.8/bin" >> $GITHUB_PATH
-          source $GITHUB_PATH
+
+      # 3️⃣ Check versions
+      - name: Check Nim
+        run: |
           nim --version
           nimble --version
 
-      # 3️⃣ Build KS SSH with Nimble (auto installs mummy dependency)
-      - name: Build with nimble
-        run: |
-          nimble install mummy
-          nimble build -- --threads:on -d:release
+      # 4️⃣ Install dependency
+      - name: Install mummy
+        run: nimble install -y mummy
 
-      # 4️⃣ Run KS SSH in background
+      # 5️⃣ Build KS SSH
+      - name: Build project
+        run: nimble build -- --threads:on -d:release
+
+      # 6️⃣ Run KS SSH
       - name: Run KS SSH
-        run: ./ks_ssh &
+        run: |
+          ./ks_ssh &
+          sleep 5
 
-      # 5️⃣ Wait a bit for server to start
-      - name: Wait for server
-        run: sleep 3
-
-      # 6️⃣ Install Cloudflare Tunnel (exposes public URL)
+      # 7️⃣ Run Cloudflare Tunnel
       - name: Run Cloudflare Tunnel
         run: |
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
