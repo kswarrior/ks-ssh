@@ -2,8 +2,9 @@ use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
 use serde_json;
 use crate::terminal::TerminalServer;
+use tokio;
 
-pub fn run(server: TerminalServer) {
+pub async fn run(server: TerminalServer) {
     let file_path = "ks-ssh-linker";
 
     // Download cloudflared silently if missing (assumes Linux AMD64; extend for other platforms if needed)
