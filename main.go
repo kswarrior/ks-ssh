@@ -15,7 +15,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -42,7 +41,11 @@ func NewTerminalServer() *TerminalServer {
 }
 
 func (ts *TerminalServer) Broadcast(msg string) {
-	ts.broadcast <- msg
+	select {
+	case ts.broadcast <- msg:
+	default:
+		// Drop if channel full
+	}
 }
 
 func (ts *TerminalServer) AddClient(id string, conn *websocket.Conn) {
@@ -59,13 +62,13 @@ func (ts *TerminalServer) RemoveClient(id string) {
 
 func (ts *TerminalServer) SendToAll(msg string) {
 	ts.mu.RLock()
+	defer ts.mu.RUnlock()
 	for _, client := range ts.clients {
 		err := client.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 		if err != nil {
 			log.Printf("Failed to send to client %s: %v", client.id, err)
 		}
 	}
-	ts.mu.RUnlock()
 }
 
 func (ts *TerminalServer) RunBroadcaster() {
@@ -80,6 +83,29 @@ type TerminalSession struct {
 	id     string
 }
 
+func copyToWriter(src io.Reader, dst io.WriteCloser, bufSize int, colorCode string) {
+	defer dst.Close()
+	buf := make([]byte, bufSize)
+	for {
+		n, err := src.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("Read error: %v", err)
+			}
+			return
+		}
+		if colorCode != "" {
+			var colored bytes.Buffer
+			colored.WriteString(colorCode)
+			colored.Write(buf[:n])
+			colored.WriteString("\x1b[0m")
+			dst.Write(colored.Bytes())
+		} else {
+			dst.Write(buf[:n])
+		}
+	}
+}
+
 func (ts *TerminalSession) HandleConnection(w http.ResponseWriter, r *http.Request, server *TerminalServer) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -89,43 +115,86 @@ func (ts *TerminalSession) HandleConnection(w http.ResponseWriter, r *http.Reque
 	defer conn.Close()
 
 	id := fmt.Sprintf("%d", time.Now().UnixNano())
-	ts := &TerminalSession{server: server, id: id}
+	ts.id = id
 	server.AddClient(id, conn)
 
 	// Welcome message
-	conn.WriteMessage(websocket.TextMessage, []byte("Welcome to KS SSH!\r\n"))
-
-	// Start broadcaster in goroutine
-	go server.RunBroadcaster()
+	if err := conn.WriteMessage(websocket.TextMessage, []byte("Welcome to KS SSH!\r\n")); err != nil {
+		log.Printf("Failed to send welcome: %v", err)
+		return
+	}
 
 	// Spawn shell
 	ts.cmd = exec.Command("/bin/sh")
-	ts.cmd.Stdin = conn
-	ts.cmd.Stdout = conn
-	ts.cmd.Stderr = conn
+	stdin, err := ts.cmd.StdinPipe()
+	if err != nil {
+		log.Printf("Failed to get stdin pipe: %v", err)
+		return
+	}
+	stdout, err := ts.cmd.StdoutPipe()
+	if err != nil {
+		log.Printf("Failed to get stdout pipe: %v", err)
+		return
+	}
+	stderr, err := ts.cmd.StderrPipe()
+	if err != nil {
+		log.Printf("Failed to get stderr pipe: %v", err)
+		return
+	}
 
-	// Handle incoming messages (input)
+	if err := ts.cmd.Start(); err != nil {
+		log.Printf("Failed to start shell: %v", err)
+		return
+	}
+
+	// Goroutine: WS input -> shell stdin (translate \r to \n)
 	go func() {
 		defer server.RemoveClient(id)
+		defer stdin.Close()
 		defer ts.cmd.Process.Kill()
 
 		for {
 			_, msg, err := conn.ReadMessage()
 			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.Printf("Unexpected WS close: %v", err)
+				}
 				break
 			}
-			// Translate \r to \n
 			msgStr := string(msg)
 			msgStr = strings.ReplaceAll(msgStr, "\r", "\n")
-			ts.cmd.Stdin.Write([]byte(msgStr))
+			if _, err := stdin.Write([]byte(msgStr)); err != nil {
+				break
+			}
 		}
 	}()
 
-	// Wait for process
-	err = ts.cmd.Run()
-	if err != nil {
+	// Goroutine: shell stdout -> WS
+	go func() {
+		copyToWriter(stdout, conn, 1024, "")
+	}()
+
+	// Goroutine: shell stderr -> WS (red color)
+	go func() {
+		copyToWriter(stderr, conn, 1024, "\x1b[31m")
+	}()
+
+	// Handle WS pings/pongs
+	go func() {
+		defer conn.Close()
+		for {
+			_, _, err := conn.NextReader()
+			if err != nil {
+				break
+			}
+		}
+	}()
+
+	// Wait for command to finish
+	if err := ts.cmd.Wait(); err != nil {
 		log.Printf("Shell exited: %v", err)
 	}
+	conn.WriteMessage(websocket.TextMessage, []byte("\r\nConnection closed. Refresh to reconnect.\r\n"))
 }
 
 const PAGE = `<!DOCTYPE html>
@@ -447,7 +516,7 @@ func runCloudflareTunnel(server *TerminalServer) {
 	filePath := "cloudflared"
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// Download cloudflared
-		cmd := exec.Command("wget", "-O", filePath, "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64")
+		cmd := exec.Command("wget", "-qO", filePath, "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64")
 		if err := cmd.Run(); err != nil {
 			log.Printf("Failed to download cloudflared: %v", err)
 			return
