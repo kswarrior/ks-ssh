@@ -1,40 +1,30 @@
-name: Test Repository
+name: Rust CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout all repo files
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      # Checkout your repository
+      - uses: actions/checkout@v5
 
-      # Step 2: Set up Rust (if your project is Rust)
-      - name: Set up Rust
-        uses: actions/setup-rust@v1
+      # Install Rust (toolchain, rustup, cargo)
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: stable
+          profile: minimal
+          toolchain: stable
 
-      # Step 3: Run tests on all Rust packages
-      - name: Run Rust tests
-        run: |
-          if [ -f Cargo.toml ]; then
-            echo "Running Rust tests..."
-            cargo test --all
-          else
-            echo "No Cargo.toml found, skipping Rust tests"
-          fi
+      # Build the project
+      - name: Build
+        run: cargo build --verbose
 
-      # Step 4: Optional: list all files in repo
-      - name: List all files
-        run: |
-          echo "Listing all files in the repository:"
-          find . -type f
+      # Run tests
+      - name: Run tests
+        run: cargo test --verbose
