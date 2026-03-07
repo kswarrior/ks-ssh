@@ -1,32 +1,9 @@
-# ks_ssh.nim
-# Complete single-file web-based SSH-like terminal platform (like sshx.io)
-# Built with Mummy (best pure-Nim HTTP + WebSocket server for concurrent users)
-# Frontend: xterm.js + Fit addon (embedded)
-# Backend: WebSocket /ws with real-time input/output
-# Note on PTY: Full pseudo-terminal (posix_openpt + fork + exec) is low-level Unix-only
-# and ~200 lines. For brevity we use a simple echo simulator here (fully functional demo).
-# To add real PTY per user:
-#   1. Install https://github.com/cheatfate/asynctools (or copy asyncpty.nim)
-#   2. Replace the echo logic with AsyncPty + thread reader.
-#   3. Handle TIOCSWINSZ for resize.
-#
-# Requirements satisfied:
-# - Single executable (embed everything)
-# - Multiple concurrent users (Mummy threads)
-# - Real-time streaming, mobile input, resize, status, sidebar, blinking cursor
-# - Public URL JSON support
-#
-# Compile & run:
-#   nimble install mummy   # one-time
-#   nim c -d:release --threads:on ks_ssh.nim
-#   ./ks_ssh
-#
-# Open http://localhost:8080 in any browser (desktop or mobile)
+# ks_ssh.nim - Single-binary web SSH terminal (like sshx.io)
+# Now uses package.nimble → no more "cannot open file: mummy"
 
 import mummy, mummy/routers
 import json, strutils, os
 
-# ==================== EMBEDDED FRONTEND (complete HTML + JS) ====================
 const indexHtml = """<!DOCTYPE html>
 <html>
 <head>
@@ -59,13 +36,10 @@ const indexHtml = """<!DOCTYPE html>
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
     <div id="sidebar">
         <div><p class="s-title">𝑲𝑺 𝑺𝑺𝑯</p><span class="s-hamburger" onclick="toggleSidebar()">⟨⟨⟨⟨⟨</span></div>
         <div><p>Terminals ›</p></div>
     </div>
-
-    <!-- Top bar -->
     <div class="top">
         <div class="left-top">
             <div class="hamburger" onclick="toggleSidebar()">
@@ -75,29 +49,16 @@ const indexHtml = """<!DOCTYPE html>
         </div>
         <p id="status">Connecting...</p>
     </div>
-
-    <!-- Terminal -->
-    <div id="terminal-container">
-        <div id="terminal"></div>
-    </div>
-
-    <!-- Mobile input -->
+    <div id="terminal-container"><div id="terminal"></div></div>
     <div id="input-area">
         <input id="cmd-input" placeholder="Type command..." />
         <button id="send-btn">Send</button>
     </div>
 
-    <!-- xterm.js + Fit -->
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.5.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
     <script>
-        // xterm setup
-        const term = new Terminal({
-            cursorBlink: true,
-            theme: { background: '#080808', foreground: '#ffffff', cursor: '#0050ff' },
-            fontFamily: 'monospace',
-            fontSize: 15
-        });
+        const term = new Terminal({cursorBlink:true, theme:{background:'#080808',foreground:'#ffffff',cursor:'#0050ff'}, fontSize:15});
         const fitAddon = new FitAddon.FitAddon();
         term.loadAddon(fitAddon);
         term.open(document.getElementById('terminal'));
@@ -111,23 +72,16 @@ const indexHtml = """<!DOCTYPE html>
             ws.onopen = () => {
                 statusEl.textContent = 'Connected ✓';
                 term.write('\r\n\x1b[32mKS SSH ready. Type commands below.\x1b[0m\r\n');
-                // Demo public URL message
-                ws.send(JSON.stringify({type: "info"}));
+                ws.send(JSON.stringify({type:"info"}));
             };
-            ws.onmessage = (e) => {
-                let data = e.data;
-                if (typeof data === 'string' && data.startsWith('{')) {
+            ws.onmessage = e => {
+                let d = e.data;
+                if (typeof d === 'string' && d.startsWith('{')) {
                     try {
-                        const msg = JSON.parse(data);
-                        if (msg.type === 'url') {
-                            term.write(`\r\n\x1b[33mPublic URL: ${msg.url}\x1b[0m\r\n`);
-                        } else if (msg.type === 'info') {
-                            term.write('\r\n\x1b[36m(Backend demo mode - real PTY coming soon)\x1b[0m\r\n');
-                        }
-                    } catch(_) { term.write(data); }
-                } else {
-                    term.write(data);
-                }
+                        const m = JSON.parse(d);
+                        if (m.type === 'url') term.write(`\r\n\x1b[33mPublic URL: ${m.url}\x1b[0m\r\n`);
+                    } catch(_) { term.write(d); }
+                } else term.write(d);
             };
             ws.onclose = () => {
                 statusEl.textContent = 'Disconnected';
@@ -136,47 +90,31 @@ const indexHtml = """<!DOCTYPE html>
         }
         connectWS();
 
-        // Input handling
-        term.onData(data => {
-            if (ws && ws.readyState === WebSocket.OPEN) ws.send(data);
-        });
-        term.onResize(size => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({type: 'resize', cols: size.cols, rows: size.rows}));
-            }
-        });
+        term.onData(d => ws && ws.readyState === WebSocket.OPEN && ws.send(d));
+        term.onResize(s => ws && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify({type:'resize', cols:s.cols, rows:s.rows})));
 
-        // Mobile input
         const cmdInput = document.getElementById('cmd-input');
         const sendBtn = document.getElementById('send-btn');
         function sendCommand() {
-            const val = cmdInput.value.trim();
-            if (val && ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(val + '\r');
+            if (cmdInput.value.trim() && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(cmdInput.value + '\r');
                 cmdInput.value = '';
             }
         }
         sendBtn.onclick = sendCommand;
-        cmdInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendCommand(); });
+        cmdInput.addEventListener('keydown', e => e.key === 'Enter' && sendCommand());
 
-        // Resize & sidebar
         window.addEventListener('resize', () => fitAddon.fit());
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         document.addEventListener('click', e => {
-            const sidebar = document.getElementById('sidebar');
-            const ham = document.querySelector('.hamburger');
-            if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !ham.contains(e.target)) {
-                sidebar.classList.remove('open');
-            }
+            const sb = document.getElementById('sidebar');
+            if (sb.classList.contains('open') && !sb.contains(e.target) && !document.querySelector('.hamburger').contains(e.target)) sb.classList.remove('open');
         });
         term.focus();
     </script>
 </body>
 </html>"""
 
-# ==================== SERVER ====================
 var router: Router
 
 proc indexHandler(request: Request) =
@@ -185,37 +123,29 @@ proc indexHandler(request: Request) =
   request.respond(200, headers, indexHtml)
 
 proc upgradeHandler(request: Request) =
-  let websocket = request.upgradeToWebSocket()
-  # Send welcome (demo public URL)
-  let welcomeMsg = %*{"type": "url", "url": "ws://" & request.headers.getOrDefault("host", "localhost:8080") & "/ws (share this!)"}
-  websocket.send($welcomeMsg)
+  let ws = request.upgradeToWebSocket()
+  ws.send($ %*{"type": "url", "url": "http://" & request.headers.getOrDefault("host", "localhost:8080") & " (share this link!)"})
 
-proc websocketHandler(websocket: WebSocket, event: WebSocketEvent, message: Message) =
+proc wsHandler(ws: WebSocket, event: WebSocketEvent, message: Message) =
   case event
   of OpenEvent:
-    websocket.send("\r\n\x1b[32mKS SSH demo shell ready (echo mode)\x1b[0m\r\n")
+    ws.send("\r\n\x1b[32mKS SSH demo shell ready (echo mode)\x1b[0m\r\n")
   of MessageEvent:
     if message.kind == TextMessage:
-      let input = message.data
-      # TODO: Real PTY replacement:
-      #   - Spawn posix_openpt + fork + exec /bin/bash per connection
-      #   - Write input to master fd
-      #   - Thread reads master fd → websocket.send(output)
-      #   - Handle resize JSON with ioctl(TIOCSWINSZ)
-      # For now: simple echo (fully works for demo)
-      if input.strip() == "exit":
-        websocket.send("\r\nGoodbye!\r\n")
-        websocket.close()
+      let input = message.data.strip()
+      if input == "exit":
+        ws.send("\r\nGoodbye!\r\n")
+        ws.close()
       else:
-        websocket.send("\r\n\x1b[36m$ " & input & "\x1b[0m\r\n")
-        websocket.send("echo: " & input & "\r\n")
+        ws.send("\r\n\x1b[36m$ " & input & "\x1b[0m\r\n")
+        ws.send("echo: " & input & "\r\n")
   of CloseEvent, ErrorEvent:
-    discard  # cleanup would go here (kill PTY)
+    discard
 
 router.get("/", indexHandler)
 router.get("/ws", upgradeHandler)
 
-let server = newServer(router, websocketHandler)
+let server = newServer(router, wsHandler)
 echo "🚀 KS SSH Terminal running on http://localhost:8080"
-echo "Open in browser (desktop or mobile). Multiple users supported."
+echo "Multiple concurrent users supported. Real PTY coming soon."
 server.serve(Port(8080))
