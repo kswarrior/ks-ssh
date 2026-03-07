@@ -529,13 +529,18 @@ func runCloudflareTunnel(server *TerminalServer) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if urlRe.MatchString(line) {
-			// Broadcast URL as JSON
+			// Print public URL to console
+			log.Printf("Public URL: %s", line)
+
+			// Broadcast URL as JSON to connected clients
 			urlMsg := map[string]string{"type": "url", "url": line}
 			jsonBytes, _ := json.Marshal(urlMsg)
 			server.Broadcast(string(jsonBytes))
 
-			// Enjoy message
-			server.Broadcast("\n\nEnjoy KS SSH!\n")
+			// Enjoy message to console and clients
+			enjoyMsg := "\n\nEnjoy KS SSH!\n"
+			log.Print(enjoyMsg)
+			server.Broadcast(enjoyMsg)
 			break // Only need first URL
 		}
 	}
