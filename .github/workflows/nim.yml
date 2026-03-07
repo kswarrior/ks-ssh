@@ -3,8 +3,7 @@ name: Build and Run KS SSH
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -12,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      # 1️⃣ Checkout the repo
+      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -23,16 +22,15 @@ jobs:
           export PATH="$HOME/.nimble/bin:$PATH"
           nim --version
 
-      # 3️⃣ Compile ks_ssh.nim
+      # 3️⃣ Compile ks_ssh.nim (root of repo)
       - name: Compile ks_ssh.nim
         run: |
           export PATH="$HOME/.nimble/bin:$PATH"
-          nim c -d:ssl --threads:on Repo/ks_ssh.nim
+          nim c -d:ssl --threads:on ks_ssh.nim
 
-      # 4️⃣ Run the compiled KS SSH binary (in background)
-      - name: Start KS SSH
-        run: |
-          ./ks_ssh &
+      # 4️⃣ Run the compiled KS SSH binary in background
+      - name: Run KS SSH
+        run: ./ks_ssh &
 
       # 5️⃣ Install Cloudflare Tunnel and run
       - name: Run Cloudflare Tunnel
