@@ -45,7 +45,7 @@ jobs:
 
       - name: Start Cloudflare Tunnel (background)
         run: |
-          cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
+          cloudflared tunnel --url http://localhost:5000 > tunnel.log 2>&1 &
           sleep 10
           echo "Cloudflare Tunnel started"
           cat tunnel.log || true
