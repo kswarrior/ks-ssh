@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'  # Use a recent stable Go version; adjust if needed based on go.mod
+
+    - name: Install dependencies
+      run: go mod tidy  # Ensures dependencies are downloaded and consistent
+
+    - name: Build ks-ssh
+      run: go build -o ks-ssh .
+
+    - name: Verify build
+      run: |
+        if [ -f "ks-ssh" ]; then
+          echo "Build successful: ks-ssh binary created"
+        else
+          echo "Build failed: ks-ssh binary not found"
+          exit 1
+        fi
+
+    - name: Run tests
+      run: ./ks-ssh  # Runs all tests in the package and subpackages; adjust if no tests exist
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ks-ssh-binary
+        path: ks-ssh
