@@ -1,43 +1,56 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+push:
+branches: [ main ]
+pull_request:
+branches: [ main ]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+build-and-test:
+runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v4
+steps:
+- uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.21'  # Use a recent stable Go version; adjust if needed based on go.mod
+- name: Set up Go
+  uses: actions/setup-go@v5
+  with:
+    go-version: '1.21'
 
-    - name: Install dependencies
-      run: go mod tidy  # Ensures dependencies are downloaded and consistent
+- name: Install dependencies
+  run: go mod tidy
 
-    - name: Build ks-ssh
-      run: go build -o ks-ssh .
+- name: Build ks-ssh
+  run: go build -o ks-ssh .
 
-    - name: Verify build
-      run: |
-        if [ -f "ks-ssh" ]; then
-          echo "Build successful: ks-ssh binary created"
-        else
-          echo "Build failed: ks-ssh binary not found"
-          exit 1
-        fi
+- name: Verify build
+  run: |
+    if [ -f "ks-ssh" ]; then
+      echo "Build successful: ks-ssh binary created"
+    else
+      echo "Build failed: ks-ssh binary not found"
+      exit 1
+    fi
 
-    - name: Run tests
-      run: ./ks-ssh  # Runs all tests in the package and subpackages; adjust if no tests exist
+- name: Install Cloudflare Tunnel
+  run: |
+    curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+    chmod +x cloudflared
+    sudo mv cloudflared /usr/local/bin/cloudflared
+    cloudflared --version
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ks-ssh-binary
-        path: ks-ssh
+- name: Start Cloudflare Tunnel
+  run: |
+    cloudflared tunnel --url http://localhost:3000 > tunnel.log 2>&1 &
+    sleep 10
+    echo "Tunnel started"
+
+- name: Run tests
+  run: ./ks-ssh
+
+- name: Upload build artifact
+  uses: actions/upload-artifact@v4
+  with:
+    name: ks-ssh-binary
+    path: ks-ssh
