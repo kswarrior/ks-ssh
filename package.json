@@ -1,0 +1,25 @@
+{
+  "name": "sshx",
+  "version": "1.0.0",
+  "description": "Zero-port web terminal tunnel (Express + Socket.IO + Cloudflare Tunnel)",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "build": "pkg index.js --target node18-linux-x64 --output sshx"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "node-pty": "^1.1.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "You",
+  "license": "MIT"
+}
