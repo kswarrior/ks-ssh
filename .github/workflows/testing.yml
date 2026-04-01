@@ -1,6 +1,8 @@
 name: KS SSH Testing
 
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -10,7 +12,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Or your preferred version
+
     - name: Install and Run
       run: |
         npm install
