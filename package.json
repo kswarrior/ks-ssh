@@ -1,13 +1,14 @@
 {
-  "name": "sshx",
+  "name": "ks-ssh",
   "version": "1.0.0",
-  "description": "Zero-port web terminal tunnel (Express + Socket.IO + Cloudflare Tunnel)",
+  "description": "Modern stylish powerful ssh by KS Warrior",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
-    "build": "pkg index.js --target node18-linux-x64 --output sshx"
+    "build": "npx pkg . --targets node18-linux-x64 --output ks-ssh",
+    "cp": "cp node_modules/xterm/lib/xterm.js src/public/js/xterm.js && cp node_modules/xterm/css/xterm.css src/public/css/xterm.css && cp node_modules/xterm-addon-fit/lib/xterm-addon-fit.js src/public/js/xterm-addon-fit.js && cp node_modules/socket.io/client-dist/socket.io.min.js src/public/js/socket.io.min.js"
   },
   "dependencies": {
     "express": "^4.19.2",
