@@ -98,7 +98,7 @@ socket.emit('request-sync');
 app.get('/', (req, res) => res.send(terminalHTML));
 
 // ======================
-// SHARED PTY + BUFFER (tmate/sshx style)
+// SHARED PTY + BUFFER
 // ======================
 let ptyProcess = null;
 let terminalBuffer = '';
@@ -112,7 +112,8 @@ function spawnPTY() {
     });
 
     setTimeout(() => {
-        ptyProcess.write(\`PS1='\\\\[\\\\e[32m\\\\]\\\\u@ks-ssh\\\\[\\\\e[0m\\\\]:\\\\[\\\\e[34m\\\\]\\\\w\\\\[\\\\e[0m\\\\]\\\\$ '\n\`);
+        const prompt = "PS1='\\[\\e[32m\\]\\u@ks-ssh\\[\\e[0m\\]:\\[\\e[34m\\]\\w\\[\\e[0m\\]\\$ '";
+        ptyProcess.write(prompt + "\n");
         ptyProcess.write('clear\n');
     }, 500);
 
@@ -150,8 +151,8 @@ io.on('connection', (socket) => {
 // ======================
 let tunnel = null;
 
-function startTunnel(path, port) {
-    tunnel = spawn(path, ['tunnel', '--url', \`http://127.0.0.1:\${port}\`]);
+function startTunnel(pathToBin, port) {
+    tunnel = spawn(pathToBin, ['tunnel', '--url', `http://127.0.0.1:${port}`]);
 
     const parse = (d) => {
         const m = d.toString().match(/https:\\/\\/.*trycloudflare.com/);
@@ -179,6 +180,12 @@ server.listen(0, '127.0.0.1', async () => {
 // Exit
 // ======================
 process.on('SIGINT', () => {
+    if (tunnel) tunnel.kill();
+    if (ptyProcess) ptyProcess.kill();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
     if (tunnel) tunnel.kill();
     if (ptyProcess) ptyProcess.kill();
     process.exit(0);
