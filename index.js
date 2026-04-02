@@ -36,7 +36,7 @@ async function ensureCloudflared() {
 
         curl.on('close', (code) => {
             if (code === 0) {
-                fs.chmodSync(CLOUDFLARED_PATH, '0755');
+                fs.chmodSync(CLOUDFLARED_PATH, 0o755);
                 console.log('✅ cloudflared ready');
                 resolve(CLOUDFLARED_PATH);
             } else {
@@ -48,282 +48,137 @@ async function ensureCloudflared() {
 }
 
 // ======================
-// FULL EMBEDDED HTML + JS — FIXED FOR PHONE + MOBILE
+// HTML
 // ======================
 const terminalHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KS SSH • Real Terminal</title>
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.5.0/lib/xterm.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.5.0/css/xterm.css">
-    <style>
-        :root { --accent: #00ff9d; --bg: #0a0a0a; }
-        body, html {
-            margin: 0; padding: 0; height: 100%; background: var(--bg); overflow: hidden;
-            font-family: 'Inter', system-ui, sans-serif;
-            touch-action: none;
-        }
-        .header {
-            position: absolute; top: 0; left: 0; right: 0; background: rgba(10,10,10,0.95);
-            color: var(--accent); padding: 14px 20px; font-size: 14px; z-index: 1000;
-            display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(0,255,157,0.2);
-            height: 56px;
-            box-sizing: border-box;
-        }
-        .header span:first-child { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
-        .status { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; }
-        .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
-        #terminal {
-            position: absolute;
-            top: 56px;
-            left: 0;
-            right: 0;
-            bottom: 220px;
-            background: #0a0a0a;
-        }
-        .chat-container {
-            position: absolute; bottom: 12px; left: 12px; right: 12px; height: 180px;
-            background: rgba(10,10,10,0.95); border: 1px solid rgba(0,255,157,0.2);
-            border-radius: 12px; z-index: 1000; display: flex; flex-direction: column; overflow: hidden;
-            backdrop-filter: blur(12px);
-        }
-        .chat-messages {
-            flex: 1; overflow-y: auto; padding: 12px; font-size: 13px; color: #ddd; line-height: 1.4;
-        }
-        .chat-input {
-            display: flex; border-top: 1px solid rgba(0,255,157,0.2); padding: 8px 12px;
-        }
-        .chat-input input {
-            flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 14px;
-        }
-        .footer {
-            position: absolute; bottom: 200px; left: 0; right: 0; text-align: center;
-            font-size: 11px; color: rgba(0,255,157,0.4); pointer-events: none; z-index: 10;
-        }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KS SSH</title>
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.5.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.5.0/css/xterm.css">
+<style>
+body,html{margin:0;height:100%;background:#0a0a0a}
+#terminal{height:100%}
+</style>
 </head>
 <body>
-    <div class="header">
-        <span>KS SSH • Real Terminal</span>
-        <div class="status">
-            <span id="users-count">1 connected</span>
-            <div class="dot"></div>
-            <span id="latency" style="font-size:12px; opacity:0.6;">0ms</span>
-        </div>
-    </div>
-    <div id="terminal"></div>
+<div id="terminal"></div>
+<script>
+const term = new Terminal({cursorBlink:true});
+const fitAddon = new FitAddon();
+term.loadAddon(fitAddon);
+const socket = io();
 
-    <div class="chat-container">
-        <div class="chat-messages" id="chat-messages"></div>
-        <div class="chat-input">
-            <input id="chat-input" type="text" placeholder="Chat with others (Enter to send) • /help" autocomplete="off">
-        </div>
-    </div>
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
 
-    <div class="footer">
-        Real SSH-like session • Shared bash • Real path ~ $ prompt • End-to-end visible
-    </div>
+window.addEventListener('resize',()=>fitAddon.fit());
 
-    <script>
-        const term = new Terminal({
-            cursorBlink: true,
-            theme: { background: '#0a0a0a', foreground: '#00ff9d', cursor: '#00ff9d' },
-            fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-            fontSize: 15,
-            lineHeight: 1.3,
-            scrollback: 10000,
-            allowTransparency: true
-        });
+term.onData(d=>socket.emit('input',d));
 
-        const fitAddon = new FitAddon();
-        term.loadAddon(fitAddon);
-        const socket = io();
+socket.on('output',d=>term.write(d));
 
-        // Open terminal
-        term.open(document.getElementById('terminal'));
+socket.on('sync',buffer=>{
+    term.write('\\x1bc');
+    term.write(buffer);
+});
 
-        // Force fit on mobile
-        function doFit() {
-            try {
-                fitAddon.fit();
-            } catch(e) {}
-        }
-
-        doFit();
-        window.addEventListener('resize', () => {
-            setTimeout(doFit, 50);
-            setTimeout(doFit, 300);
-        });
-
-        // Input → shared PTY
-        term.onData(data => socket.emit('input', data));
-        socket.on('output', data => term.write(data));
-
-        // Chat system
-        const chatMessages = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
-
-        socket.on('chat', (msg) => {
-            const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit'});
-            const html = '<span style="color:#00ff9d">[' + time + '] </span><strong>' + msg.user + ':</strong> ' + msg.text + '<br>';
-            chatMessages.innerHTML += html;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        });
-
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && chatInput.value.trim()) {
-                const text = chatInput.value.trim();
-                if (text === '/help') {
-                    term.writeln('\r\n\x1b[32mKS SSH commands:\x1b[0m');
-                    term.writeln('  /clear  - Clear terminal');
-                    term.writeln('  /users  - Show connected users');
-                    term.writeln('  /ping   - Latency test');
-                } else if (text === '/clear') {
-                    term.clear();
-                } else if (text === '/users') {
-                    socket.emit('get-users');
-                } else if (text === '/ping') {
-                    const start = Date.now();
-                    socket.emit('ping');
-                    socket.once('pong', () => {
-                        const latency = Date.now() - start;
-                        term.writeln('\r\n\x1b[32mPong! Latency: ' + latency + 'ms\x1b[0m');
-                    });
-                } else {
-                    socket.emit('chat', { text });
-                }
-                chatInput.value = '';
-            }
-        });
-
-        socket.on('users', (count) => {
-            document.getElementById('users-count').textContent = count + ' connected';
-        });
-
-        // Real SSH banner + prompt
-        term.writeln('\x1b[32m╔════════════════════════════════════════════════════╗');
-        term.writeln('║               KS SSH — REAL TERMINAL               ║');
-        term.writeln('║  You are now in a shared bash session (like SSH)   ║');
-        term.writeln('╚════════════════════════════════════════════════════╝\x1b[0m');
-        term.writeln('\r\n\x1b[90mConnected via Cloudflare Tunnel • All inputs shared\x1b[0m\r\n');
-
-        term.focus();
-
-        // Extra mobile fit
-        setTimeout(() => { doFit(); term.focus(); }, 400);
-        setTimeout(() => { doFit(); term.focus(); }, 1200);
-    </script>
+socket.emit('request-sync');
+</script>
 </body>
 </html>`;
 
-// Serve the terminal
-app.get('/', (req, res) => {
-    res.send(terminalHTML);
-});
+// ======================
+// Server
+// ======================
+app.get('/', (req, res) => res.send(terminalHTML));
 
 // ======================
-// SHARED PTY (real bash with SSH-like prompt)
+// SHARED PTY + BUFFER (tmate/sshx style)
 // ======================
 let ptyProcess = null;
+let terminalBuffer = '';
 let connectedClients = 0;
 
+function spawnPTY() {
+    ptyProcess = pty.spawn('bash', ['-i'], {
+        name: 'xterm-256color',
+        cwd: process.env.HOME,
+        env: { ...process.env, TERM: 'xterm-256color' }
+    });
+
+    setTimeout(() => {
+        ptyProcess.write(\`PS1='\\\\[\\\\e[32m\\\\]\\\\u@ks-ssh\\\\[\\\\e[0m\\\\]:\\\\[\\\\e[34m\\\\]\\\\w\\\\[\\\\e[0m\\\\]\\\\$ '\n\`);
+        ptyProcess.write('clear\n');
+    }, 500);
+
+    ptyProcess.onData(data => {
+        terminalBuffer += data;
+        if (terminalBuffer.length > 50000) {
+            terminalBuffer = terminalBuffer.slice(-30000);
+        }
+        io.emit('output', data);
+    });
+}
+
 io.on('connection', (socket) => {
-    console.log(`[+] New client connected (${++connectedClients} total)`);
+    connectedClients++;
     io.emit('users', connectedClients);
 
-    if (!ptyProcess) {
-        console.log('Spawning shared bash PTY (real SSH-like session)...');
-        ptyProcess = pty.spawn('bash', ['-i'], {
-            name: 'xterm-256color',
-            cwd: process.env.HOME || '/root',
-            env: { ...process.env, TERM: 'xterm-256color' }
-        });
+    if (!ptyProcess) spawnPTY();
 
-        // Real SSH prompt: user@ks-ssh:~/path $
-        setTimeout(() => {
-            ptyProcess.write(`PS1='\\[\\e[32m\\]\\u@ks-ssh\\[\\e[0m\\]:\\[\\e[34m\\]\\w\\[\\e[0m\\]\\$ '\n`);
-            ptyProcess.write('clear\n');
-        }, 800);
-
-        ptyProcess.onData((data) => {
-            io.emit('output', data);
-        });
-    }
+    socket.on('request-sync', () => {
+        socket.emit('sync', terminalBuffer);
+    });
 
     socket.on('input', (data) => {
         if (ptyProcess) ptyProcess.write(data);
     });
 
-    socket.on('chat', (msg) => {
-        const username = `guest-${socket.id.slice(0, 6)}`;
-        io.emit('chat', { user: username, text: msg.text });
-    });
-
-    socket.on('get-users', () => {
-        socket.emit('users', connectedClients);
-    });
-
-    socket.on('ping', () => {
-        socket.emit('pong');
-    });
-
     socket.on('disconnect', () => {
-        console.log(`[-] Client disconnected (${--connectedClients} total)`);
+        connectedClients--;
         io.emit('users', connectedClients);
     });
 });
 
 // ======================
-// Cloudflare Tunnel
+// Tunnel
 // ======================
 let tunnel = null;
-let PORT = null;
 
-function startTunnel(cloudflaredPath, port) {
-    console.log(`Starting Cloudflare Tunnel on port ${port}...`);
-    tunnel = spawn(cloudflaredPath, ['tunnel', '--url', `http://127.0.0.1:${port}`]);
+function startTunnel(path, port) {
+    tunnel = spawn(path, ['tunnel', '--url', \`http://127.0.0.1:\${port}\`]);
 
-    const checkForUrl = (data) => {
-        const output = data.toString();
-        const urlMatch = output.match(/https:\/\/([a-z0-9.-]+)\.trycloudflare\.com/);
-        if (urlMatch) {
-            const publicUrl = `https://${urlMatch[1]}.trycloudflare.com`;
-            console.log('\n✅ TUNNEL READY');
-            console.log('🔗 Your real SSH terminal link:');
-            console.log(publicUrl);
-            console.log('\nOpen on phone or PC — now fully mobile friendly!\n');
+    const parse = (d) => {
+        const m = d.toString().match(/https:\\/\\/.*trycloudflare.com/);
+        if (m) {
+            console.log('\\n🔗 ' + m[0] + '\\n');
         }
     };
 
-    tunnel.stdout.on('data', checkForUrl);
-    tunnel.stderr.on('data', checkForUrl);
+    tunnel.stdout.on('data', parse);
+    tunnel.stderr.on('data', parse);
 }
 
-// Start everything
+// ======================
+// Start
+// ======================
 server.listen(0, '127.0.0.1', async () => {
-    const addr = server.address();
-    PORT = addr.port;
-    console.log(`Local server ready on http://127.0.0.1:${PORT}`);
+    const PORT = server.address().port;
+    console.log('Local:', PORT);
 
-    const cloudflaredPath = await ensureCloudflared();
-    startTunnel(cloudflaredPath, PORT);
+    const cf = await ensureCloudflared();
+    startTunnel(cf, PORT);
 });
 
-// Graceful shutdown
+// ======================
+// Exit
+// ======================
 process.on('SIGINT', () => {
-    console.log('\nShutting down KS SSH...');
-    if (tunnel) tunnel.kill();
-    if (ptyProcess) ptyProcess.kill();
-    process.exit(0);
-});
-
-process.on('SIGTERM', () => {
     if (tunnel) tunnel.kill();
     if (ptyProcess) ptyProcess.kill();
     process.exit(0);
