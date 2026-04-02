@@ -1,26 +1,43 @@
 {
   "name": "ks-ssh",
   "version": "1.0.0",
-  "description": "Modern stylish powerful ssh by KS Warrior",
-  "main": "index.js",
-  "type": "commonjs",
+  "description": "KS SSH - Powerful browser-based SSH with terminals, ports, and file management",
+  "main": "src/server.js",
+  "bin": {
+    "ks-ssh": "./src/server.js"
+  },
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
-    "build": "npx pkg . --targets node18-linux-x64 --output ks-ssh",
-    "cp": "cp node_modules/xterm/lib/xterm.js src/public/js/xterm.js && cp node_modules/xterm/css/xterm.css src/public/css/xterm.css && cp node_modules/xterm-addon-fit/lib/xterm-addon-fit.js src/public/js/xterm-addon-fit.js && cp node_modules/socket.io/client-dist/socket.io.min.js src/public/js/socket.io.min.js"
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "build-pkg": "npx pkg . --targets node18-linux-x64 --output ks-ssh"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "socket.io": "^4.7.5",
-    "node-pty": "^1.1.0"
+    "archiver": "^6.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mime-types": "^2.1.35",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0",
+    "node-pty": "^1.0.0",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.0",
+    "ws": "^8.16.0",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "pkg": "^5.8.1"
   },
-  "engines": {
-    "node": ">=18"
-  },
-  "author": "You",
-  "license": "MIT"
+  "pkg": {
+    "scripts": "src/**/*.js",
+    "assets": [
+      "src/public/**/*",
+      "node_modules/node-pty/build/Release/**/*.node",
+      "node_modules/node-pty/lib/**/*"
+    ],
+    "targets": [
+      "node18-linux-x64"
+    ],
+    "outputPath": "."
+  }
 }
