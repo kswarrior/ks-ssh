@@ -48,13 +48,13 @@ async function ensureCloudflared() {
 }
 
 // ======================
-// FULL EMBEDDED HTML + JS (Real SSH prompt + sshx/tmate features)
+// FULL EMBEDDED HTML + JS — FIXED FOR PHONE + MOBILE
 // ======================
 const terminalHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KS SSH • Real Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.5.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
@@ -65,20 +65,29 @@ const terminalHTML = `<!DOCTYPE html>
         body, html {
             margin: 0; padding: 0; height: 100%; background: var(--bg); overflow: hidden;
             font-family: 'Inter', system-ui, sans-serif;
+            touch-action: none;
         }
-        #terminal { width: 100%; height: 100%; }
         .header {
             position: absolute; top: 0; left: 0; right: 0; background: rgba(10,10,10,0.95);
-            color: var(--accent); padding: 12px 20px; font-size: 14px; z-index: 1000;
+            color: var(--accent); padding: 14px 20px; font-size: 14px; z-index: 1000;
             display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0,255,157,0.2);
+            height: 56px;
+            box-sizing: border-box;
         }
         .header span:first-child { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
         .status { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; }
         .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
-        .users { font-size: 13px; background: rgba(0,255,157,0.1); padding: 2px 8px; border-radius: 9999px; }
+        #terminal {
+            position: absolute;
+            top: 56px;
+            left: 0;
+            right: 0;
+            bottom: 220px;
+            background: #0a0a0a;
+        }
         .chat-container {
-            position: absolute; bottom: 12px; left: 20px; right: 20px; height: 180px;
+            position: absolute; bottom: 12px; left: 12px; right: 12px; height: 180px;
             background: rgba(10,10,10,0.95); border: 1px solid rgba(0,255,157,0.2);
             border-radius: 12px; z-index: 1000; display: flex; flex-direction: column; overflow: hidden;
             backdrop-filter: blur(12px);
@@ -87,13 +96,13 @@ const terminalHTML = `<!DOCTYPE html>
             flex: 1; overflow-y: auto; padding: 12px; font-size: 13px; color: #ddd; line-height: 1.4;
         }
         .chat-input {
-            display: flex; border-top: 1px solid rgba(0,255,157,0.2); padding: 8px;
+            display: flex; border-top: 1px solid rgba(0,255,157,0.2); padding: 8px 12px;
         }
         .chat-input input {
             flex: 1; background: transparent; border: none; color: #fff; outline: none; font-size: 14px;
         }
         .footer {
-            position: absolute; bottom: 210px; left: 0; right: 0; text-align: center;
+            position: absolute; bottom: 200px; left: 0; right: 0; text-align: center;
             font-size: 11px; color: rgba(0,255,157,0.4); pointer-events: none; z-index: 10;
         }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -113,12 +122,12 @@ const terminalHTML = `<!DOCTYPE html>
     <div class="chat-container">
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input">
-            <input id="chat-input" type="text" placeholder="Chat with others (Enter to send) • Type /help for commands" autocomplete="off">
+            <input id="chat-input" type="text" placeholder="Chat with others (Enter to send) • /help" autocomplete="off">
         </div>
     </div>
 
     <div class="footer">
-        Real SSH-like session • Shared bash • ${path} ~ $ prompt • End-to-end visible
+        Real SSH-like session • Shared bash • Real path ~ $ prompt • End-to-end visible
     </div>
 
     <script>
@@ -126,22 +135,37 @@ const terminalHTML = `<!DOCTYPE html>
             cursorBlink: true,
             theme: { background: '#0a0a0a', foreground: '#00ff9d', cursor: '#00ff9d' },
             fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-            fontSize: 15, lineHeight: 1.3, scrollback: 10000,
+            fontSize: 15,
+            lineHeight: 1.3,
+            scrollback: 10000,
             allowTransparency: true
         });
+
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
         const socket = io();
 
+        // Open terminal
         term.open(document.getElementById('terminal'));
-        fitAddon.fit();
 
-        window.addEventListener('resize', () => setTimeout(() => fitAddon.fit(), 100));
+        // Force fit on mobile
+        function doFit() {
+            try {
+                fitAddon.fit();
+            } catch(e) {}
+        }
 
+        doFit();
+        window.addEventListener('resize', () => {
+            setTimeout(doFit, 50);
+            setTimeout(doFit, 300);
+        });
+
+        // Input → shared PTY
         term.onData(data => socket.emit('input', data));
         socket.on('output', data => term.write(data));
 
-        // Chat
+        // Chat system
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
 
@@ -157,9 +181,9 @@ const terminalHTML = `<!DOCTYPE html>
                 const text = chatInput.value.trim();
                 if (text === '/help') {
                     term.writeln('\r\n\x1b[32mKS SSH commands:\x1b[0m');
-                    term.writeln('  /clear     - Clear terminal');
-                    term.writeln('  /users     - Show connected users');
-                    term.writeln('  /ping      - Latency test');
+                    term.writeln('  /clear  - Clear terminal');
+                    term.writeln('  /users  - Show connected users');
+                    term.writeln('  /ping   - Latency test');
                 } else if (text === '/clear') {
                     term.clear();
                 } else if (text === '/users') {
@@ -182,15 +206,18 @@ const terminalHTML = `<!DOCTYPE html>
             document.getElementById('users-count').textContent = count + ' connected';
         });
 
-        // Real SSH-style banner
+        // Real SSH banner + prompt
         term.writeln('\x1b[32m╔════════════════════════════════════════════════════╗');
         term.writeln('║               KS SSH — REAL TERMINAL               ║');
         term.writeln('║  You are now in a shared bash session (like SSH)   ║');
         term.writeln('╚════════════════════════════════════════════════════╝\x1b[0m');
-        term.writeln('\r\n\x1b[90mConnected via Cloudflare Tunnel • All inputs are shared\x1b[0m\r\n');
+        term.writeln('\r\n\x1b[90mConnected via Cloudflare Tunnel • All inputs shared\x1b[0m\r\n');
 
         term.focus();
-        setTimeout(() => fitAddon.fit(), 300);
+
+        // Extra mobile fit
+        setTimeout(() => { doFit(); term.focus(); }, 400);
+        setTimeout(() => { doFit(); term.focus(); }, 1200);
     </script>
 </body>
 </html>`;
@@ -270,7 +297,7 @@ function startTunnel(cloudflaredPath, port) {
             console.log('\n✅ TUNNEL READY');
             console.log('🔗 Your real SSH terminal link:');
             console.log(publicUrl);
-            console.log('\nOpen this link in any browser — you will see the ${path} ~ $ prompt!\n');
+            console.log('\nOpen on phone or PC — now fully mobile friendly!\n');
         }
     };
 
