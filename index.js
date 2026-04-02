@@ -12,7 +12,7 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 // ======================
-// Auto-install cloudflared (unchanged)
+// Auto-install cloudflared (no root)
 // ======================
 const HOME = os.homedir();
 const KSSSH_DIR = path.join(HOME, '.ksssh');
@@ -27,10 +27,13 @@ async function ensureCloudflared() {
         console.log('✅ Using local cloudflared');
         return CLOUDFLARED_PATH;
     }
+
     console.log('Downloading cloudflared (one-time)...');
     const downloadUrl = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64';
-    return new Promise((resolve, reject) => {
+
+    return new Promise((resolve) => {
         const curl = spawn('curl', ['-L', '-o', CLOUDFLARED_PATH, downloadUrl]);
+
         curl.on('close', (code) => {
             if (code === 0) {
                 fs.chmodSync(CLOUDFLARED_PATH, '0755');
@@ -45,7 +48,7 @@ async function ensureCloudflared() {
 }
 
 // ======================
-// UPDATED HTML + JS (Real SSH prompt + chat + presence)
+// FULL EMBEDDED HTML + JS (Real SSH prompt + sshx/tmate features)
 // ======================
 const terminalHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -107,7 +110,6 @@ const terminalHTML = `<!DOCTYPE html>
     </div>
     <div id="terminal"></div>
 
-    <!-- Chat (sshx-style collaboration) -->
     <div class="chat-container">
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input">
@@ -116,7 +118,7 @@ const terminalHTML = `<!DOCTYPE html>
     </div>
 
     <div class="footer">
-        Real SSH-like session • Shared bash • End-to-end visible (self-hosted) • Type any command
+        Real SSH-like session • Shared bash • ${path} ~ $ prompt • End-to-end visible
     </div>
 
     <script>
@@ -136,19 +138,16 @@ const terminalHTML = `<!DOCTYPE html>
 
         window.addEventListener('resize', () => setTimeout(() => fitAddon.fit(), 100));
 
-        // Input → server
         term.onData(data => socket.emit('input', data));
-
-        // Output from shared PTY
         socket.on('output', data => term.write(data));
 
-        // Chat (sshx-style real-time collaboration)
+        // Chat
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
 
         socket.on('chat', (msg) => {
             const time = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit'});
-            const html = `<span style="color:#00ff9d">[${time}] </span><strong>${msg.user}:</strong> ${msg.text}<br>`;
+            const html = '<span style="color:#00ff9d">[' + time + '] </span><strong>' + msg.user + ':</strong> ' + msg.text + '<br>';
             chatMessages.innerHTML += html;
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
@@ -170,7 +169,7 @@ const terminalHTML = `<!DOCTYPE html>
                     socket.emit('ping');
                     socket.once('pong', () => {
                         const latency = Date.now() - start;
-                        term.writeln(`\r\n\x1b[32mPong! Latency: ${latency}ms\x1b[0m`);
+                        term.writeln('\r\n\x1b[32mPong! Latency: ' + latency + 'ms\x1b[0m');
                     });
                 } else {
                     socket.emit('chat', { text });
@@ -179,12 +178,11 @@ const terminalHTML = `<!DOCTYPE html>
             }
         });
 
-        // Connected users (tmate/sshx-style presence)
         socket.on('users', (count) => {
-            document.getElementById('users-count').textContent = `${count} connected`;
+            document.getElementById('users-count').textContent = count + ' connected';
         });
 
-        // Initial banner — feels exactly like a real SSH login
+        // Real SSH-style banner
         term.writeln('\x1b[32m╔════════════════════════════════════════════════════╗');
         term.writeln('║               KS SSH — REAL TERMINAL               ║');
         term.writeln('║  You are now in a shared bash session (like SSH)   ║');
@@ -192,17 +190,18 @@ const terminalHTML = `<!DOCTYPE html>
         term.writeln('\r\n\x1b[90mConnected via Cloudflare Tunnel • All inputs are shared\x1b[0m\r\n');
 
         term.focus();
-
-        // Auto-fit on load
         setTimeout(() => fitAddon.fit(), 300);
     </script>
 </body>
-</html>`; // ← Paste the entire HTML block I gave above here (it's long, so I put it separately for clarity)
+</html>`;
 
-app.get('/', (req, res) => res.send(terminalHTML));
+// Serve the terminal
+app.get('/', (req, res) => {
+    res.send(terminalHTML);
+});
 
 // ======================
-// SHARED PTY + REAL SSH PROMPT (the magic)
+// SHARED PTY (real bash with SSH-like prompt)
 // ======================
 let ptyProcess = null;
 let connectedClients = 0;
@@ -213,30 +212,29 @@ io.on('connection', (socket) => {
 
     if (!ptyProcess) {
         console.log('Spawning shared bash PTY (real SSH-like session)...');
-        ptyProcess = pty.spawn('bash', ['-i'], {    // -i = interactive login shell
+        ptyProcess = pty.spawn('bash', ['-i'], {
             name: 'xterm-256color',
             cwd: process.env.HOME || '/root',
             env: { ...process.env, TERM: 'xterm-256color' }
         });
 
-        // === REAL SSH PROMPT ===
-        // This runs once when PTY starts → gives you exactly "${path} ~ $" style
+        // Real SSH prompt: user@ks-ssh:~/path $
         setTimeout(() => {
             ptyProcess.write(`PS1='\\[\\e[32m\\]\\u@ks-ssh\\[\\e[0m\\]:\\[\\e[34m\\]\\w\\[\\e[0m\\]\\$ '\n`);
-            ptyProcess.write('clear\n'); // clean start
+            ptyProcess.write('clear\n');
         }, 800);
 
-        ptyProcess.onData((data) => io.emit('output', data));
+        ptyProcess.onData((data) => {
+            io.emit('output', data);
+        });
     }
 
-    // Input from any client goes to the shared PTY (tmate-style)
     socket.on('input', (data) => {
         if (ptyProcess) ptyProcess.write(data);
     });
 
-    // Chat (sshx collaboration)
     socket.on('chat', (msg) => {
-        const username = `guest-${socket.id.slice(0,6)}`;
+        const username = `guest-${socket.id.slice(0, 6)}`;
         io.emit('chat', { user: username, text: msg.text });
     });
 
@@ -244,7 +242,9 @@ io.on('connection', (socket) => {
         socket.emit('users', connectedClients);
     });
 
-    socket.on('ping', () => socket.emit('pong'));
+    socket.on('ping', () => {
+        socket.emit('pong');
+    });
 
     socket.on('disconnect', () => {
         console.log(`[-] Client disconnected (${--connectedClients} total)`);
@@ -253,7 +253,7 @@ io.on('connection', (socket) => {
 });
 
 // ======================
-// Cloudflare Tunnel (unchanged)
+// Cloudflare Tunnel
 // ======================
 let tunnel = null;
 let PORT = null;
@@ -270,7 +270,7 @@ function startTunnel(cloudflaredPath, port) {
             console.log('\n✅ TUNNEL READY');
             console.log('🔗 Your real SSH terminal link:');
             console.log(publicUrl);
-            console.log('\nOpen in any browser — feels exactly like SSH!\n');
+            console.log('\nOpen this link in any browser — you will see the ${path} ~ $ prompt!\n');
         }
     };
 
@@ -278,7 +278,7 @@ function startTunnel(cloudflaredPath, port) {
     tunnel.stderr.on('data', checkForUrl);
 }
 
-// Start server
+// Start everything
 server.listen(0, '127.0.0.1', async () => {
     const addr = server.address();
     PORT = addr.port;
@@ -291,6 +291,12 @@ server.listen(0, '127.0.0.1', async () => {
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log('\nShutting down KS SSH...');
+    if (tunnel) tunnel.kill();
+    if (ptyProcess) ptyProcess.kill();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
     if (tunnel) tunnel.kill();
     if (ptyProcess) ptyProcess.kill();
     process.exit(0);
