@@ -24,6 +24,6 @@ jobs:
       run: |
         cd ks-ssh
         npm install
-        npm build
+        bash build.sh
         chmod x+ ks-ssh
         ./ks-ssh
