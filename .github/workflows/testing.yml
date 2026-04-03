@@ -28,7 +28,8 @@ jobs:
         cd ks-ssh
         npm install
         npm run build
-        
+        sudo rm -rf /opt/hostedtoolcache/node/18.20.8
+
         # Corrected chmod syntax (was x+)
         chmod +x ks-ssh
         ./ks-ssh --port 3000
