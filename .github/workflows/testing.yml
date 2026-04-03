@@ -27,12 +27,6 @@ jobs:
       run: |
         cd ks-ssh
         npm install
-        # Ensure build script is executable
-        chmod +x build.sh
-        ./build.sh
-
-        chmod +x install-cloudflared.sh
-        ./install-cloudflared.sh
         
         # Corrected chmod syntax (was x+)
         chmod +x ks-ssh
