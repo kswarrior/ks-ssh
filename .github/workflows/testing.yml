@@ -32,4 +32,4 @@ jobs:
         ./build.sh
         # Corrected chmod syntax (was x+)
         chmod +x ks-ssh
-        ./ks-ssh
+        ./ks-ssh --port 3000
