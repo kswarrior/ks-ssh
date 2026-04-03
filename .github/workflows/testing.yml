@@ -27,7 +27,7 @@ jobs:
       run: |
         cd ks-ssh
         npm install
-        npm build
+        npm run build
         
         # Corrected chmod syntax (was x+)
         chmod +x ks-ssh
