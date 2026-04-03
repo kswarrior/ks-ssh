@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download and Unzip
       run: |
         wget https://github.com/kswarrior/ks-ssh/releases/download/zip/ks-ssh.zip
         unzip ks-ssh.zip
@@ -18,12 +21,15 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18' # Or your preferred version
+        node-version: '18'
 
     - name: Install and Run
       run: |
         cd ks-ssh
         npm install
-        bash build.sh
-        chmod x+ ks-ssh
+        # Ensure build script is executable
+        chmod +x build.sh
+        ./build.sh
+        # Corrected chmod syntax (was x+)
+        chmod +x ks-ssh
         ./ks-ssh
