@@ -13,7 +13,7 @@ jobs:
 
     - name: Download and Unzip
       run: |
-        wget https://github.com/kswarrior/ks-ssh/releases/download/zip/ks-ssh.zip
+        wget https://github.com/kswarrior/ks-ssh/releases/download/v1.0.0/ks-ssh
         unzip ks-ssh.zip
 
     - name: Setup Node.js
