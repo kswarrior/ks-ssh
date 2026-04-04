@@ -14,20 +14,9 @@ jobs:
     - name: Download and Unzip
       run: |
         wget https://github.com/kswarrior/ks-ssh/releases/download/v1.0.0/ks-ssh
-        unzip ks-ssh.zip
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
 
     - name: Install and Run
       run: |
-        cd ks-ssh
-        npm install
-        npm run build
-        sudo rm -rf /opt/hostedtoolcache/node/18.20.8
-
-        # Corrected chmod syntax (was x+)
+        node -v || true
         chmod +x ks-ssh
         ./ks-ssh --port 3000
