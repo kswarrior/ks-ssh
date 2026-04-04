@@ -1,0 +1,37 @@
+name: Download and Move Release Files
+
+on:
+  workflow_dispatch: # Allows you to run this manually
+
+jobs:
+  update-repo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push changes back to the repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download and Unzip Release
+        run: |
+          # 1. Download the zip file
+          curl -L https://github.com/kswarrior/ks-ssh/releases/download/zip/ks-ssh.zip -o ks-ssh.zip
+          
+          # 2. Unzip the file
+          unzip ks-ssh.zip
+          
+          # 3. Move contents from ks-ssh folder to root
+          # Using '.' ensures hidden files are moved too
+          cp -rn ks-ssh/. .
+          
+          # 4. Clean up the zip and the temporary folder
+          rm -rf ks-ssh ks-ssh.zip
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          # Only commit if there are actual changes to avoid errors
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Add files from ks-ssh release" && git push)
