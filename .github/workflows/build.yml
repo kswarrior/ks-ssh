@@ -24,20 +24,18 @@ jobs:
       run: |
         VERSION=$(node -p "require('./package.json').version")
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Install and Build
       run: |
         npm install
         npm run build
-        # If your build process creates a binary or specific folder, 
-        # ensure it is ready here.
-        zip -r ks-ssh-v${{ env.VERSION }}.zip . -x "*.git*" "node_modules/*"
+        # Ensure your build command produces the 'ks-ssh' file
+        # If the file is inside a 'dist' folder, adjust the path below
 
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh-v${{ env.VERSION }}.zip"
+        artifacts: "ks-ssh" 
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}
