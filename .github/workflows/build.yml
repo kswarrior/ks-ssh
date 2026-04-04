@@ -1,0 +1,46 @@
+name: Build and Release KS SSH
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Get Version from package.json
+      id: get_version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Install and Build
+      run: |
+        npm install
+        npm run build
+        # If your build process creates a binary or specific folder, 
+        # ensure it is ready here.
+        zip -r ks-ssh-v${{ env.VERSION }}.zip . -x "*.git*" "node_modules/*"
+
+    - name: Create GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "ks-ssh-v${{ env.VERSION }}.zip"
+        tag: "v${{ env.VERSION }}"
+        name: "Release v${{ env.VERSION }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        allowUpdates: true
+        draft: false
+        prerelease: false
