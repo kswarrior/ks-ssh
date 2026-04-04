@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
-    "build-pkg": "npx pkg . --targets node18-linux-x64 --output ks-ssh"
+    "build": "cp node_modules/xterm/lib/xterm.js src/public/js/xterm.js && cp node_modules/xterm/css/xterm.css src/public/css/xterm.css && cp node_modules/xterm-addon-fit/lib/xterm-addon-fit.js src/public/js/xterm-addon-fit.js && cp node_modules/socket.io/client-dist/socket.io.min.js src/public/js/socket.io.min.js && npx pkg . --targets node18-linux-x64 --output ks-ssh && chmod +x ks-ssh && echo '[KS-SSH] Binary built: ./ks-ssh' && echo '[KS-SSH] Usage: ./ks-ssh --port 3000'"
   },
   "dependencies": {
     "archiver": "^6.0.1",
