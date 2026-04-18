@@ -1,0 +1,16 @@
+
+[36m╔══════════════════════════════════════════════════╗[0m
+[36m║[0m  [1m[97mKS SSH[0m — Browser Terminal Manager  [2mby KS Warrior[0m  [36m║[0m
+[36m╚══════════════════════════════════════════════════╝[0m
+
+  [2mLocal:[0m    [4mhttp://localhost:3000[0m
+  [2mNetwork:[0m  [4mhttp://0.0.0.0:3000[0m
+
+  [2m⏳ Starting tunnel… Link & Token will appear below.[0m
+
+[32m  ✓ Tunnel ready![0m
+
+[36m  ┌──────────────────────────────────────────────┐[0m
+[36m  │[0m  [1mLink:[0m   [4m[97mhttps://ssh.ksw.workers.dev/[0m          [36m│[0m
+[36m  │[0m  [1mToken:[0m  [93mlodging-griffin-productions-implementation[0m
+[36m  └──────────────────────────────────────────────┘[0m
