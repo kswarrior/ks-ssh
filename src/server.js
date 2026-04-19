@@ -29,8 +29,15 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(PUBLIC_DIR));
+
+app.get('/', (req, res) => {
+  res.render('index');
+});
 
 const upload = multer({
   storage: multer.diskStorage({

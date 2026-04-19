@@ -17,11 +17,11 @@ function init() {
   setupSocket();
   setupModals();
   setupPortPreview();
-  setupKeyboardBar();
 
   // Load state
   const saved = JSON.parse(sessionStorage.getItem('ks-ssh-terms') || '[]');
   if (saved.length) saved.forEach(s => terminals.restore(s.id, s.num));
+  else if ($('empty-new-term')) $('empty-new-term').onclick = () => terminals.create();
 
   loadSystemInfo();
   setInterval(() => {
@@ -46,10 +46,13 @@ function setupNavigation() {
     };
   });
 
-  $('sidebar-toggle').onclick = () => {
-    $('sidebar').classList.toggle('collapsed');
-    setTimeout(() => terminals.refit(), 300);
-  };
+  const toggle = $('sidebar-toggle');
+  if (toggle) {
+    toggle.onclick = () => {
+      $('sidebar').classList.toggle('collapsed');
+      setTimeout(() => terminals.refit(), 300);
+    };
+  }
 }
 
 function setupSocket() {
@@ -68,26 +71,33 @@ function setupSocket() {
       socket.emit('terminal:create', { id, cols: t.term.cols, rows: t.term.rows });
     }
   });
-  socket.on('tunnel:url', (data) => {
-    showToast('Tunnel Connected!', 'success');
-  });
 }
 
 function setupModals() {
-  $('term-close-input').oninput = () => {
-    const ok = $('term-close-input').value === 'KS SSH';
-    $('term-close-confirm').disabled = !ok;
-  };
-  $('term-close-confirm').onclick = () => {
-    if (terminals.pendingClose) {
-      terminals.close(terminals.pendingClose);
-      $('term-close-modal').classList.add('hidden');
-    }
-  };
-  $('term-close-modal-x').onclick = () => $('term-close-modal').classList.add('hidden');
-  $('term-close-cancel').onclick = () => $('term-close-modal').classList.add('hidden');
+  const input = $('term-close-input');
+  if (input) {
+    input.oninput = () => {
+      const ok = input.value === 'KS SSH';
+      $('term-close-confirm').disabled = !ok;
+    };
+  }
+  const confirmBtn = $('term-close-confirm');
+  if (confirmBtn) {
+    confirmBtn.onclick = () => {
+      if (terminals.pendingClose) {
+        terminals.close(terminals.pendingClose);
+        $('term-close-modal').classList.add('hidden');
+      }
+    };
+  }
+  const closeBtn = $('term-close-modal-x');
+  if (closeBtn) closeBtn.onclick = () => $('term-close-modal').classList.add('hidden');
 
-  $('empty-new-term').onclick = () => terminals.create();
+  const cancelBtn = $('term-close-cancel');
+  if (cancelBtn) cancelBtn.onclick = () => $('term-close-modal').classList.add('hidden');
+
+  const emptyBtn = $('empty-new-term');
+  if (emptyBtn) emptyBtn.onclick = () => terminals.create();
 }
 
 function setupPortPreview() {
@@ -97,35 +107,13 @@ function setupPortPreview() {
     $('port-preview-iframe').src = `/ksapi/proxy/${port}/`;
     $('port-preview-panel').classList.remove('hidden');
   };
-  $('port-preview-close').onclick = () => {
-    $('port-preview-panel').classList.add('hidden');
-    $('port-preview-iframe').src = 'about:blank';
-  };
-}
-
-function setupKeyboardBar() {
-  const kbdKeys = [
-    { label: 'ESC', key: '\x1b' }, { label: 'TAB', key: '\t' },
-    { label: 'CTRL', key: 'CTRL', id: 'kbd-ctrl' }, { label: 'ALT', key: 'ALT', id: 'kbd-alt' },
-    { label: '↑', key: '\x1b[A' }, { label: '↓', key: '\x1b[B' },
-    { label: '←', key: '\x1b[D' }, { label: '→', key: '\x1b[C' }
-  ];
-
-  const bar = document.createElement('div');
-  bar.className = 'mobile-kbd-bar';
-  kbdKeys.forEach(k => {
-    const b = document.createElement('button');
-    b.className = 'kbd-key';
-    b.textContent = k.label;
-    if (k.id) b.id = k.id;
-    b.onclick = () => terminals.sendKbdKey(k.key);
-    bar.appendChild(b);
-  });
-
-  // Insert into terminals area (will be managed by TerminalManager in future refactor)
-  // For now, simple injection if terminals wrapper exists
-  const target = qs('.terminal-wrapper');
-  if (target) target.insertBefore(bar, target.querySelector('.terminal-body'));
+  const closeBtn = $('port-preview-close');
+  if (closeBtn) {
+    closeBtn.onclick = () => {
+      $('port-preview-panel').classList.add('hidden');
+      $('port-preview-iframe').src = 'about:blank';
+    };
+  }
 }
 
 async function loadSystemInfo() {

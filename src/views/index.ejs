@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KS SSH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/xterm.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>" />
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="menu-toggle" id="sidebar-toggle" title="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="logo">
+        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        <span class="logo-text">KS SSH</span>
+      </div>
+      <div class="sys-info" id="sys-info">
+        <span id="sys-host">Loading…</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="res-mon-wrap" id="res-mon-wrap">
+        <button class="hdr-icon-btn" id="res-mon-btn">📊</button>
+        <div class="res-dropdown hidden" id="res-dropdown">
+          <div class="res-metric">
+            <div class="res-metric-top"><span>CPU</span><span id="rm-cpu-label">-%</span></div>
+            <div class="res-bar-track"><div id="rm-cpu-bar" class="res-bar" style="width:0%"></div></div>
+          </div>
+          <div class="res-metric">
+            <div class="res-metric-top"><span>RAM</span><span id="rm-ram-label">-%</span></div>
+            <div class="res-bar-track"><div id="rm-ram-bar" class="res-bar" style="width:0%"></div></div>
+          </div>
+          <div id="rm-cores-container" class="rm-cores-container"></div>
+          <div class="rm-net-row">
+            <span>In: <span id="rm-net-in">-</span></span>
+            <span>Out: <span id="rm-net-out">-</span></span>
+          </div>
+        </div>
+      </div>
+      <button class="hdr-icon-btn" id="info-btn">🔑</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-nav">
+        <button class="sidebar-nav-item active" data-tab="terminals">Terminal</button>
+        <button class="sidebar-nav-item" data-tab="ports">Ports</button>
+        <button class="sidebar-nav-item" data-tab="files">Files</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">System</div>
+        <div class="sys-panel">
+          <div class="sys-row"><span>Host</span><span id="sp-host">-</span></div>
+          <div class="sys-row"><span>OS</span><span id="sp-os">-</span></div>
+          <div class="sys-row"><span>User</span><span id="sp-user">-</span></div>
+          <div class="sys-row"><span>CPUs</span><span id="sp-cpus">-</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <%- include('terminal') %>
+      <%- include('port') %>
+      <%- include('file') %>
+    </main>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="term-close-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Close Terminal</h3><button class="modal-close" id="term-close-modal-x">&times;</button></div>
+    <div class="modal-body">
+      <p>Type <strong>KS SSH</strong> to confirm.</p>
+      <input type="text" id="term-close-input" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="term-close-cancel">Cancel</button>
+      <button class="btn-danger" id="term-close-confirm" disabled>Close</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="bnav-item active" data-tab="terminals">Terminal</button>
+  <button class="bnav-item" data-tab="ports">Ports</button>
+  <button class="bnav-item" data-tab="files">Files</button>
+</nav>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/js/xterm.js"></script>
+<script src="/js/xterm-addon-fit.js"></script>
+<script src="/js/socket.io.min.js"></script>
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
