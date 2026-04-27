@@ -17,7 +17,7 @@ export class FileManager {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       this.currentPath = data.path;
-      $('current-path').textContent = data.path;
+      if ($('current-path')) $('current-path').textContent = data.path;
       this.renderBreadcrumb(data.path);
       this.render(data);
     } catch (err) {
@@ -27,6 +27,7 @@ export class FileManager {
 
   renderBreadcrumb(filePath) {
     const bc = $('breadcrumb');
+    if (!bc) return;
     bc.innerHTML = '';
     const parts = filePath.split('/').filter(Boolean);
     const paths = ['/'];
@@ -48,6 +49,7 @@ export class FileManager {
 
   render(data) {
     const list = $('files-list');
+    if (!list) return;
     list.innerHTML = '';
 
     if (data.parent && data.path !== '/') {
@@ -62,6 +64,7 @@ export class FileManager {
     data.files.forEach(f => {
       const row = document.createElement('div');
       row.className = 'file-item-row';
+      row.dataset.path = f.path;
       if (f.isDirectory) row.style.cursor = 'pointer';
 
       const check = document.createElement('input');
@@ -109,7 +112,7 @@ export class FileManager {
     const items = [
       { label: 'Download', action: () => this.download(file.path) },
       { label: 'Rename', action: () => this.promptRename(file) },
-      { label: 'Delete', danger: true, action: () => this.promptDelete(file) }
+      { label: 'Delete', danger: true, action: () => this.optimisticDelete(file) }
     ];
 
     items.forEach(item => {
@@ -136,26 +139,36 @@ export class FileManager {
   promptRename(file) {
     const newName = prompt('New name:', file.name);
     if (newName && newName !== file.name) {
+      // Optimistic rename
+      const row = document.querySelector(`.file-item-row[data-path="${file.path.replace(/\\/g, '\\\\')}"]`);
+      const nameEl = row?.querySelector('.file-name');
+      const oldName = nameEl ? nameEl.textContent : file.name;
+      if (nameEl) nameEl.textContent = newName;
+
       fetch('/ksapi/files/rename', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ oldPath: file.path, newName })
       }).then(r => r.json()).then(d => {
         if (d.success) { showToast('Renamed'); this.load(); }
-        else showToast(d.error, 'error');
+        else { showToast(d.error, 'error'); if (nameEl) nameEl.textContent = oldName; }
       });
     }
   }
 
-  promptDelete(file) {
+  optimisticDelete(file) {
     if (confirm(`Delete ${file.name}?`)) {
+      // Optimistic delete: remove from UI immediately
+      const row = document.querySelector(`.file-item-row[data-path="${file.path.replace(/\\/g, '\\\\')}"]`);
+      if (row) row.style.opacity = '0.5';
+
       fetch('/ksapi/files/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filePath: file.path })
       }).then(r => r.json()).then(d => {
-        if (d.success) { showToast('Deleted'); this.load(); }
-        else showToast(d.error, 'error');
+        if (d.success) { showToast('Deleted'); row?.remove(); }
+        else { showToast(d.error, 'error'); if (row) row.style.opacity = '1'; }
       });
     }
   }

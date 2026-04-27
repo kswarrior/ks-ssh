@@ -49,7 +49,8 @@ export class TerminalManager {
       cursorBlink: true,
       fontSize: 13,
       fontFamily: '"JetBrains Mono", monospace',
-      theme: { background: '#000000' }
+      theme: { background: '#000000' },
+      allowProposedApi: true
     });
     const fit = new FitAddon.FitAddon();
     term.loadAddon(fit);
@@ -160,10 +161,12 @@ export class TerminalManager {
     let data = key;
     if (this.ctrlActive) {
       if (key.length === 1) data = String.fromCharCode(key.charCodeAt(0) & 0x1f);
-      this.ctrlActive = false; this._updateKbd();
+      this.ctrlActive = false;
+      this._updateKbd();
     } else if (this.altActive) {
       data = '\x1b' + key;
-      this.altActive = false; this._updateKbd();
+      this.altActive = false;
+      this._updateKbd();
     }
     this.socket.emit('terminal:input', { id: this.activeId, data });
     t.term.focus();

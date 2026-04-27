@@ -5,10 +5,12 @@ export class ResourceMonitor {
     this.isOpen = false;
     this.btn = $('res-mon-btn');
     this.dropdown = $('res-dropdown');
+    this.data = null;
     this.init();
   }
 
   init() {
+    if (!this.btn) return;
     this.btn.onclick = (e) => {
       e.stopPropagation();
       this.toggle();
@@ -26,6 +28,7 @@ export class ResourceMonitor {
   }
 
   async poll() {
+    if (!this.isOpen) return;
     try {
       const res = await fetch('/ksapi/resources');
       const d = await res.json();
@@ -35,62 +38,50 @@ export class ResourceMonitor {
 
   update(d) {
     if (!d || d.error) return;
+    this.data = d;
 
-    // Icon Fills
-    this._setFill('rm-ram-fill', d.ram.percent);
-    this._setFill('rm-cpu-fill', d.cpu.percent);
-    this._setFill('rm-disk-fill', d.disk.percent);
-
-    // Dropdown Labels & Bars
-    if ($('rm-ram-label')) $('rm-ram-label').textContent = `${d.ram.used.toFixed(1)} / ${d.ram.total.toFixed(1)} GB (${Math.round(d.ram.percent)}%)`;
+    // Update labels
+    if ($('rm-ram-label')) $('rm-ram-label').textContent = `${Math.round(d.ram.percent)}%`;
     if ($('rm-cpu-label')) $('rm-cpu-label').textContent = `${Math.round(d.cpu.percent)}%`;
-    if ($('rm-disk-label')) $('rm-disk-label').textContent = `${d.disk.used.toFixed(1)} / ${d.disk.total.toFixed(1)} GB (${Math.round(d.disk.percent)}%)`;
 
-    this._setBar('rm-ram-bar', d.ram.percent, '#22c55e');
-    this._setBar('rm-cpu-bar', d.cpu.percent, '#3b82f6');
-    this._setBar('rm-disk-bar', d.disk.percent, '#a855f7');
+    // Optimistic progress bars with smooth transitions
+    this._setBar('rm-ram-bar', d.ram.percent);
+    this._setBar('rm-cpu-bar', d.cpu.percent);
 
-    if (d.cpu.model && $('rm-cpu-model')) $('rm-cpu-model').textContent = d.cpu.model;
-
-    // Network
-    if (d.network && $('rm-net-in')) {
-      const fmt = (b) => b > 1073741824 ? (b/1073741824).toFixed(1)+'GB' : b > 1048576 ? (b/1048576).toFixed(1)+'MB' : (b/1024).toFixed(1)+'KB';
-      $('rm-net-in').textContent = fmt(d.network.in);
-      $('rm-net-out').textContent = fmt(d.network.out);
-    }
-
-    // Cores
+    // Core-level tracking
     if (d.cpu.cores && $('rm-cores-container')) {
       const container = $('rm-cores-container');
       if (container.children.length !== d.cpu.cores.length) {
         container.innerHTML = d.cpu.cores.map((_, i) => `
           <div class="rm-core-item">
             <span class="rm-core-label">C${i}</span>
-            <div class="rm-core-track"><div class="rm-core-fill" id="rm-core-fill-${i}"></div></div>
+            <div class="rm-core-track">
+              <div class="rm-core-fill" id="rm-core-fill-${i}" style="height: 0%"></div>
+            </div>
           </div>
         `).join('');
       }
       d.cpu.cores.forEach((pct, i) => {
         const f = $(`rm-core-fill-${i}`);
-        if (f) f.style.height = pct + '%';
+        if (f) f.style.height = Math.round(pct) + '%';
       });
+    }
+
+    // Network stats
+    if (d.network && $('rm-net-in')) {
+      const fmt = (b) => b > 1073741824 ? (b/1073741824).toFixed(1)+'GB' : b > 1048576 ? (b/1048576).toFixed(1)+'MB' : (b/1024).toFixed(1)+'KB';
+      $('rm-net-in').textContent = fmt(d.network.in);
+      $('rm-net-out').textContent = fmt(d.network.out);
     }
   }
 
-  _setFill(id, pct) {
-    const el = $(id);
-    if (!el) return;
-    const h = (pct / 100) * 17;
-    el.setAttribute('height', h.toFixed(1));
-    el.setAttribute('y', (21 - h).toFixed(1));
-  }
-
-  _setBar(id, pct, color) {
+  _setBar(id, pct) {
     const el = $(id);
     if (!el) return;
     el.style.width = pct + '%';
-    if (pct > 90) el.style.background = '#ef4444';
-    else if (pct > 70) el.style.background = '#f59e0b';
-    else el.style.background = color;
+    // Deeply optimistic color shifts
+    if (pct > 85) el.style.background = 'var(--red)';
+    else if (pct > 60) el.style.background = 'var(--yellow)';
+    else el.style.background = id.includes('cpu') ? 'var(--blue-primary)' : 'var(--green)';
   }
 }

@@ -14,74 +14,10 @@
 <body>
 <div id="app">
 
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="header-left">
-      <button class="menu-toggle" id="sidebar-toggle" title="Toggle sidebar">
-        <span></span><span></span><span></span>
-      </button>
-      <div class="logo">
-        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-        <span class="logo-text">KS SSH</span>
-      </div>
-      <div class="sys-info" id="sys-info">
-        <span id="sys-host">Loading…</span>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="res-mon-wrap" id="res-mon-wrap">
-        <button class="hdr-icon-btn" id="res-mon-btn">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </button>
-        <div class="res-dropdown hidden" id="res-dropdown">
-          <div class="res-metric">
-            <div class="res-metric-top"><span>CPU</span><span id="rm-cpu-label">-%</span></div>
-            <div class="res-bar-track"><div id="rm-cpu-bar" class="res-bar" style="width:0%"></div></div>
-          </div>
-          <div class="res-metric">
-            <div class="res-metric-top"><span>RAM</span><span id="rm-ram-label">-%</span></div>
-            <div class="res-bar-track"><div id="rm-ram-bar" class="res-bar" style="width:0%"></div></div>
-          </div>
-          <div id="rm-cores-container" class="rm-cores-container"></div>
-          <div class="rm-net-row">
-            <span>In: <span id="rm-net-in">-</span></span>
-            <span>Out: <span id="rm-net-out">-</span></span>
-          </div>
-        </div>
-      </div>
-      <button class="hdr-icon-btn" id="info-btn">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-      </button>
-    </div>
-  </header>
+  <%- include('partials/header') %>
 
   <div class="app-body">
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-nav">
-        <button class="sidebar-nav-item active" data-tab="terminals">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          <span>Terminal</span>
-        </button>
-        <button class="sidebar-nav-item" data-tab="ports">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-          <span>Ports</span>
-        </button>
-        <button class="sidebar-nav-item" data-tab="files">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
-          <span>Files</span>
-        </button>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">System</div>
-        <div class="sys-panel">
-          <div class="sys-row"><span>Host</span><span id="sp-host">-</span></div>
-          <div class="sys-row"><span>OS</span><span id="sp-os">-</span></div>
-          <div class="sys-row"><span>User</span><span id="sp-user">-</span></div>
-          <div class="sys-row"><span>CPUs</span><span id="sp-cpus">-</span></div>
-        </div>
-      </div>
-    </aside>
+    <%- include('partials/sidebar') %>
 
     <!-- MAIN CONTENT -->
     <main class="main-content">
@@ -93,20 +29,7 @@
 
 </div>
 
-<!-- MODALS -->
-<div class="modal-overlay hidden" id="term-close-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>Close Terminal</h3><button class="modal-close" id="term-close-modal-x">&times;</button></div>
-    <div class="modal-body">
-      <p>Type <strong>KS SSH</strong> to confirm.</p>
-      <input type="text" id="term-close-input" />
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" id="term-close-cancel">Cancel</button>
-      <button class="btn-danger" id="term-close-confirm" disabled>Close</button>
-    </div>
-  </div>
-</div>
+<%- include('partials/modals') %>
 
 <nav class="bottom-nav">
   <button class="bnav-item active" data-tab="terminals">
@@ -125,9 +48,6 @@
 
 <div class="toast-container" id="toast-container"></div>
 
-<script src="/js/xterm.js"></script>
-<script src="/js/xterm-addon-fit.js"></script>
-<script src="/js/socket.io.min.js"></script>
-<script type="module" src="/js/app.js"></script>
+<%- include('partials/scripts') %>
 </body>
 </html>
