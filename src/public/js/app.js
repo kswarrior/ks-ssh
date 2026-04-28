@@ -27,6 +27,10 @@ function init() {
     loadSystemInfo();
     if (resMon.isOpen) resMon.poll();
   }, 5000);
+
+  $('info-btn')?.addEventListener('click', () => {
+    showToast('KS-SSH v1.0.0 by KS Warrior', 'info');
+  });
 }
 
 function setupNavigation() {
@@ -57,7 +61,6 @@ function setupNavigation() {
   if (toggle) {
     toggle.onclick = () => {
       $('sidebar').classList.toggle('collapsed');
-      // Optimistic refit: don't wait too long
       setTimeout(() => terminals.refit(), 100);
     };
   }
@@ -103,9 +106,6 @@ function setupModals() {
 
   const cancelBtn = $('term-close-cancel');
   if (cancelBtn) cancelBtn.onclick = () => $('term-close-modal').classList.add('hidden');
-
-  const emptyBtn = $('empty-new-term');
-  if (emptyBtn) emptyBtn.onclick = () => terminals.create();
 }
 
 function setupPortPreview() {

@@ -6,13 +6,33 @@ export class TerminalManager {
     this.terminals = new Map();
     this.activeId = null;
     this.counter = 0;
-    this.ctrlActive = false;
-    this.altActive = false;
+    this.fontSize = 14;
+
+    this._setupUI();
+  }
+
+  _setupUI() {
+    $('empty-new-term')?.addEventListener('click', () => this.create());
+    $('add-term-btn')?.addEventListener('click', () => this.create());
+    $('t-clear-btn')?.addEventListener('click', () => this.clearActive());
+    $('t-fit-btn')?.addEventListener('click', () => this.refit());
+    $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
+    $('t-copy-btn')?.addEventListener('click', () => this.copyActiveBuffer());
+    $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
+    $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
+
+    const searchInput = $('t-search-input');
+    if (searchInput) {
+      searchInput.onkeydown = (e) => {
+        if (e.key === 'Enter') this.searchActive(searchInput.value);
+      };
+    }
+    $('t-search-next')?.addEventListener('click', () => this.searchActive(searchInput.value));
   }
 
   create(data = {}) {
-    this.counter++;
     const id = data.id || `term-${Date.now()}`;
+    this.counter++;
     this._spawn({ id, num: this.counter, restore: false });
     return id;
   }
@@ -23,33 +43,35 @@ export class TerminalManager {
   }
 
   _spawn({ id, num, restore }) {
-    const wrapper = this._getWrapper();
-    const tabBar = wrapper.querySelector('.terminal-tab-bar');
-    const body = wrapper.querySelector('.terminal-body');
-
-    // Create Tab
+    const tabList = $('terminal-tabs-list');
     const tab = document.createElement('div');
-    tab.className = 'term-tab';
+    tab.className = 't-tab';
     tab.dataset.id = id;
     tab.innerHTML = `
-      <span class="term-tab-num">${num}</span>
-      <button class="term-tab-close">&times;</button>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <span>bash (${num})</span>
+      <button class="t-tab-close" title="Close Session">&times;</button>
     `;
-    tab.onclick = (e) => { if (!e.target.closest('.term-tab-close')) this.activate(id); };
-    tab.querySelector('.term-tab-close').onclick = (e) => { e.stopPropagation(); this.confirmClose(id); };
-    tabBar.insertBefore(tab, tabBar.querySelector('.new-tab-btn'));
+    tab.onclick = (e) => { if (!e.target.closest('.t-tab-close')) this.activate(id); };
+    tab.querySelector('.t-tab-close').onclick = (e) => { e.stopPropagation(); this.confirmClose(id); };
+    tabList.appendChild(tab);
 
-    // Create Container
+    const area = $('terminals-area');
     const container = document.createElement('div');
-    container.className = 'terminal-container';
-    container.id = `tc-${id}`;
-    body.appendChild(container);
+    container.className = 'terminal-instance';
+    container.id = `ti-${id}`;
+    area.appendChild(container);
 
     const term = new Terminal({
       cursorBlink: true,
-      fontSize: 13,
-      fontFamily: '"JetBrains Mono", monospace',
-      theme: { background: '#000000' },
+      fontSize: this.fontSize,
+      fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+      theme: {
+        background: '#000000',
+        foreground: '#f8fafc',
+        cursor: '#3b82f6',
+        selection: 'rgba(59, 130, 246, 0.3)'
+      },
       allowProposedApi: true
     });
     const fit = new FitAddon.FitAddon();
@@ -57,21 +79,13 @@ export class TerminalManager {
     term.open(container);
 
     term.onData(data => {
-      let out = data;
-      if (this.ctrlActive && data.length === 1) {
-        out = String.fromCharCode(data.charCodeAt(0) & 0x1f);
-        this.ctrlActive = false;
-        this._updateKbd();
-      } else if (this.altActive && data.length === 1) {
-        out = '\x1b' + data;
-        this.altActive = false;
-        this._updateKbd();
-      }
-      this.socket.emit('terminal:input', { id, data: out });
+      this.socket.emit('terminal:input', { id, data });
     });
 
     this.terminals.set(id, { term, fit, num, tab, container });
-    $('terminals-empty').style.display = 'none';
+
+    $('terminals-empty').classList.add('hidden');
+    $('terminal-toolbar').classList.remove('hidden');
 
     setTimeout(() => {
       fit.fit();
@@ -84,91 +98,132 @@ export class TerminalManager {
   }
 
   activate(id) {
+    if (this.activeId === id) return;
     this.activeId = id;
-    this.terminals.forEach(t => { t.tab.classList.remove('active'); t.container.classList.remove('active'); });
+
+    this.terminals.forEach(t => {
+      t.tab.classList.remove('active');
+      t.container.classList.remove('active');
+    });
+
     const t = this.terminals.get(id);
     if (!t) return;
+
     t.tab.classList.add('active');
     t.container.classList.add('active');
-    setTimeout(() => { t.fit.fit(); t.term.focus(); }, 20);
+    $('t-session-name').textContent = `bash (${t.num})`;
+
+    setTimeout(() => {
+      t.fit.fit();
+      t.term.focus();
+    }, 50);
+  }
+
+  changeFontSize(delta) {
+    this.fontSize = Math.max(8, Math.min(32, this.fontSize + delta));
+    this.terminals.forEach(t => {
+      t.term.options.fontSize = this.fontSize;
+      setTimeout(() => t.fit.fit(), 20);
+    });
+    showToast(`Font size: ${this.fontSize}px`);
+  }
+
+  clearActive() {
+    const t = this.terminals.get(this.activeId);
+    if (t) {
+      t.term.clear();
+      showToast('Terminal cleared');
+    }
+  }
+
+  searchActive(query) {
+    if (!query) return;
+    showToast(`Search not yet implemented: ${query}`, 'info');
+  }
+
+  copyActiveBuffer() {
+    const t = this.terminals.get(this.activeId);
+    if (!t) return;
+
+    let content = "";
+    const buffer = t.term.buffer.active;
+    for (let i = 0; i < buffer.length; i++) {
+        const line = buffer.getLine(i);
+        if (line) content += line.translateToString() + "\n";
+    }
+
+    navigator.clipboard.writeText(content).then(() => {
+      showToast('Buffer copied to clipboard');
+    }).catch(() => {
+      showToast('Failed to copy', 'error');
+    });
+  }
+
+  downloadActiveLog() {
+    const t = this.terminals.get(this.activeId);
+    if (!t) return;
+
+    let content = "";
+    const buffer = t.term.buffer.active;
+    for (let i = 0; i < buffer.length; i++) {
+        const line = buffer.getLine(i);
+        if (line) content += line.translateToString() + "\n";
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `terminal-log-${t.num}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Log downloaded');
   }
 
   confirmClose(id) {
     this.pendingClose = id;
     $('term-close-modal').classList.remove('hidden');
     $('term-close-input').value = '';
+    $('term-close-input').focus();
     $('term-close-confirm').disabled = true;
   }
 
   close(id) {
     const t = this.terminals.get(id);
     if (!t) return;
-    this.socket.emit('terminal:kill', { id });
-    t.term.dispose(); t.tab.remove(); t.container.remove();
-    this.terminals.delete(id);
-    this._save();
-    if (this.activeId === id) {
-      const remaining = [...this.terminals.keys()];
-      if (remaining.length) this.activate(remaining[remaining.length - 1]);
-      else { this.activeId = null; $('terminals-empty').style.display = ''; this._getWrapper()?.remove(); }
-    }
-  }
 
-  _getWrapper() {
-    let w = document.querySelector('.terminal-wrapper');
-    if (!w) {
-      w = document.createElement('div');
-      w.className = 'terminal-wrapper active';
-      w.innerHTML = `
-        <div class="terminal-tab-bar">
-          <button class="new-tab-btn">+</button>
-        </div>
-        <div class="terminal-body"></div>
-      `;
-      w.querySelector('.new-tab-btn').onclick = () => this.create();
-      $('terminals-area').appendChild(w);
-      new ResizeObserver(() => this.refit()).observe(w.querySelector('.terminal-body'));
+    this.socket.emit('terminal:kill', { id });
+    t.term.dispose();
+    t.tab.remove();
+    t.container.remove();
+    this.terminals.delete(id);
+
+    this._save();
+
+    if (this.activeId === id) {
+      const keys = Array.from(this.terminals.keys());
+      if (keys.length > 0) {
+        this.activate(keys[keys.length - 1]);
+      } else {
+        this.activeId = null;
+        $('terminals-empty').classList.remove('hidden');
+        $('terminal-toolbar').classList.add('hidden');
+      }
     }
-    return w;
   }
 
   refit() {
     if (this.activeId) {
       const t = this.terminals.get(this.activeId);
-      if (t) { t.fit.fit(); this.socket.emit('terminal:resize', { id: this.activeId, cols: t.term.cols, rows: t.term.rows }); }
+      if (t) {
+        t.fit.fit();
+        this.socket.emit('terminal:resize', { id: this.activeId, cols: t.term.cols, rows: t.term.rows });
+      }
     }
   }
 
   _save() {
     const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num }));
     sessionStorage.setItem('ks-ssh-terms', JSON.stringify(data));
-  }
-
-  _updateKbd() {
-    const cb = $('kbd-ctrl'), ab = $('kbd-alt');
-    if (cb) cb.classList.toggle('on', this.ctrlActive);
-    if (ab) ab.classList.toggle('on', this.altActive);
-  }
-
-  sendKbdKey(key) {
-    if (!this.activeId) return;
-    const t = this.terminals.get(this.activeId);
-    if (!t) return;
-
-    if (key === 'CTRL') { this.ctrlActive = !this.ctrlActive; this.altActive = false; this._updateKbd(); return; }
-    if (key === 'ALT')  { this.altActive = !this.altActive; this.ctrlActive = false; this._updateKbd(); return; }
-
-    let data = key;
-    if (this.ctrlActive) {
-      if (key.length === 1) data = String.fromCharCode(key.charCodeAt(0) & 0x1f);
-      this.ctrlActive = false;
-      this._updateKbd();
-    } else if (this.altActive) {
-      data = '\x1b' + key;
-      this.altActive = false;
-      this._updateKbd();
-    }
-    this.socket.emit('terminal:input', { id: this.activeId, data });
-    t.term.focus();
   }
 }
