@@ -21,7 +21,6 @@ function init() {
   // Load state
   const saved = JSON.parse(sessionStorage.getItem('ks-ssh-terms') || '[]');
   if (saved.length) saved.forEach(s => terminals.restore(s.id, s.num));
-  else if ($('empty-new-term')) $('empty-new-term').onclick = () => terminals.create();
 
   loadSystemInfo();
   setInterval(() => {
@@ -34,15 +33,23 @@ function setupNavigation() {
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.onclick = () => {
       const tab = btn.dataset.tab;
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-      document.querySelectorAll('.sidebar-nav-item, .bnav-item').forEach(b => b.classList.remove('active'));
+      const panels = document.querySelectorAll('.tab-panel');
+      const items = document.querySelectorAll('.sidebar-nav-item, .bnav-item');
 
-      $(`tab-${tab}`).classList.remove('hidden');
-      document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
+      panels.forEach(p => p.classList.add('hidden'));
+      items.forEach(b => b.classList.remove('active'));
+
+      const targetPanel = $(`tab-${tab}`);
+      if (targetPanel) {
+        targetPanel.classList.remove('hidden');
+        document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
+      }
 
       if (tab === 'files') files.load();
       if (tab === 'ports') ports.load();
-      if (tab === 'terminals') terminals.refit();
+      if (tab === 'terminals') {
+        setTimeout(() => terminals.refit(), 50);
+      }
     };
   });
 
@@ -50,7 +57,8 @@ function setupNavigation() {
   if (toggle) {
     toggle.onclick = () => {
       $('sidebar').classList.toggle('collapsed');
-      setTimeout(() => terminals.refit(), 300);
+      // Optimistic refit: don't wait too long
+      setTimeout(() => terminals.refit(), 100);
     };
   }
 }
@@ -120,11 +128,11 @@ async function loadSystemInfo() {
   try {
     const res = await fetch('/ksapi/system');
     const d = await res.json();
-    $('sys-host').textContent = d.hostname;
-    $('sp-host').textContent = d.hostname;
-    $('sp-os').textContent = d.platform;
-    $('sp-user').textContent = d.user;
-    $('sp-cpus').textContent = d.cpus;
+    if ($('sys-host')) $('sys-host').textContent = d.hostname;
+    if ($('sp-host')) $('sp-host').textContent = d.hostname;
+    if ($('sp-os')) $('sp-os').textContent = d.platform;
+    if ($('sp-user')) $('sp-user').textContent = d.user;
+    if ($('sp-cpus')) $('sp-cpus').textContent = d.cpus;
   } catch {}
 }
 
