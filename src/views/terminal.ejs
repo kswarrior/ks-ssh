@@ -1,65 +1,33 @@
 <div class="tab-panel" id="tab-terminals">
   <div class="terminal-container">
-    <!-- Terminal Header / Tabs -->
-    <div class="terminal-tabs-bar" id="terminal-tabs-bar">
-      <div class="terminal-tabs-list" id="terminal-tabs-list">
-        <!-- Tabs injected here -->
-      </div>
-      <button class="add-term-btn" id="add-term-btn" title="New Terminal">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <div class="t-tabs-row">
+      <div class="t-tabs-scroll" id="terminal-tabs-list"></div>
+      <button class="icon-btn" id="add-term-btn" style="width:34px; height:34px; border-radius:8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
 
-    <!-- Terminal Toolbar -->
-    <div class="terminal-toolbar hidden" id="terminal-toolbar">
-      <div class="t-toolbar-left">
-        <span class="t-status-dot active"></span>
-        <span class="t-session-name" id="t-session-name">bash</span>
-      </div>
-      <div class="t-toolbar-right">
-        <div class="t-search-box">
-          <input type="text" id="t-search-input" placeholder="Find..." />
-          <button id="t-search-next" title="Next result"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+    <div class="t-toolbar hidden" id="terminal-toolbar">
+        <div class="t-tools-group">
+            <span id="t-session-name" style="font-size:12px; font-weight:700; color:var(--text-muted)">BASH</span>
         </div>
-
-        <div class="toolbar-separator"></div>
-
-        <button class="t-tool-btn" id="t-font-dec" title="Decrease Font Size">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <button class="t-tool-btn" id="t-font-inc" title="Increase Font Size">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-
-        <div class="toolbar-separator"></div>
-
-        <button class="t-tool-btn" id="t-copy-btn" title="Copy All">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
-        <button class="t-tool-btn" id="t-clear-btn" title="Clear Terminal">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-        <button class="t-tool-btn" id="t-fit-btn" title="Fit Terminal">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
-        </button>
-        <button class="t-tool-btn" id="t-download-btn" title="Download Log">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-      </div>
+        <div class="t-tools-group">
+            <button class="icon-btn" id="t-font-dec" style="width:30px; height:30px; border-radius:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+            <button class="icon-btn" id="t-font-inc" style="width:30px; height:30px; border-radius:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+            <div style="width:1px; height:16px; background:var(--border); margin:0 4px;"></div>
+            <button class="icon-btn" id="t-clear-btn" style="width:30px; height:30px; border-radius:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            <button class="icon-btn" id="t-download-btn" style="width:30px; height:30px; border-radius:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        </div>
     </div>
 
-    <!-- Terminal Viewport -->
     <div class="terminals-area" id="terminals-area">
       <div class="empty-state" id="terminals-empty">
-        <div class="empty-icon-glow">
-          <svg class="empty-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        <div style="width:80px; height:80px; background:var(--zinc-900); border:1px solid var(--border); border-radius:24px; display:flex; align-items:center; justify-content:center; color:var(--electric-blue); box-shadow:var(--shadow-glow); margin-bottom:20px;">
+             <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         </div>
-        <h3>Ready to Work?</h3>
-        <p>Launch a secure terminal session to manage your system.</p>
-        <button class="btn-primary" id="empty-new-term">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Terminal Session
-        </button>
+        <h2 style="font-size:24px; font-weight:800; letter-spacing:-0.03em; margin-bottom:8px;">New Session</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-bottom:24px;">Start a high-performance terminal session.</p>
+        <button class="btn-primary" id="empty-new-term" style="padding:12px 32px; font-size:15px;">Launch Terminal</button>
       </div>
     </div>
   </div>

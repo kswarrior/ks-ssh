@@ -11,59 +11,29 @@ export class PortScanner {
   }
 
   async load() {
-    this.list.innerHTML = `
-      <div class="empty-state">
-        <div class="loading-spinner"></div>
-        <p>Scanning active processes...</p>
-      </div>
-    `;
+    this.list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Syncing gateway...</div>';
     try {
       const res = await fetch('/ksapi/ports');
       const data = await res.json();
       this.render(data.ports || []);
-      if ($('ports-count')) $('ports-count').textContent = (data.ports || []).length;
     } catch (err) {
-      this.list.innerHTML = `<div class="empty-state" style="color:var(--red)">Error: ${err.message}</div>`;
+      this.list.innerHTML = `<div style="color:var(--red); text-align:center; padding:40px;">Error: ${err.message}</div>`;
     }
   }
 
   render(ports) {
     if (!ports.length) {
-      this.list.innerHTML = `
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--text-muted)" stroke-width="1"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
-          <p>No active listening ports found.</p>
-        </div>
-      `;
+      this.list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">No services found.</div>';
       return;
     }
-    this.list.innerHTML = `
-      <table class="ports-table">
-        <thead>
-          <tr>
-            <th>Port</th>
-            <th>Process</th>
-            <th>Visibility</th>
-            <th style="text-align:right">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${ports.map(p => `
-            <tr>
-              <td><span class="port-num-badge">:${p.port}</span></td>
-              <td><span style="font-weight:600">${p.process}</span></td>
-              <td>
-                <span style="color:${p.address === '0.0.0.0' ? 'var(--green)' : 'var(--text-muted)'}">
-                  ${p.address === '0.0.0.0' ? 'Public' : 'Local'}
-                </span>
-              </td>
-              <td style="text-align:right">
-                <button onclick="window.openPortPreview(${p.port})" class="port-open-btn">Preview</button>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    this.list.innerHTML = ports.map(p => `
+      <div class="p-row">
+        <div class="p-info">
+          <div class="p-port">:${p.port}</div>
+          <div class="p-process">${p.process} • ${p.address === '0.0.0.0' ? 'Public' : 'Local'}</div>
+        </div>
+        <button onclick="window.openPortPreview(${p.port})" class="btn-primary" style="padding:8px 16px; font-size:12px;">Connect</button>
+      </div>
+    `).join('');
   }
 }

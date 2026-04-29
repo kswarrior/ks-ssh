@@ -18,9 +18,8 @@ function init() {
   setupModals();
   setupPortPreview();
 
-  // Load state
-  const saved = JSON.parse(sessionStorage.getItem('ks-ssh-terms') || '[]');
-  if (saved.length) saved.forEach(s => terminals.restore(s.id, s.num));
+  // Initial tab
+  switchTab('terminals');
 
   loadSystemInfo();
   setInterval(() => {
@@ -29,40 +28,33 @@ function init() {
   }, 5000);
 
   $('info-btn')?.addEventListener('click', () => {
-    showToast('KS-SSH v1.0.0 by KS Warrior', 'info');
+    showToast('KS-SSH Next-Gen v1.1.0', 'info');
   });
 }
 
 function setupNavigation() {
   document.querySelectorAll('[data-tab]').forEach(btn => {
-    btn.onclick = () => {
-      const tab = btn.dataset.tab;
-      const panels = document.querySelectorAll('.tab-panel');
-      const items = document.querySelectorAll('.sidebar-nav-item, .bnav-item');
-
-      panels.forEach(p => p.classList.add('hidden'));
-      items.forEach(b => b.classList.remove('active'));
-
-      const targetPanel = $(`tab-${tab}`);
-      if (targetPanel) {
-        targetPanel.classList.remove('hidden');
-        document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
-      }
-
-      if (tab === 'files') files.load();
-      if (tab === 'ports') ports.load();
-      if (tab === 'terminals') {
-        setTimeout(() => terminals.refit(), 50);
-      }
-    };
+    btn.onclick = () => switchTab(btn.dataset.tab);
   });
+}
 
-  const toggle = $('sidebar-toggle');
-  if (toggle) {
-    toggle.onclick = () => {
-      $('sidebar').classList.toggle('collapsed');
-      setTimeout(() => terminals.refit(), 100);
-    };
+function switchTab(tab) {
+  const panels = document.querySelectorAll('.tab-panel');
+  const items = document.querySelectorAll('.nav-item, .dock-item');
+
+  panels.forEach(p => p.classList.add('hidden'));
+  items.forEach(b => b.classList.remove('active'));
+
+  const targetPanel = $(`tab-${tab}`);
+  if (targetPanel) {
+    targetPanel.classList.remove('hidden');
+    document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
+  }
+
+  if (tab === 'files') files.load();
+  if (tab === 'ports') ports.load();
+  if (tab === 'terminals') {
+    setTimeout(() => terminals.refit(), 100);
   }
 }
 
@@ -75,37 +67,24 @@ function setupSocket() {
     const t = terminals.terminals.get(id);
     if (t) t.term.write(buffer);
   });
-  socket.on('terminal:reconnect:fail', ({ id }) => {
-    const t = terminals.terminals.get(id);
-    if (t) {
-      t.term.writeln('\r\n\x1b[33m[Session expired — starting new shell]\x1b[0m\r\n');
-      socket.emit('terminal:create', { id, cols: t.term.cols, rows: t.term.rows });
-    }
-  });
 }
 
 function setupModals() {
   const input = $('term-close-input');
   if (input) {
     input.oninput = () => {
-      const ok = input.value === 'KS SSH';
-      $('term-close-confirm').disabled = !ok;
+        $('term-close-confirm').disabled = input.value !== 'KS SSH';
     };
   }
-  const confirmBtn = $('term-close-confirm');
-  if (confirmBtn) {
-    confirmBtn.onclick = () => {
+  $('term-close-confirm')?.addEventListener('click', () => {
       if (terminals.pendingClose) {
-        terminals.close(terminals.pendingClose);
-        $('term-close-modal').classList.add('hidden');
+          terminals.close(terminals.pendingClose);
+          $('term-close-modal').classList.add('hidden');
       }
-    };
-  }
-  const closeBtn = $('term-close-modal-x');
-  if (closeBtn) closeBtn.onclick = () => $('term-close-modal').classList.add('hidden');
-
-  const cancelBtn = $('term-close-cancel');
-  if (cancelBtn) cancelBtn.onclick = () => $('term-close-modal').classList.add('hidden');
+  });
+  document.querySelectorAll('.modal-close, #term-close-cancel').forEach(b => {
+      b.onclick = () => $('term-close-modal').classList.add('hidden');
+  });
 }
 
 function setupPortPreview() {
@@ -115,13 +94,10 @@ function setupPortPreview() {
     $('port-preview-iframe').src = `/ksapi/proxy/${port}/`;
     $('port-preview-panel').classList.remove('hidden');
   };
-  const closeBtn = $('port-preview-close');
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      $('port-preview-panel').classList.add('hidden');
-      $('port-preview-iframe').src = 'about:blank';
-    };
-  }
+  $('port-preview-close')?.addEventListener('click', () => {
+    $('port-preview-panel').classList.add('hidden');
+    $('port-preview-iframe').src = 'about:blank';
+  });
 }
 
 async function loadSystemInfo() {
@@ -129,10 +105,8 @@ async function loadSystemInfo() {
     const res = await fetch('/ksapi/system');
     const d = await res.json();
     if ($('sys-host')) $('sys-host').textContent = d.hostname;
-    if ($('sp-host')) $('sp-host').textContent = d.hostname;
     if ($('sp-os')) $('sp-os').textContent = d.platform;
     if ($('sp-user')) $('sp-user').textContent = d.user;
-    if ($('sp-cpus')) $('sp-cpus').textContent = d.cpus;
   } catch {}
 }
 

@@ -1,25 +1,30 @@
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-nav">
-    <button class="sidebar-nav-item active" data-tab="terminals">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>Terminal</span>
-    </button>
-    <button class="sidebar-nav-item" data-tab="ports">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-      <span>Ports</span>
-    </button>
-    <button class="sidebar-nav-item" data-tab="files">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
-      <span>Files</span>
-    </button>
-  </div>
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">System</div>
-    <div class="sys-panel">
-      <div class="sys-row"><span>Host</span><span id="sp-host">-</span></div>
-      <div class="sys-row"><span>OS</span><span id="sp-os">-</span></div>
-      <div class="sys-row"><span>User</span><span id="sp-user">-</span></div>
-      <div class="sys-row"><span>CPUs</span><span id="sp-cpus">-</span></div>
+<aside class="sidebar">
+  <nav class="nav-group">
+    <div class="nav-item active" data-tab="terminals">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <span>Terminals</span>
+    </div>
+    <div class="nav-item" data-tab="ports">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+      <span>Port Preview</span>
+    </div>
+    <div class="nav-item" data-tab="files">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
+      <span>File Manager</span>
+    </div>
+  </nav>
+
+  <div style="margin-top:auto; padding-top:20px; border-top:1px solid var(--border);">
+    <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px;">Next-Gen Terminal</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px;">
+            <span style="color:var(--text-muted)">OS</span>
+            <span id="sp-os" style="font-weight:600">Linux</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px;">
+            <span style="color:var(--text-muted)">User</span>
+            <span id="sp-user" style="font-weight:600">jules</span>
+        </div>
     </div>
   </div>
 </aside>
