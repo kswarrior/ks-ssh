@@ -2,7 +2,7 @@ import { TerminalManager } from './modules/terminal.js';
 import { FileManager } from './modules/files.js';
 import { PortScanner } from './modules/ports.js';
 import { ResourceMonitor } from './modules/res-mon.js';
-import { $, showToast } from './modules/utils.js';
+import { $, showToast, fmtBytes } from './modules/utils.js';
 
 let socket, terminals, files, ports, resMon;
 let startTime = Date.now();
@@ -26,6 +26,9 @@ function init() {
   updateHUD();
   setInterval(updateHUD, 1000);
 
+  // Latency check
+  setInterval(checkLatency, 2000);
+
   // Initial tunnel check
   fetchTunnelInfo();
   setInterval(fetchTunnelInfo, 30000);
@@ -35,22 +38,27 @@ function init() {
   });
 }
 
-function updateHUD() {
-  // Uptime
-  const diff = Date.now() - startTime;
-  const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-  const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-  const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-  if ($('hud-uptime')) $('hud-uptime').textContent = `${h}:${m}:${s}`;
+async function checkLatency() {
+    const start = Date.now();
+    try {
+        await fetch('/ksapi/ping');
+        const lat = Date.now() - start;
+        if ($('hdr-latency')) $('hdr-latency').textContent = `${lat}ms`;
+    } catch {
+        if ($('hdr-latency')) $('hdr-latency').textContent = `--ms`;
+    }
+}
 
+function updateHUD() {
   // Active Sessions
-  if ($('hud-session-count')) {
-      const count = terminals.terminals.size;
-      $('hud-session-count').textContent = `${count} ${count === 1 ? 'SESSION' : 'SESSIONS'} ACTIVE`;
-  }
+  const count = terminals.terminals.size;
+  const empty = $('terminals-empty');
+  const tabs = $('terminal-tabs-container');
+  if (empty) empty.classList.toggle('hidden', count > 0);
+  if (tabs) tabs.classList.toggle('hidden', count === 0);
 
   loadSystemInfo();
-  if (resMon.isOpen) resMon.poll();
+  resMon.poll();
 }
 
 function setupNavigation() {
@@ -61,7 +69,7 @@ function setupNavigation() {
 
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
-  const items = document.querySelectorAll('.hud-nav-item');
+  const items = document.querySelectorAll('.nav-item');
 
   panels.forEach(p => p.classList.add('hidden'));
   items.forEach(b => b.classList.remove('active'));
@@ -123,10 +131,33 @@ function setupPortPreview() {
 
 async function loadSystemInfo() {
   try {
-    const res = await fetch('/ksapi/system');
-    const d = await res.json();
-    if ($('sys-host')) $('sys-host').textContent = d.hostname.toUpperCase();
-  } catch {}
+    const sRes = await fetch('/ksapi/system');
+    const s = await sRes.json();
+
+    const rRes = await fetch('/ksapi/resources');
+    const r = await rRes.json();
+
+    if ($('hdr-host-id')) $('hdr-host-id').textContent = s.hostname.substring(0, 12);
+    if ($('hdr-ram-pct')) $('hdr-ram-pct').textContent = `${Math.round(r.ram.percent)}%`;
+
+    if ($('sys-host')) $('sys-host').textContent = s.hostname;
+    if ($('sys-os')) $('sys-os').textContent = `${s.platform}/${s.arch}`;
+    if ($('sys-user')) $('sys-user').textContent = s.user;
+    if ($('sys-cpus')) $('sys-cpus').textContent = s.cpus;
+    if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
+
+    // Uptime
+    const up = s.uptime;
+    const days = Math.floor(up / 86400);
+    const hours = Math.floor((up % 86400) / 3600);
+    if ($('sys-uptime')) $('sys-uptime').textContent = `${days}d ${hours}h`;
+
+    // Load
+    if ($('sys-load')) $('sys-load').textContent = s.loadAvg.map(l => l.toFixed(2)).join(' ');
+
+  } catch (err) {
+      console.error('HUD update error:', err);
+  }
 }
 
 async function fetchTunnelInfo() {
@@ -134,14 +165,7 @@ async function fetchTunnelInfo() {
     const res = await fetch('/ksapi/tunnel');
     const d = await res.json();
     if (d.active && d.token) {
-      $('tunnel-info-stat').style.display = 'flex';
-      $('hud-tunnel-token').textContent = d.token.toUpperCase();
-      $('hud-tunnel-token').onclick = () => {
-        navigator.clipboard.writeText(d.url);
-        showToast('TUNNEL URL COPIED');
-      };
-    } else {
-      $('tunnel-info-stat').style.display = 'none';
+      // Could show in footer or somewhere else
     }
   } catch {}
 }

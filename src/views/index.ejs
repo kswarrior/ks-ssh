@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>KS SSH | HUD MASTER</title>
+  <title>KS SSH | HUD</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
@@ -14,88 +14,79 @@
 <body>
 <div id="app">
 
-  <header class="hud-panel hud-header">
-    <div class="hud-logo">
-      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>KS SSH <span>HUD</span></span>
+  <header class="hud-header">
+    <div class="header-left">
+        <button class="icon-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <div class="header-brand">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            KS SSH <span id="hdr-host-id">----</span>
+        </div>
+        <div class="header-stats">
+            <div class="header-stat-item">
+                <span id="hdr-ram-pct">0%</span> RAM
+            </div>
+            <div class="header-stat-item">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#22c55e" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+                <span id="hdr-latency">--ms</span>
+            </div>
+        </div>
     </div>
 
-    <div class="hud-stats">
-      <div class="hud-stat-item" id="tunnel-info-stat" style="display:none; border-color:var(--electric-cyan);">
-        <span class="hud-stat-label" style="color:var(--electric-cyan)">TUNNEL ACTIVE</span>
-        <span class="hud-stat-value" id="hud-tunnel-token" style="cursor:pointer;" title="Click to copy URL">---</span>
-      </div>
-      <div class="hud-stat-item">
-        <span class="hud-stat-label">Uptime</span>
-        <span class="hud-stat-value" id="hud-uptime">--:--:--</span>
-      </div>
-      <div class="hud-stat-item">
-        <span class="hud-stat-label">Session</span>
-        <span class="hud-stat-value" id="hud-session-count">0 ACTIVE</span>
-      </div>
-      <div class="hud-stat-item">
-        <span class="hud-stat-label">Host</span>
-        <span class="hud-stat-value" id="sys-host">DEVBOX</span>
-      </div>
+    <div class="header-right">
+        <button class="icon-btn" id="res-mon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+        <button class="icon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        <button class="icon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></button>
     </div>
   </header>
 
-  <nav class="hud-panel hud-nav">
-    <div class="hud-nav-item active" data-tab="terminals" title="Command HUD">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-    </div>
-    <div class="hud-nav-item" data-tab="ports" title="Network HUD">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-    </div>
-    <div class="hud-nav-item" data-tab="files" title="Storage HUD">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
-    </div>
-    <div style="margin-top:auto; padding-bottom:12px;">
-        <button id="info-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-    </div>
-  </nav>
+  <aside class="hud-sidebar">
+    <nav class="nav-section">
+        <div class="nav-item active" data-tab="terminals">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Terminal
+        </div>
+        <div class="nav-item" data-tab="ports">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+            Ports
+        </div>
+        <div class="nav-item" data-tab="files">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
+            Files
+        </div>
+    </nav>
 
-  <main class="hud-panel hud-main">
+    <div class="system-section">
+        <div class="section-label">SYSTEM</div>
+        <div class="system-table">
+            <div class="system-row"><span class="system-key">Host</span><span class="system-val" id="sys-host">----</span></div>
+            <div class="system-row"><span class="system-key">OS</span><span class="system-val" id="sys-os">----</span></div>
+            <div class="system-row"><span class="system-key">User</span><span class="system-val" id="sys-user">----</span></div>
+            <div class="system-row"><span class="system-key">CPUs</span><span class="system-val" id="sys-cpus">----</span></div>
+            <div class="system-row"><span class="system-key">Memory</span><span class="system-val" id="sys-mem">----</span></div>
+            <div class="system-row"><span class="system-key">Uptime</span><span class="system-val" id="sys-uptime">----</span></div>
+            <div class="system-row"><span class="system-key">Load</span><span class="system-val" id="sys-load">----</span></div>
+        </div>
+    </div>
+  </aside>
+
+  <main class="hud-main">
     <%- include('terminal') %>
     <%- include('port') %>
     <%- include('file') %>
   </main>
 
-  <aside class="hud-panel hud-monitor">
-    <div class="hud-section-title">System Metrics</div>
-
-    <div class="hud-metric">
-      <div class="hud-metric-header"><span>Processor</span><span id="rm-cpu-label">0%</span></div>
-      <div class="hud-progress-track"><div id="rm-cpu-bar" class="hud-progress-fill" style="width:0%"></div></div>
+  <footer class="hud-footer">
+    <div id="footer-status">No buttons yet — press + to add one</div>
+    <div style="display:flex; gap:12px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </div>
-
-    <div class="hud-metric">
-      <div class="hud-metric-header"><span>Memory</span><span id="rm-ram-label">0%</span></div>
-      <div class="hud-progress-track"><div id="rm-ram-bar" class="hud-progress-fill" style="width:0%"></div></div>
-    </div>
-
-    <div class="hud-section-title" style="margin-top:20px;">Processor HUD</div>
-    <div id="rm-cores-container" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;"></div>
-
-    <div class="hud-section-title" style="margin-top:auto;">Network I/O</div>
-    <div style="font-family:var(--font-mono); font-size:12px; display:flex; flex-direction:column; gap:8px;">
-        <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-dim)">INBOUND</span>
-            <span id="rm-net-in" style="color:var(--electric-cyan)">0 B/s</span>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-dim)">OUTBOUND</span>
-            <span id="rm-net-out" style="color:var(--electric-cyan)">0 B/s</span>
-        </div>
-    </div>
-  </aside>
+  </footer>
 
 </div>
 
 <%- include('partials/modals') %>
-
 <div class="toast-container" id="toast-container"></div>
-
 <%- include('partials/scripts') %>
 </body>
 </html>
