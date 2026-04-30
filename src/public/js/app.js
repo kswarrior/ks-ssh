@@ -5,6 +5,7 @@ import { ResourceMonitor } from './modules/res-mon.js';
 import { $, showToast } from './modules/utils.js';
 
 let socket, terminals, files, ports, resMon;
+let startTime = Date.now();
 
 function init() {
   socket = io();
@@ -21,15 +22,35 @@ function init() {
   // Initial tab
   switchTab('terminals');
 
-  loadSystemInfo();
-  setInterval(() => {
-    loadSystemInfo();
-    if (resMon.isOpen) resMon.poll();
-  }, 5000);
+  // HUD Update cycle
+  updateHUD();
+  setInterval(updateHUD, 1000);
+
+  // Initial tunnel check
+  fetchTunnelInfo();
+  setInterval(fetchTunnelInfo, 30000);
 
   $('info-btn')?.addEventListener('click', () => {
-    showToast('KS-SSH Next-Gen v1.1.0', 'info');
+    showToast('KS-SSH HUD MASTER v2.0.0', 'info');
   });
+}
+
+function updateHUD() {
+  // Uptime
+  const diff = Date.now() - startTime;
+  const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+  const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+  const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+  if ($('hud-uptime')) $('hud-uptime').textContent = `${h}:${m}:${s}`;
+
+  // Active Sessions
+  if ($('hud-session-count')) {
+      const count = terminals.terminals.size;
+      $('hud-session-count').textContent = `${count} ${count === 1 ? 'SESSION' : 'SESSIONS'} ACTIVE`;
+  }
+
+  loadSystemInfo();
+  if (resMon.isOpen) resMon.poll();
 }
 
 function setupNavigation() {
@@ -40,7 +61,7 @@ function setupNavigation() {
 
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
-  const items = document.querySelectorAll('.nav-item, .dock-item');
+  const items = document.querySelectorAll('.hud-nav-item');
 
   panels.forEach(p => p.classList.add('hidden'));
   items.forEach(b => b.classList.remove('active'));
@@ -54,7 +75,7 @@ function switchTab(tab) {
   if (tab === 'files') files.load();
   if (tab === 'ports') ports.load();
   if (tab === 'terminals') {
-    setTimeout(() => terminals.refit(), 100);
+    setTimeout(() => terminals.refit(), 50);
   }
 }
 
@@ -104,9 +125,24 @@ async function loadSystemInfo() {
   try {
     const res = await fetch('/ksapi/system');
     const d = await res.json();
-    if ($('sys-host')) $('sys-host').textContent = d.hostname;
-    if ($('sp-os')) $('sp-os').textContent = d.platform;
-    if ($('sp-user')) $('sp-user').textContent = d.user;
+    if ($('sys-host')) $('sys-host').textContent = d.hostname.toUpperCase();
+  } catch {}
+}
+
+async function fetchTunnelInfo() {
+  try {
+    const res = await fetch('/ksapi/tunnel');
+    const d = await res.json();
+    if (d.active && d.token) {
+      $('tunnel-info-stat').style.display = 'flex';
+      $('hud-tunnel-token').textContent = d.token.toUpperCase();
+      $('hud-tunnel-token').onclick = () => {
+        navigator.clipboard.writeText(d.url);
+        showToast('TUNNEL URL COPIED');
+      };
+    } else {
+      $('tunnel-info-stat').style.display = 'none';
+    }
   } catch {}
 }
 

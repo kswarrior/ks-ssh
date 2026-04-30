@@ -118,6 +118,7 @@ class TunnelManager {
       active: !!this.currentUrl,
       url: this.currentUrl,
       shareUrl: this.shareUrl,
+      token: this.subdomain,
       subdomain: this.subdomain
     };
   }

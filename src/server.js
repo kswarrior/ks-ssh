@@ -41,7 +41,10 @@ app.get('/', (req, res) => {
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, req.query.path || os.homedir()),
+    destination: (req, file, cb) => {
+      const dest = req.query.path || req.body.path || os.homedir();
+      cb(null, dest);
+    },
     filename: (req, file, cb) => cb(null, file.originalname)
   })
 });
@@ -100,8 +103,13 @@ app.post('/ksapi/files/delete', (req, res) => {
 });
 
 app.post('/ksapi/files/mkdir', (req, res) => {
-  try { fs.mkdirSync(req.body.dirPath, { recursive: true }); res.json({ success: true }); }
-  catch (err) { res.status(400).json({ error: err.message }); }
+  try {
+    const dirPath = req.body.dirPath || path.join(req.body.path, req.body.name);
+    fs.mkdirSync(dirPath, { recursive: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 app.get('/ksapi/files/read', (req, res) => {

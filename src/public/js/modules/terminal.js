@@ -6,7 +6,7 @@ export class TerminalManager {
     this.terminals = new Map();
     this.activeId = null;
     this.counter = 0;
-    this.fontSize = 14;
+    this.fontSize = 13;
 
     this._setupUI();
   }
@@ -17,17 +17,8 @@ export class TerminalManager {
     $('t-clear-btn')?.addEventListener('click', () => this.clearActive());
     $('t-fit-btn')?.addEventListener('click', () => this.refit());
     $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
-    $('t-copy-btn')?.addEventListener('click', () => this.copyActiveBuffer());
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
-
-    const searchInput = $('t-search-input');
-    if (searchInput) {
-      searchInput.onkeydown = (e) => {
-        if (e.key === 'Enter') this.searchActive(searchInput.value);
-      };
-    }
-    $('t-search-next')?.addEventListener('click', () => this.searchActive(searchInput.value));
   }
 
   create(data = {}) {
@@ -45,19 +36,20 @@ export class TerminalManager {
   _spawn({ id, num, restore }) {
     const tabList = $('terminal-tabs-list');
     const tab = document.createElement('div');
-    tab.className = 't-tab';
+    tab.className = 'hud-t-tab';
     tab.dataset.id = id;
     tab.innerHTML = `
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>bash (${num})</span>
-      <button class="t-tab-close" title="Close Session">&times;</button>
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <span>UPLINK-${num.toString().padStart(2, '0')}</span>
+      <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px;">&times;</button>
     `;
-    tab.onclick = (e) => { if (!e.target.closest('.t-tab-close')) this.activate(id); };
-    tab.querySelector('.t-tab-close').onclick = (e) => { e.stopPropagation(); this.confirmClose(id); };
+    tab.onclick = (e) => { if (!e.target.closest('.hud-t-tab-close')) this.activate(id); };
+    tab.querySelector('.hud-t-tab-close').onclick = (e) => { e.stopPropagation(); this.confirmClose(id); };
     tabList.appendChild(tab);
 
     const area = $('terminals-area');
     const container = document.createElement('div');
+    container.style.cssText = "position:absolute; inset:0; display:none;";
     container.className = 'terminal-instance';
     container.id = `ti-${id}`;
     area.appendChild(container);
@@ -65,12 +57,12 @@ export class TerminalManager {
     const term = new Terminal({
       cursorBlink: true,
       fontSize: this.fontSize,
-      fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+      fontFamily: '"JetBrains Mono", monospace',
       theme: {
-        background: '#000000',
-        foreground: '#f8fafc',
-        cursor: '#3b82f6',
-        selection: 'rgba(59, 130, 246, 0.3)'
+        background: 'transparent',
+        foreground: '#06b6d4',
+        cursor: '#06b6d4',
+        selection: 'rgba(6, 182, 212, 0.3)'
       },
       allowProposedApi: true
     });
@@ -78,9 +70,7 @@ export class TerminalManager {
     term.loadAddon(fit);
     term.open(container);
 
-    term.onData(data => {
-      this.socket.emit('terminal:input', { id, data });
-    });
+    term.onData(data => this.socket.emit('terminal:input', { id, data }));
 
     this.terminals.set(id, { term, fit, num, tab, container });
 
@@ -103,6 +93,7 @@ export class TerminalManager {
 
     this.terminals.forEach(t => {
       t.tab.classList.remove('active');
+      t.container.style.display = 'none';
       t.container.classList.remove('active');
     });
 
@@ -110,8 +101,9 @@ export class TerminalManager {
     if (!t) return;
 
     t.tab.classList.add('active');
+    t.container.style.display = 'block';
     t.container.classList.add('active');
-    $('t-session-name').textContent = `bash (${t.num})`;
+    $('t-session-name').textContent = `UPLINK-${t.num.toString().padStart(2, '0')} STATUS: ESTABLISHED`;
 
     setTimeout(() => {
       t.fit.fit();
@@ -125,59 +117,30 @@ export class TerminalManager {
       t.term.options.fontSize = this.fontSize;
       setTimeout(() => t.fit.fit(), 20);
     });
-    showToast(`Font size: ${this.fontSize}px`);
   }
 
   clearActive() {
     const t = this.terminals.get(this.activeId);
-    if (t) {
-      t.term.clear();
-      showToast('Terminal cleared');
-    }
-  }
-
-  searchActive(query) {
-    if (!query) return;
-    showToast(`Search not yet implemented: ${query}`, 'info');
-  }
-
-  copyActiveBuffer() {
-    const t = this.terminals.get(this.activeId);
-    if (!t) return;
-
-    let content = "";
-    const buffer = t.term.buffer.active;
-    for (let i = 0; i < buffer.length; i++) {
-        const line = buffer.getLine(i);
-        if (line) content += line.translateToString() + "\n";
-    }
-
-    navigator.clipboard.writeText(content).then(() => {
-      showToast('Buffer copied to clipboard');
-    }).catch(() => {
-      showToast('Failed to copy', 'error');
-    });
+    if (t) { t.term.clear(); showToast('HUD BUFFER CLEARED'); }
   }
 
   downloadActiveLog() {
     const t = this.terminals.get(this.activeId);
     if (!t) return;
-
     let content = "";
     const buffer = t.term.buffer.active;
     for (let i = 0; i < buffer.length; i++) {
         const line = buffer.getLine(i);
         if (line) content += line.translateToString() + "\n";
     }
-
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `terminal-log-${t.num}.txt`;
+    a.download = `uplink-${t.num}-log.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Log downloaded');
+    showToast('LOG DOWNLOADED');
   }
 
   confirmClose(id) {
@@ -191,20 +154,16 @@ export class TerminalManager {
   close(id) {
     const t = this.terminals.get(id);
     if (!t) return;
-
     this.socket.emit('terminal:kill', { id });
     t.term.dispose();
     t.tab.remove();
     t.container.remove();
     this.terminals.delete(id);
-
     this._save();
-
     if (this.activeId === id) {
       const keys = Array.from(this.terminals.keys());
-      if (keys.length > 0) {
-        this.activate(keys[keys.length - 1]);
-      } else {
+      if (keys.length > 0) this.activate(keys[keys.length - 1]);
+      else {
         this.activeId = null;
         $('terminals-empty').classList.remove('hidden');
         $('terminal-toolbar').classList.add('hidden');

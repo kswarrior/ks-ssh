@@ -31,3 +31,10 @@ export function fmtUptime(s) {
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
 }
+
+export function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}

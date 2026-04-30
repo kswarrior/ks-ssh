@@ -1,4 +1,4 @@
-import { $, showToast, fmtBytes } from './utils.js';
+import { $, showToast, fmtBytes, esc } from './utils.js';
 
 export class FileManager {
   constructor() {
@@ -18,18 +18,17 @@ export class FileManager {
 
   async load(dirPath = this.currentPath) {
     const list = $('files-list');
-    list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">Scanning disks...</div>';
+    list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; font-family:var(--font-mono); color:var(--electric-cyan); font-size:12px;">SEQUENCING DATA BLOCKS...</div>';
     this.exitSelectMode();
     try {
       const res = await fetch(`/ksapi/files?path=${encodeURIComponent(dirPath)}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       this.currentPath = data.path;
-      if ($('current-path')) $('current-path').textContent = data.path;
       this.renderBreadcrumb(data.path);
       this.render(data);
     } catch (err) {
-      list.innerHTML = `<div style="grid-column:1/-1; color:var(--red); text-align:center; padding:40px;">Error: ${err.message}</div>`;
+      list.innerHTML = `<div style="grid-column:1/-1; color:#ef4444; text-align:center; padding:40px;">UPLINK ERROR: ${err.message}</div>`;
     }
   }
 
@@ -43,20 +42,19 @@ export class FileManager {
     paths.forEach((p, i) => {
       const seg = parts[i - 1] || '/';
       const el = document.createElement('span');
-      el.className = 'bc-item' + (i === paths.length - 1 ? ' current' : '');
-      el.textContent = seg === '/' ? 'root' : seg;
-      el.style.cssText = "cursor:pointer; font-size:12px; font-weight:700; padding:4px 8px; border-radius:6px; transition:0.2s; color:var(--text-muted);";
-      if (i === paths.length - 1) el.style.color = "var(--text)";
+      el.textContent = (seg === '/' ? 'ROOT' : seg).toUpperCase();
+      el.style.cssText = "cursor:pointer; transition:0.2s;";
+      if (i === paths.length - 1) el.style.color = "var(--text-pure)";
       else {
-        el.onmouseover = () => el.style.background = "var(--bg-hover)";
-        el.onmouseout = () => el.style.background = "transparent";
+        el.onmouseover = () => el.style.color = "var(--text-pure)";
+        el.onmouseout = () => el.style.color = "var(--electric-cyan)";
         el.onclick = () => this.load(p);
       }
       bc.appendChild(el);
       if (i < paths.length - 1) {
         const sep = document.createElement('span');
-        sep.textContent = '›';
-        sep.style.cssText = "color:var(--zinc-700); font-size:14px; margin:0 4px;";
+        sep.textContent = ' / ';
+        sep.style.color = "var(--night-700)";
         bc.appendChild(sep);
       }
     });
@@ -68,43 +66,30 @@ export class FileManager {
     list.innerHTML = '';
 
     if (data.parent && data.path !== '/') {
-        const card = this.createCard({ name: '..', isDirectory: true, path: data.parent });
-        list.appendChild(card);
+        list.appendChild(this.createCard({ name: '..', isDirectory: true, path: data.parent }));
     }
 
-    data.files.forEach(f => {
-      const card = this.createCard(f);
-      list.appendChild(card);
-    });
+    data.files.forEach(f => list.appendChild(this.createCard(f)));
   }
 
   createCard(f) {
     const card = document.createElement('div');
-    card.className = 'f-card';
+    card.className = 'hud-f-card';
     card.innerHTML = `
-        <div class="f-icon">${f.isDirectory ? '📁' : '📄'}</div>
-        <div class="f-name">${f.name}</div>
-        ${!f.isDirectory ? `<div style="font-size:10px; color:var(--text-muted); font-family:var(--font-mono)">${fmtBytes(f.size)}</div>` : ''}
+        <div class="hud-f-icon">${f.isDirectory ? '📁' : '📄'}</div>
+        <div class="hud-f-name">${esc(f.name)}</div>
+        ${!f.isDirectory ? `<div style="font-size:10px; color:var(--text-dim); font-family:var(--font-mono); margin-top:auto;">${fmtBytes(f.size)}</div>` : ''}
     `;
 
-    card.onclick = () => {
-        if (f.isDirectory) this.load(f.path);
-        else this.openFileMenu(f, card);
-    };
-
-    card.oncontextmenu = (e) => {
-        e.preventDefault();
-        this.openFileMenu(f, card);
-    };
-
+    card.onclick = () => f.isDirectory ? this.load(f.path) : this.openFileMenu(f);
     return card;
   }
 
-  openFileMenu(file, card) {
-    if (confirm(`Action for ${file.name}?\n- OK to Download\n- Cancel to Delete`)) {
+  openFileMenu(file) {
+    if (confirm(`INITIATE DOWNLOAD FOR ${file.name}?`)) {
         this.download(file.path);
     } else {
-        if (confirm(`Permanently delete ${file.name}?`)) {
+        if (confirm(`EXECUTE PERMANENT PURGE OF ${file.name}?`)) {
             this.optimisticDelete(file);
         }
     }
@@ -115,14 +100,14 @@ export class FileManager {
     if (!files.length) return;
 
     const formData = new FormData();
-    for (let f of files) formData.append('files', f);
     formData.append('path', this.currentPath);
+    for (let f of files) formData.append('files', f);
 
-    showToast(`Uploading...`);
+    showToast(`UPLOADING DATA...`);
     try {
       const res = await fetch('/ksapi/files/upload', { method: 'POST', body: formData });
       const data = await res.json();
-      if (data.success) { showToast('Complete'); this.load(); }
+      if (data.success) { showToast('UPLINK COMPLETE'); this.load(); }
       else throw new Error(data.error);
     } catch (err) {
       showToast(err.message, 'error');
@@ -131,7 +116,7 @@ export class FileManager {
   }
 
   async promptNewFolder() {
-    const name = prompt('Folder Name:');
+    const name = prompt('FOLDER IDENTIFIER:');
     if (!name) return;
     try {
       const res = await fetch('/ksapi/files/mkdir', {
@@ -140,7 +125,7 @@ export class FileManager {
         body: JSON.stringify({ path: this.currentPath, name })
       });
       const data = await res.json();
-      if (data.success) { showToast('Created'); this.load(); }
+      if (data.success) { showToast('IDENTIFIER REGISTERED'); this.load(); }
       else throw new Error(data.error);
     } catch (err) {
       showToast(err.message, 'error');
@@ -157,9 +142,13 @@ export class FileManager {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filePath: file.path })
     }).then(r => r.json()).then(d => {
-        if (d.success) { showToast('Deleted'); this.load(); }
+        if (d.success) { showToast('DATA PURGED'); this.load(); }
         else showToast(d.error, 'error');
     });
+  }
+
+  handleBulkDelete() {
+      showToast('BULK PURGE NOT YET IMPLEMENTED', 'info');
   }
 
   exitSelectMode() {
