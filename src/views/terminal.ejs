@@ -1,0 +1,34 @@
+<div class="tab-panel" id="tab-terminals">
+  <div class="terminal-hud-wrapper">
+    <div class="terminal-hud-tabs">
+      <div id="terminal-tabs-list" style="display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;"></div>
+      <button id="add-term-btn" style="background:var(--electric-cyan-dim); border:1px solid var(--electric-cyan); color:var(--electric-cyan); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+
+    <div id="terminal-toolbar" class="hidden" style="display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:rgba(0,0,0,0.1); border-bottom:1px solid var(--glass-border);">
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--electric-cyan); font-weight:700;" id="t-session-name">HUD-TERMINAL-01</div>
+        <div style="display:flex; gap:8px;">
+            <button id="t-font-dec" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+            <button id="t-font-inc" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+            <div style="width:1px; height:12px; background:var(--glass-border); margin:0 4px;"></div>
+            <button id="t-clear-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            <button id="t-download-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        </div>
+    </div>
+
+    <div class="terminal-hud-content" id="terminals-area">
+      <div id="terminals-empty" style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; text-align:center;">
+        <div style="width:100px; height:100px; border:2px dashed var(--glass-border); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--glass-border);">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <div>
+            <h2 style="font-weight:900; letter-spacing:-0.03em; margin-bottom:4px;">Command HUD Ready</h2>
+            <p style="color:var(--text-dim); font-size:13px;">Establish a secure uplink to begin system management.</p>
+        </div>
+        <button id="empty-new-term" style="background:var(--electric-cyan); color:var(--obsidian); border:none; padding:12px 32px; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 0 20px var(--electric-cyan-glow);">INITIALIZE UPLINK</button>
+      </div>
+    </div>
+  </div>
+</div>

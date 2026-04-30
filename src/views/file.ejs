@@ -1,0 +1,26 @@
+<div class="tab-panel hidden" id="tab-files">
+  <div style="padding:24px; display:flex; flex-direction:column; height:100%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div>
+            <h1 style="font-weight:900; letter-spacing:-0.04em;">Storage HUD</h1>
+            <div id="breadcrumb" style="font-family:var(--font-mono); font-size:11px; color:var(--electric-cyan); margin-top:4px;">/root</div>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button id="upload-btn" style="background:var(--night-700); border:1px solid var(--glass-border); color:var(--text-pure); padding:8px 20px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer;">UPLOAD</button>
+            <button id="new-folder-btn" style="background:var(--night-700); border:1px solid var(--glass-border); color:var(--text-pure); padding:8px; border-radius:10px; cursor:pointer;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+            <button id="files-refresh-btn" style="background:var(--night-700); border:1px solid var(--glass-border); color:var(--text-pure); padding:8px; border-radius:10px; cursor:pointer;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+        </div>
+    </div>
+
+    <div id="files-list" class="files-hud-grid"></div>
+
+    <div id="bulk-bar" class="hidden" style="position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--night-800); border:1px solid var(--electric-cyan); padding:16px 32px; border-radius:16px; display:flex; align-items:center; gap:32px; box-shadow:var(--shadow-hud);">
+        <div id="bulk-count" style="font-weight:900; font-family:var(--font-mono); color:var(--electric-cyan);">0 ITEMS TAGGED</div>
+        <div style="display:flex; gap:12px;">
+            <button id="bulk-delete" style="background:#ef4444; color:white; border:none; padding:8px 24px; border-radius:8px; font-weight:800; cursor:pointer;">PURGE</button>
+            <button id="bulk-cancel" style="background:transparent; border:none; color:var(--text-dim); font-weight:700; cursor:pointer;">ABORT</button>
+        </div>
+    </div>
+  </div>
+</div>
+<input type="file" id="file-input" multiple class="hidden" />
