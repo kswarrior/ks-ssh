@@ -359,3 +359,20 @@ body {
   font-size: 13px;
   resize: none;
 }
+
+.file-row {
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hud-f-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-primary, .icon-btn {
+    transition: all 0.2s ease;
+}

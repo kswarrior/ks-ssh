@@ -104,8 +104,12 @@ export class FileManager {
     row.className = 'file-row';
     const isParent = f.name === '..';
 
+    const icon = f.isDirectory
+        ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>'
+        : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+
     row.innerHTML = `
-        <div class="file-icon">${f.isDirectory ? '📁' : '📄'}</div>
+        <div class="file-icon">${icon}</div>
         <div class="file-info">
             <div class="file-name">${esc(f.name)}</div>
             ${!isParent ? `<div class="file-meta">${f.modified ? f.modified.split('T')[0] : ''}</div>` : ''}
@@ -126,6 +130,7 @@ export class FileManager {
             this.toggleSelect(f.path, row);
         } else {
             if (f.isDirectory) this.load(f.path);
+            else if (!isParent) this.download(f.path);
         }
     };
 
@@ -200,6 +205,14 @@ export class FileManager {
   async promptRename(file) {
     const newName = prompt('NEW IDENTIFIER:', file.name);
     if (!newName || newName === file.name) return;
+
+    // Optimistic UI
+    const rows = document.querySelectorAll('.file-row');
+    let targetRow = null;
+    rows.forEach(r => { if (r.querySelector('.file-name').textContent === file.name) targetRow = r; });
+    const oldName = file.name;
+    if (targetRow) targetRow.querySelector('.file-name').textContent = newName;
+
     try {
         const res = await fetch('/ksapi/files/rename', {
             method: 'POST',
@@ -210,6 +223,7 @@ export class FileManager {
         if (data.success) { showToast('RENAMED'); this.load(); }
         else throw new Error(data.error);
     } catch (err) {
+        if (targetRow) targetRow.querySelector('.file-name').textContent = oldName;
         showToast(err.message, 'error');
     }
   }
@@ -278,12 +292,26 @@ export class FileManager {
 
   optimisticDelete(file) {
     if (!confirm(`PURGE ${file.name}?`)) return;
+
+    // Optimistic UI
+    const rows = document.querySelectorAll('.file-row');
+    let targetRow = null;
+    rows.forEach(r => { if (r.querySelector('.file-name').textContent === file.name) targetRow = r; });
+    if (targetRow) targetRow.style.display = 'none';
+
     fetch('/ksapi/files/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filePath: file.path })
     }).then(r => r.json()).then(d => {
         if (d.success) { showToast('DATA PURGED'); this.load(); }
+        else {
+            if (targetRow) targetRow.style.display = 'grid';
+            showToast(d.error, 'error');
+        }
+    }).catch(err => {
+        if (targetRow) targetRow.style.display = 'grid';
+        showToast(err.message, 'error');
     });
   }
 
