@@ -276,7 +276,7 @@ async function loadSystemInfo() {
     if ($('sys-cpus')) $('sys-cpus').textContent = s.cpus;
     if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
 
-    // VPS Info (Neofetch)
+    // VPS Info
     if ($('vps-logo')) $('vps-logo').textContent = s.logo || '🐧';
     if ($('nf-user')) $('nf-user').textContent = s.user;
     if ($('nf-host')) $('nf-host').textContent = s.hostname;

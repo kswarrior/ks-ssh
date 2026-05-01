@@ -5,6 +5,7 @@ export class TerminalManager {
     this.socket = socket;
     this.terminals = new Map();
     this.activeId = null;
+    this.splitActive = false;
     this.counter = 0;
     this.fontSize = 13;
     this.ctrlActive = false;
@@ -23,6 +24,7 @@ export class TerminalManager {
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
     $('t-rename-btn')?.addEventListener('click', () => this.renameActive());
     $('t-kill-all')?.addEventListener('click', () => this.killAll());
+    $('t-split-btn')?.addEventListener('click', () => this.toggleSplit());
     $('t-session-name')?.addEventListener('click', () => this.renameActive());
 
     window.addEventListener('keydown', (e) => {
@@ -164,28 +166,66 @@ export class TerminalManager {
   }
 
   activate(id) {
-    if (this.activeId === id) return;
+    if (this.activeId === id && !this.splitActive) return;
     this.activeId = id;
 
-    this.terminals.forEach(t => {
-      t.tab.classList.remove('active');
-      t.container.style.display = 'none';
-      t.container.classList.remove('active');
-    });
+    if (!this.splitActive) {
+        this.terminals.forEach(t => {
+            t.tab.classList.remove('active');
+            t.container.style.display = 'none';
+            t.container.style.width = '100%';
+            t.container.style.left = '0';
+            t.container.classList.remove('active');
+        });
+    } else {
+        // Handle split logic: Active is always right if 2+ exist
+        const keys = Array.from(this.terminals.keys());
+        if (keys.length >= 2) {
+            const leftId = keys[0];
+            const rightId = id;
+            this.terminals.forEach((t, tid) => {
+                t.tab.classList.remove('active');
+                if (tid === leftId) {
+                    t.container.style.display = 'block';
+                    t.container.style.width = '50%';
+                    t.container.style.left = '0';
+                    t.container.style.borderRight = '1px solid var(--glass-border)';
+                } else if (tid === rightId) {
+                    t.tab.classList.add('active');
+                    t.container.style.display = 'block';
+                    t.container.style.width = '50%';
+                    t.container.style.left = '50%';
+                    t.container.style.borderRight = 'none';
+                } else {
+                    t.container.style.display = 'none';
+                }
+            });
+        }
+    }
 
     const t = this.terminals.get(id);
     if (!t) return;
 
-    t.tab.classList.add('active');
-    t.container.style.display = 'block';
+    if (!this.splitActive) {
+        t.tab.classList.add('active');
+        t.container.style.display = 'block';
+    }
+
     t.container.classList.add('active');
     const displayNum = t.num.toString().padStart(2, '0');
-    $('t-session-name').textContent = `${t.name === t.num ? 'SESSION' : t.name.toUpperCase()}: ${displayNum} [ONLINE]`;
+    $('t-session-name').textContent = `${t.name === t.num ? 'SESSION' : t.name.toUpperCase()}: ${displayNum} [ONLINE] ${this.splitActive ? '(SPLIT)' : ''}`;
 
     setTimeout(() => {
-      t.fit.fit();
+      this.terminals.forEach(termObj => { if (termObj.container.style.display === 'block') termObj.fit.fit(); });
       t.term.focus();
     }, 50);
+  }
+
+  toggleSplit() {
+      if (this.terminals.size < 2) { showToast('NEED 2+ TERMINALS FOR SPLIT', 'info'); return; }
+      this.splitActive = !this.splitActive;
+      $('t-split-btn').classList.toggle('active', this.splitActive);
+      this.activate(this.activeId);
   }
 
   renameActive() {

@@ -1,16 +1,16 @@
 :root {
-  /* Black & Blue Theme */
-  --obsidian: #04060b;
-  --night-900: #060912;
-  --night-800: #0a0e1a;
-  --night-700: #101628;
+  /* Exact Colors from ssh.ksw.workers.dev */
+  --obsidian: #000000;
+  --night-900: #0d1117;
+  --night-800: #161b22;
+  --night-700: #21262d;
 
-  --electric-blue: #0099ff;
-  --electric-blue-glow: rgba(0, 153, 255, 0.3);
-  --electric-blue-dim: rgba(0, 153, 255, 0.1);
+  --electric-blue: #2f81f7;
+  --electric-blue-glow: rgba(47, 129, 247, 0.4);
+  --electric-blue-dim: rgba(47, 129, 247, 0.15);
 
-  --glass: rgba(10, 14, 26, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass: rgba(13, 17, 23, 0.95);
+  --glass-border: #30363d;
   --glass-blur: blur(20px);
 
   --text-pure: #ffffff;
@@ -359,16 +359,15 @@ body {
 .btn-primary {
   background: var(--electric-blue);
   color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+  padding: 8px 16px;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px var(--electric-blue-glow);
   transition: var(--transition-fast);
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--electric-blue-glow); }
