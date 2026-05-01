@@ -101,6 +101,15 @@ function setupSocket() {
     const t = terminals.terminals.get(id);
     if (t) t.term.write(buffer);
   });
+
+  // Restore terminals from session storage
+  const saved = sessionStorage.getItem('ks-ssh-terms');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      data.forEach(d => terminals._spawn({ id: d.id, num: d.num, name: d.name, restore: true }));
+    } catch {}
+  }
 }
 
 function setupModals() {

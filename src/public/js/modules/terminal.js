@@ -19,6 +19,16 @@ export class TerminalManager {
     $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
+    $('t-rename-btn')?.addEventListener('click', () => this.renameActive());
+    $('t-session-name')?.addEventListener('click', () => this.renameActive());
+
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey && e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key) - 1;
+        const keys = Array.from(this.terminals.keys());
+        if (keys[idx]) this.activate(keys[idx]);
+      }
+    });
   }
 
   create(data = {}) {
@@ -33,13 +43,14 @@ export class TerminalManager {
     this._spawn({ id, num, restore: true });
   }
 
-  _spawn({ id, num, restore }) {
+  _spawn({ id, num, restore, name }) {
     const tabList = $('terminal-tabs-list');
     const tab = document.createElement('div');
     tab.className = 'hud-t-tab';
     tab.dataset.id = id;
+    const displayName = name || num;
     tab.innerHTML = `
-      <span>${num}</span>
+      <span class="tab-label">${displayName}</span>
       <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px; font-size:14px; line-height:1;">&times;</button>
     `;
     tab.onclick = (e) => { if (!e.target.closest('.hud-t-tab-close')) this.activate(id); };
@@ -80,7 +91,7 @@ export class TerminalManager {
 
     term.onData(data => this.socket.emit('terminal:input', { id, data }));
 
-    this.terminals.set(id, { term, fit, num, tab, container });
+    this.terminals.set(id, { term, fit, num, name: displayName, tab, container });
 
     $('terminals-empty').classList.add('hidden');
     $('terminal-toolbar').classList.remove('hidden');
@@ -112,12 +123,25 @@ export class TerminalManager {
     t.tab.classList.add('active');
     t.container.style.display = 'block';
     t.container.classList.add('active');
-    $('t-session-name').textContent = `SESSION: ${t.num.toString().padStart(2, '0')} STATUS: ONLINE`;
+    const displayNum = t.num.toString().padStart(2, '0');
+    $('t-session-name').textContent = `${t.name === t.num ? 'SESSION' : t.name.toUpperCase()}: ${displayNum} [ONLINE]`;
 
     setTimeout(() => {
       t.fit.fit();
       t.term.focus();
     }, 50);
+  }
+
+  renameActive() {
+    const t = this.terminals.get(this.activeId);
+    if (!t) return;
+    const newName = prompt('Enter session name:', t.name === t.num ? '' : t.name);
+    if (newName !== null) {
+      t.name = newName.trim() || t.num;
+      t.tab.querySelector('.tab-label').textContent = t.name;
+      this.activate(this.activeId); // Refresh toolbar text
+      this._save();
+    }
   }
 
   changeFontSize(delta) {
@@ -191,7 +215,7 @@ export class TerminalManager {
   }
 
   _save() {
-    const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num }));
+    const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num, name: t.name }));
     sessionStorage.setItem('ks-ssh-terms', JSON.stringify(data));
   }
 }
