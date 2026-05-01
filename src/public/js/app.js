@@ -2,9 +2,10 @@ import { TerminalManager } from './modules/terminal.js';
 import { FileManager } from './modules/files.js';
 import { PortScanner } from './modules/ports.js';
 import { ResourceMonitor } from './modules/res-mon.js';
+import { ProcessManager } from './modules/processes.js';
 import { $, showToast, fmtBytes } from './modules/utils.js';
 
-let socket, terminals, files, ports, resMon;
+let socket, terminals, files, ports, processes, resMon;
 let startTime = Date.now();
 
 function init() {
@@ -12,6 +13,7 @@ function init() {
   terminals = new TerminalManager(socket);
   files = new FileManager();
   ports = new PortScanner();
+  processes = new ProcessManager();
   // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
 
   setupNavigation();
@@ -19,6 +21,7 @@ function init() {
   setupModals();
   setupPortPreview();
   setupVPSInfo();
+  setupThemes();
 
   // Initial tab
   switchTab('terminals');
@@ -34,9 +37,62 @@ function init() {
   fetchTunnelInfo();
   setInterval(fetchTunnelInfo, 30000);
 
+  setupCommandPalette();
+
   $('info-btn')?.addEventListener('click', () => {
     showToast('KS-SSH HUD MASTER v2.0.0', 'info');
   });
+}
+
+function setupCommandPalette() {
+    const palette = $('cmd-palette');
+    const input = $('cmd-input');
+    const results = $('cmd-results');
+
+    const commands = [
+        { name: 'Terminal: New session', action: () => terminals.create(), keys: 'Ctrl+Shift+N' },
+        { name: 'Files: Refresh list', action: () => files.load(), keys: 'Ctrl+R' },
+        { name: 'Network: Scan ports', action: () => ports.load() },
+        { name: 'Processes: Refresh tasks', action: () => processes.load() },
+        { name: 'Go to Terminal', action: () => switchTab('terminals') },
+        { name: 'Go to Files', action: () => switchTab('files') },
+        { name: 'Go to Ports', action: () => switchTab('ports') },
+        { name: 'Go to Tasks', action: () => switchTab('processes') },
+        { name: 'HUD: Toggle VPS Info', action: () => $('vps-info-dropdown').classList.toggle('hidden') },
+    ];
+
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            palette.classList.remove('hidden');
+            input.value = '';
+            input.focus();
+            renderResults('');
+        }
+        if (e.key === 'Escape') palette.classList.add('hidden');
+    });
+
+    input.oninput = (e) => renderResults(e.target.value);
+
+    function renderResults(query) {
+        const filtered = query
+            ? commands.filter(c => c.name.toLowerCase().includes(query.toLowerCase()))
+            : commands;
+
+        results.innerHTML = filtered.map(c => `
+            <div class="cmd-item" style="padding:10px 16px; border-radius:4px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:0.2s;" onmouseover="this.style.background='var(--night-700)'" onmouseout="this.style.background='transparent'">
+                <div style="font-size:13px; font-weight:600; color:var(--text-pure);">${c.name}</div>
+                ${c.keys ? `<div style="font-size:10px; font-family:var(--font-mono); color:var(--text-dim); background:var(--night-900); padding:2px 6px; border-radius:4px;">${c.keys}</div>` : ''}
+            </div>
+        `).join('');
+
+        results.querySelectorAll('.cmd-item').forEach((el, i) => {
+            el.onclick = () => {
+                filtered[i].action();
+                palette.classList.add('hidden');
+            };
+        });
+    }
 }
 
 async function checkLatency() {
@@ -87,6 +143,7 @@ function switchTab(tab) {
     document.querySelector(`.nav-link[data-tab="${tab}"]`)?.classList.add('active');
   }
   if (tab === 'ports') ports.load();
+  if (tab === 'processes') processes.load();
   if (tab === 'terminals') {
     setTimeout(() => terminals.refit(), 50);
   }
@@ -166,6 +223,39 @@ function setupVPSInfo() {
         });
 
         menu.addEventListener('click', (e) => e.stopPropagation());
+    }
+}
+
+function setupThemes() {
+    const btn = $('theme-btn');
+    const menu = $('theme-dropdown');
+    if (!btn || !menu) return;
+
+    btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); };
+    document.addEventListener('click', () => menu.classList.add('hidden'));
+
+    const themes = {
+        default: { blue: '#0099ff', glow: 'rgba(0,153,255,0.3)' },
+        emerald: { blue: '#10b981', glow: 'rgba(16,185,129,0.3)' },
+        ruby: { blue: '#ef4444', glow: 'rgba(239,68,68,0.3)' },
+        gold: { blue: '#f59e0b', glow: 'rgba(245,158,11,0.3)' }
+    };
+
+    document.querySelectorAll('.theme-opt').forEach(opt => {
+        opt.onclick = () => {
+            const t = themes[opt.dataset.theme];
+            document.documentElement.style.setProperty('--electric-blue', t.blue);
+            document.documentElement.style.setProperty('--electric-blue-glow', t.glow);
+            showToast(`THEME: ${opt.textContent.toUpperCase()}`);
+            localStorage.setItem('ks-ssh-theme', opt.dataset.theme);
+        };
+    });
+
+    const saved = localStorage.getItem('ks-ssh-theme');
+    if (saved && themes[saved]) {
+        const t = themes[saved];
+        document.documentElement.style.setProperty('--electric-blue', t.blue);
+        document.documentElement.style.setProperty('--electric-blue-glow', t.glow);
     }
 }
 

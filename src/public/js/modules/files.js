@@ -55,6 +55,20 @@ export class FileManager {
 
     // Search
     $('files-search')?.addEventListener('input', (e) => this.filterList(e.target.value));
+
+    // Editor Gutter
+    $('file-editor-text')?.addEventListener('input', () => this.updateEditorGutter());
+    $('file-editor-text')?.addEventListener('scroll', () => {
+        $('editor-gutter').scrollTop = $('file-editor-text').scrollTop;
+    });
+  }
+
+  updateEditorGutter() {
+      const text = $('file-editor-text').value;
+      const lines = text.split('\n').length;
+      let html = '';
+      for (let i = 1; i <= lines; i++) html += i + '<br>';
+      $('editor-gutter').innerHTML = html;
   }
 
   async load(dirPath = this.currentPath) {
@@ -231,6 +245,7 @@ export class FileManager {
         const res = await fetch(`/ksapi/files/read?path=${encodeURIComponent(file.path)}`);
         const data = await res.json();
         $('file-editor-text').value = data.content || '';
+        this.updateEditorGutter();
     } catch (err) {
         showToast('FAILED TO READ FILE', 'error');
     }

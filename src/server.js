@@ -122,6 +122,25 @@ app.post('/ksapi/files/write', (req, res) => {
   catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+app.get('/ksapi/processes', (req, res) => {
+  try {
+    const output = require('child_process').execSync('ps -eo pid,ppid,user,%cpu,%mem,comm --sort=-%cpu | head -n 50', { encoding: 'utf8' });
+    const lines = output.trim().split('\n');
+    const data = lines.slice(1).map(l => {
+      const parts = l.trim().split(/\s+/);
+      return { pid: parts[0], ppid: parts[1], user: parts[2], cpu: parts[3], mem: parts[4], name: parts.slice(5).join(' ') };
+    });
+    res.json({ processes: data });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/ksapi/processes/kill', (req, res) => {
+  try {
+    require('child_process').execSync(`kill -9 ${req.body.pid}`);
+    res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
 // Proxy logic (kept in server.js for simplicity of middleware integration)
 app.all('/ksapi/proxy/:port*', (req, res) => {
   const port = parseInt(req.params.port);

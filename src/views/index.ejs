@@ -25,6 +25,7 @@
           <div class="nav-link active" data-tab="terminals">Terminal</div>
           <div class="nav-link" data-tab="files">Files</div>
           <div class="nav-link" data-tab="ports">Ports</div>
+          <div class="nav-link" data-tab="processes">Tasks</div>
         </nav>
 
         <div class="header-stats">
@@ -40,6 +41,17 @@
 
     <div class="header-right">
         <div class="dropdown-wrapper">
+            <button class="icon-btn" id="theme-btn" title="Appearance" style="margin-right: 4px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+            <div class="dropdown-menu hidden" id="theme-dropdown" style="width: 180px;">
+                <div class="dropdown-header">Theme HUD</div>
+                <div style="padding: 8px;">
+                    <div class="theme-opt" data-theme="default" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:var(--text-blue);">Electric Blue</div>
+                    <div class="theme-opt" data-theme="emerald" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:#10b981;">Emerald Cyber</div>
+                    <div class="theme-opt" data-theme="ruby" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:#ef4444;">Ruby Crimson</div>
+                    <div class="theme-opt" data-theme="gold" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:#f59e0b;">Liquid Gold</div>
+                </div>
+            </div>
+
             <button class="icon-btn" id="vps-info-btn" title="VPS Information"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
             <div class="dropdown-menu hidden" id="vps-info-dropdown">
                 <div class="dropdown-header">KS SSH — System Information</div>
@@ -77,6 +89,19 @@
     <%- include('port') %>
     <%- include('file') %>
 
+    <div class="tab-panel hidden" id="tab-processes">
+        <div style="padding:20px; display:flex; flex-direction:column; height:100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 16px;">
+                <div>
+                    <h1 style="font-weight:900; letter-spacing:-0.04em; font-size:24px;">Process HUD</h1>
+                    <p style="font-size:12px; color:var(--text-dim); margin-top:4px;">TOP RESOURCES BY CPU</p>
+                </div>
+                <button id="proc-refresh-btn" class="btn-primary" style="padding:8px 16px; font-size:12px; box-shadow:none;">REFRESH</button>
+            </div>
+            <div id="proc-list" class="flex-1 scroll-y" style="padding:0 16px;"></div>
+        </div>
+    </div>
+
     <!-- Port Preview Panel -->
     <div id="port-preview-panel" class="port-preview-panel hidden">
         <div class="preview-header">
@@ -111,6 +136,17 @@
 </div>
 
 <%- include('partials/modals') %>
+
+<!-- Command Palette -->
+<div id="cmd-palette" class="modal-overlay hidden">
+    <div class="modal" style="margin-top: 10vh; max-width: 600px;">
+        <div style="padding: 8px;">
+            <input type="text" id="cmd-input" class="input-hud" placeholder="Type a command or search..." autocomplete="off" />
+        </div>
+        <div id="cmd-results" class="scroll-y" style="max-height: 300px; padding: 4px;"></div>
+    </div>
+</div>
+
 <div class="toast-container" id="toast-container"></div>
 <%- include('partials/scripts') %>
 </body>

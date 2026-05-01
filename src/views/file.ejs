@@ -63,8 +63,9 @@
 <div class="modal-overlay hidden" id="file-editor-modal">
     <div class="modal modal-editor">
         <div class="modal-header"><h3 id="editor-filename">editor.txt</h3><button class="icon-btn modal-close">&times;</button></div>
-        <div class="modal-body" style="padding:0;">
-            <textarea id="file-editor-text" class="textarea-hud"></textarea>
+        <div class="modal-body" style="padding:0; display:flex;">
+            <div id="editor-gutter" style="background:var(--night-900); padding:14px 8px; border-right:1px solid var(--glass-border); font-family:var(--font-mono); font-size:13px; color:var(--text-dim); text-align:right; min-width:40px; user-select:none; overflow:hidden;"></div>
+            <textarea id="file-editor-text" class="textarea-hud" style="flex:1; border:none; border-radius:0;"></textarea>
         </div>
         <div class="modal-footer">
             <button class="icon-btn modal-close" style="font-size:13px; font-weight:600;">DISCARD</button>
