@@ -54,7 +54,26 @@ export class FileManager {
 
   async load(dirPath = this.currentPath) {
     const list = $('files-list');
-    list.innerHTML = '<div style="text-align:center; padding:60px; font-family:var(--font-mono); color:var(--text-blue); font-size:12px;">SEQUENCING DATA BLOCKS...</div>';
+    list.innerHTML = `
+        <div class="skeleton-row">
+            <div class="skeleton skeleton-icon"></div>
+            <div><div class="skeleton skeleton-line mid"></div><div class="skeleton skeleton-line short"></div></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-icon"></div>
+        </div>
+        <div class="skeleton-row">
+            <div class="skeleton skeleton-icon"></div>
+            <div><div class="skeleton skeleton-line mid"></div><div class="skeleton skeleton-line short"></div></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-icon"></div>
+        </div>
+        <div class="skeleton-row">
+            <div class="skeleton skeleton-icon"></div>
+            <div><div class="skeleton skeleton-line mid"></div><div class="skeleton skeleton-line short"></div></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-icon"></div>
+        </div>
+    `;
     this.exitSelectMode();
     try {
       const res = await fetch(`/ksapi/files?path=${encodeURIComponent(dirPath)}`);

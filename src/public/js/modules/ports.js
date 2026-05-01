@@ -11,7 +11,18 @@ export class PortScanner {
   }
 
   async load() {
-    this.list.innerHTML = '<div style="text-align:center; padding:60px; font-family:var(--font-mono); font-size:12px; color:var(--text-blue);">SCANNING UPLINK PORTS...</div>';
+    this.list.innerHTML = `
+      <div class="skeleton-row" style="grid-template-columns: 40px 1fr 80px; background:var(--night-900); border:1px solid var(--glass-border); border-radius:8px; margin-bottom:8px;">
+        <div class="skeleton skeleton-icon"></div>
+        <div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line mid"></div></div>
+        <div class="skeleton skeleton-icon"></div>
+      </div>
+      <div class="skeleton-row" style="grid-template-columns: 40px 1fr 80px; background:var(--night-900); border:1px solid var(--glass-border); border-radius:8px; margin-bottom:8px;">
+        <div class="skeleton skeleton-icon"></div>
+        <div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line mid"></div></div>
+        <div class="skeleton skeleton-icon"></div>
+      </div>
+    `;
     try {
       const res = await fetch('/ksapi/ports');
       const data = await res.json();

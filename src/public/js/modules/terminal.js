@@ -52,6 +52,15 @@ export class TerminalManager {
     container.style.cssText = "position:absolute; inset:0; display:none;";
     container.className = 'terminal-instance';
     container.id = `ti-${id}`;
+
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-term';
+    skeleton.innerHTML = `
+        <div class="skeleton skeleton-line short"></div>
+        <div class="skeleton skeleton-line mid"></div>
+        <div class="skeleton skeleton-line"></div>
+    `;
+    container.appendChild(skeleton);
     area.appendChild(container);
 
     const term = new Terminal({
@@ -78,10 +87,11 @@ export class TerminalManager {
     $('terminal-toolbar').classList.remove('hidden');
 
     setTimeout(() => {
+      skeleton.remove();
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
-    }, 100);
+    }, 1000); // 1s artificial delay to show skeleton
 
     this.activate(id);
     this._save();

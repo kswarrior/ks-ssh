@@ -376,3 +376,43 @@ body {
 .btn-primary, .icon-btn {
     transition: all 0.2s ease;
 }
+
+/* ===== SKELETON LOADING ===== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--night-800) 25%,
+    var(--night-700) 50%,
+    var(--night-800) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 100px 40px;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 12px;
+}
+
+.skeleton-icon { width: 24px; height: 24px; border-radius: 6px; }
+.skeleton-line { height: 12px; border-radius: 4px; margin-bottom: 6px; }
+.skeleton-line.short { width: 40%; }
+.skeleton-line.mid { width: 70%; }
+
+.skeleton-term {
+    position: absolute;
+    inset: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
