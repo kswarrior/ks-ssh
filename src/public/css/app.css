@@ -137,6 +137,53 @@ body {
   position: relative;
 }
 
+.port-preview-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60vh;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--glass-border);
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.preview-header {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.preview-dot { width: 8px; height: 8px; background: var(--electric-blue); border-radius: 50%; box-shadow: 0 0 8px var(--electric-blue); }
+.preview-title { font-size: 13px; font-weight: 700; color: var(--text-pure); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.preview-address-bar {
+  background: var(--night-900);
+  margin: 8px 16px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-blue);
+}
+
+.preview-body { flex: 1; position: relative; }
+.preview-body iframe { width: 100%; height: 100%; border: none; background: white; }
+
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);

@@ -17,14 +17,18 @@ class PortScanner {
     }
 
     for (const line of output.split('\n')) {
-      const m = line.match(/(?:0\.0\.0\.0|127\.0\.0\.1|\[::\]|\[::1\]|::|\*):(\d+)/);
+      const m = line.match(/(?:0\.0\.0\.0|127\.0\.0\.1|\[::\]|\[::1\]|::|\*|::1|::0):(\d+)/);
       if (!m) continue;
       const port = parseInt(m[1]);
       if (!port || port > 65535 || seen.has(port)) continue;
       seen.add(port);
-      const pm = line.match(/users:\(\("([^"]+)"/) || line.match(/"([^"]+)"\/\d+/);
-      const isPublic = line.includes('0.0.0.0') || /\*:\d+/.test(line) || line.includes('[::]');
-      ports.push({ port, process: pm ? pm[1] : 'unknown', address: isPublic ? '0.0.0.0' : '127.0.0.1' });
+
+      let processName = 'unknown';
+      const pm = line.match(/users:\(\("([^"]+)"/) || line.match(/"([^"]+)"\/\d+/) || line.match(/\d+\/([^ \n]+)/);
+      if (pm) processName = pm[1];
+
+      const isPublic = line.includes('0.0.0.0') || line.includes('*') || line.includes('[::]') || line.includes(':::');
+      ports.push({ port, process: processName, address: isPublic ? '0.0.0.0' : '127.0.0.1' });
     }
 
     if (!ports.length) {

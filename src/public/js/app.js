@@ -141,6 +141,14 @@ function setupPortPreview() {
     $('port-preview-panel').classList.add('hidden');
     $('port-preview-iframe').src = 'about:blank';
   });
+  $('port-preview-refresh')?.addEventListener('click', () => {
+    const src = $('port-preview-iframe').src;
+    $('port-preview-iframe').src = 'about:blank';
+    setTimeout(() => { $('port-preview-iframe').src = src; }, 50);
+  });
+  $('port-preview-pop')?.addEventListener('click', () => {
+    window.open($('port-preview-iframe').src, '_blank');
+  });
 }
 
 function setupVPSInfo() {
