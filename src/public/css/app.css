@@ -209,6 +209,16 @@ body {
   background: var(--obsidian);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
 }
 
 /* ===== FOOTER ===== */
@@ -269,7 +279,7 @@ body {
 .btn-primary:active { transform: translateY(0); }
 
 /* ===== TERMINAL HUD ===== */
-.terminal-hud-wrapper { height: 100%; display: flex; flex-direction: column; }
+.terminal-hud-wrapper { height: 100%; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .terminal-hud-tabs {
   display: flex;
   padding: 8px 16px;

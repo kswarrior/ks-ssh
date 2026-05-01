@@ -39,9 +39,8 @@ export class TerminalManager {
     tab.className = 'hud-t-tab';
     tab.dataset.id = id;
     tab.innerHTML = `
-      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>UPLINK-${num.toString().padStart(2, '0')}</span>
-      <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px;">&times;</button>
+      <span>${num}</span>
+      <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px; font-size:14px; line-height:1;">&times;</button>
     `;
     tab.onclick = (e) => { if (!e.target.closest('.hud-t-tab-close')) this.activate(id); };
     tab.querySelector('.hud-t-tab-close').onclick = (e) => { e.stopPropagation(); this.confirmClose(id); };
@@ -113,7 +112,7 @@ export class TerminalManager {
     t.tab.classList.add('active');
     t.container.style.display = 'block';
     t.container.classList.add('active');
-    $('t-session-name').textContent = `UPLINK-${t.num.toString().padStart(2, '0')} STATUS: ESTABLISHED`;
+    $('t-session-name').textContent = `SESSION: ${t.num.toString().padStart(2, '0')} STATUS: ONLINE`;
 
     setTimeout(() => {
       t.fit.fit();

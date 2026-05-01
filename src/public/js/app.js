@@ -12,7 +12,7 @@ function init() {
   terminals = new TerminalManager(socket);
   files = new FileManager();
   ports = new PortScanner();
-  resMon = new ResourceMonitor();
+  // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
 
   setupNavigation();
   setupSocket();
@@ -59,7 +59,6 @@ function updateHUD() {
   if (tabs) tabs.classList.toggle('hidden', count === 0);
 
   loadSystemInfo();
-  resMon.poll();
 }
 
 function setupNavigation() {
