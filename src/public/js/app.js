@@ -197,6 +197,7 @@ async function loadSystemInfo() {
     if ($('nf-shell')) $('nf-shell').textContent = s.shell;
     if ($('nf-cpu')) $('nf-cpu').textContent = `${r.cpu.model} (${r.cpu.count})`;
     if ($('nf-mem')) $('nf-mem').textContent = `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`;
+    if ($('nf-mem-bar')) $('nf-mem-bar').style.width = `${r.ram.percent}%`;
     if ($('nf-ip')) $('nf-ip').textContent = s.ip;
 
     // Uptime

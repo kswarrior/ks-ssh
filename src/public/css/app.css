@@ -251,6 +251,28 @@ body {
   color: var(--text-blue);
   margin: 0;
   white-space: pre;
+  text-shadow: 0 0 10px var(--electric-blue-glow);
+  animation: nf-pulse 4s infinite ease-in-out;
+}
+
+@keyframes nf-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.nf-bar-container {
+  height: 4px;
+  background: var(--night-700);
+  border-radius: 2px;
+  margin: 4px 0 8px;
+  overflow: hidden;
+  width: 120px;
+}
+.nf-bar-fill {
+  height: 100%;
+  background: var(--electric-blue);
+  box-shadow: 0 0 6px var(--electric-blue-glow);
+  transition: width 0.5s ease-out;
 }
 .neofetch-details {
   flex: 1;
