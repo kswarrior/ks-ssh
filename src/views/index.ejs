@@ -42,7 +42,7 @@
         <div class="dropdown-wrapper">
             <button class="icon-btn" id="vps-info-btn" title="VPS Information"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
             <div class="dropdown-menu hidden" id="vps-info-dropdown">
-                <div class="dropdown-header">System Information (Neofetch)</div>
+                <div class="dropdown-header">KS SSH — System Information</div>
                 <div class="dropdown-content neofetch-layout">
                     <pre id="vps-logo" class="neofetch-logo">🐧</pre>
                     <div class="neofetch-details">
@@ -55,8 +55,14 @@
                         <div class="nf-row"><span class="nf-key">Packages:</span> <span id="nf-packages">--</span></div>
                         <div class="nf-row"><span class="nf-key">Shell:</span> <span id="nf-shell">--</span></div>
                         <div class="nf-row"><span class="nf-key">CPU:</span> <span id="nf-cpu" style="color:var(--text-pure);">--</span></div>
-                        <div class="nf-row"><span class="nf-key">Memory:</span> <span id="nf-mem">--</span></div>
+                        <div id="nf-cpu-cores-list" style="margin-top:4px;"></div>
+
+                        <div class="nf-row" style="margin-top:8px;"><span class="nf-key">Memory:</span> <span id="nf-mem">--</span></div>
                         <div class="nf-bar-container"><div id="nf-mem-bar" class="nf-bar-fill" style="width: 0%;"></div></div>
+
+                        <div class="nf-row"><span class="nf-key">Disk:</span> <span id="nf-disk">--</span></div>
+                        <div class="nf-bar-container"><div id="nf-disk-bar" class="nf-bar-fill" style="width: 0%; background:#a855f7; box-shadow:0 0 6px rgba(168,85,247,0.4);"></div></div>
+
                         <div class="nf-row"><span class="nf-key">IP:</span> <span id="nf-ip" class="text-blue" style="font-weight: 800;">--</span></div>
                     </div>
                 </div>

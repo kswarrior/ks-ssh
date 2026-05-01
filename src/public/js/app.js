@@ -198,7 +198,25 @@ async function loadSystemInfo() {
     if ($('nf-cpu')) $('nf-cpu').textContent = `${r.cpu.model} (${r.cpu.count})`;
     if ($('nf-mem')) $('nf-mem').textContent = `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`;
     if ($('nf-mem-bar')) $('nf-mem-bar').style.width = `${r.ram.percent}%`;
+
+    if ($('nf-disk')) $('nf-disk').textContent = `${r.disk.used.toFixed(1)}GB / ${r.disk.total.toFixed(1)}GB`;
+    if ($('nf-disk-bar')) $('nf-disk-bar').style.width = `${r.disk.percent}%`;
+
     if ($('nf-ip')) $('nf-ip').textContent = s.ip;
+
+    // Per-core CPU
+    const coreList = $('nf-cpu-cores-list');
+    if (coreList && r.cpu.cores) {
+        coreList.innerHTML = r.cpu.cores.map((pct, i) => `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px;">
+                <div style="font-size:9px; color:var(--text-dim); width:35px; font-family:var(--font-mono);">CORE${i}</div>
+                <div style="flex:1; height:3px; background:var(--night-700); border-radius:2px; overflow:hidden;">
+                    <div style="width:${pct}%; height:100%; background:var(--text-blue); box-shadow: 0 0 4px var(--electric-blue-glow);"></div>
+                </div>
+                <div style="font-size:9px; color:var(--text-main); width:25px; text-align:right;">${Math.round(pct)}%</div>
+            </div>
+        `).join('');
+    }
 
     // Uptime
     const up = s.uptime;
