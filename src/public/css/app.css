@@ -227,6 +227,7 @@ body {
   transition: var(--transition-fast);
 }
 .icon-btn:hover { color: var(--text-pure); background: var(--night-700); }
+.icon-btn.danger-hover:hover { color: #f87171; background: rgba(248, 113, 113, 0.1); }
 
 
 /* ===== MAIN WORKSPACE ===== */
@@ -531,14 +532,19 @@ body {
     justify-content: space-between;
     padding: 8px 12px;
     flex-wrap: nowrap;
-    overflow-x: auto;
+    /* Removed overflow-x: auto to prevent dropdown clipping */
     scrollbar-width: none;
   }
   .hud-header::-webkit-scrollbar { display: none; }
 
   .header-left {
     gap: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+    margin-right: 8px;
   }
+  .header-left::-webkit-scrollbar { display: none; }
 
   .header-right {
     padding-top: 0;

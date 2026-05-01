@@ -20,6 +20,7 @@ export class TerminalManager {
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
     $('t-rename-btn')?.addEventListener('click', () => this.renameActive());
+    $('t-kill-all')?.addEventListener('click', () => this.killAll());
     $('t-session-name')?.addEventListener('click', () => this.renameActive());
 
     window.addEventListener('keydown', (e) => {
@@ -201,6 +202,13 @@ export class TerminalManager {
         $('terminals-empty').classList.remove('hidden');
         $('terminal-toolbar').classList.add('hidden');
       }
+    }
+  }
+
+  killAll() {
+    if (confirm('Kill all active sessions?')) {
+      [...this.terminals.keys()].forEach(id => this.close(id));
+      showToast('ALL SESSIONS TERMINATED');
     }
   }
 
