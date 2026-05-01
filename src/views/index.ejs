@@ -16,11 +16,17 @@
 
   <header class="hud-header">
     <div class="header-left">
-        <button class="icon-btn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
         <div class="header-brand">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            KS SSH <span id="hdr-host-id">----</span>
+            KS SSH
         </div>
+
+        <nav class="top-nav">
+          <div class="nav-link active" data-tab="terminals">Terminal</div>
+          <div class="nav-link" data-tab="files">Files</div>
+          <div class="nav-link" data-tab="ports">Ports</div>
+        </nav>
+
         <div class="header-stats">
             <div class="header-stat-item">
                 <span id="hdr-ram-pct">0%</span> RAM
@@ -33,41 +39,28 @@
     </div>
 
     <div class="header-right">
-        <button class="icon-btn" id="res-mon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
-        <button class="icon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-        <button class="icon-btn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></button>
+        <button class="icon-btn" id="res-mon-btn" title="Resource Monitor"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+
+        <div class="dropdown-wrapper">
+            <button class="icon-btn" id="vps-info-btn" title="VPS Info"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+            <div class="dropdown-menu hidden" id="vps-info-dropdown">
+                <div class="dropdown-header">VPS System Information</div>
+                <div class="dropdown-content">
+                    <div class="info-grid">
+                        <div class="info-label">CPU Model</div><div class="info-value" id="vps-cpu-model">--</div>
+                        <div class="info-label">Cores</div><div class="info-value" id="vps-cpu-cores">--</div>
+                        <div class="info-label">RAM</div><div class="info-value" id="vps-ram-usage">--</div>
+                        <div class="info-label">Disk</div><div class="info-value" id="vps-disk-usage">--</div>
+                        <div class="info-label">IP Address</div><div class="info-value text-blue" id="vps-ip">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="icon-btn" id="ks-key-btn" title="Master Key"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></button>
     </div>
   </header>
 
-  <aside class="hud-sidebar">
-    <nav class="nav-section">
-        <div class="nav-item active" data-tab="terminals">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            Terminal
-        </div>
-        <div class="nav-item" data-tab="ports">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-            Ports
-        </div>
-        <div class="nav-item" data-tab="files">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
-            Files
-        </div>
-    </nav>
-
-    <div class="system-section">
-        <div class="section-label">SYSTEM</div>
-        <div class="system-table">
-            <div class="system-row"><span class="system-key">Host</span><span class="system-val" id="sys-host">----</span></div>
-            <div class="system-row"><span class="system-key">OS</span><span class="system-val" id="sys-os">----</span></div>
-            <div class="system-row"><span class="system-key">User</span><span class="system-val" id="sys-user">----</span></div>
-            <div class="system-row"><span class="system-key">CPUs</span><span class="system-val" id="sys-cpus">----</span></div>
-            <div class="system-row"><span class="system-key">Memory</span><span class="system-val" id="sys-mem">----</span></div>
-            <div class="system-row"><span class="system-key">Uptime</span><span class="system-val" id="sys-uptime">----</span></div>
-            <div class="system-row"><span class="system-key">Load</span><span class="system-val" id="sys-load">----</span></div>
-        </div>
-    </div>
-  </aside>
 
   <main class="hud-main">
     <%- include('terminal') %>

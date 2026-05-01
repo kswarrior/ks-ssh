@@ -18,6 +18,7 @@ function init() {
   setupSocket();
   setupModals();
   setupPortPreview();
+  setupVPSInfo();
 
   // Initial tab
   switchTab('terminals');
@@ -69,7 +70,7 @@ function setupNavigation() {
 
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
-  const items = document.querySelectorAll('.nav-item');
+  const items = document.querySelectorAll('.nav-item, .nav-link');
 
   panels.forEach(p => p.classList.add('hidden'));
   items.forEach(b => b.classList.remove('active'));
@@ -80,7 +81,12 @@ function switchTab(tab) {
     document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
   }
 
-  if (tab === 'files') files.load();
+  if (tab === 'files') {
+    files.load();
+    // Ensure navigation state is correct if called manually
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector(`.nav-link[data-tab="${tab}"]`)?.classList.add('active');
+  }
   if (tab === 'ports') ports.load();
   if (tab === 'terminals') {
     setTimeout(() => terminals.refit(), 50);
@@ -129,6 +135,24 @@ function setupPortPreview() {
   });
 }
 
+function setupVPSInfo() {
+    const btn = $('vps-info-btn');
+    const menu = $('vps-info-dropdown');
+
+    if (btn && menu) {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => {
+            menu.classList.add('hidden');
+        });
+
+        menu.addEventListener('click', (e) => e.stopPropagation());
+    }
+}
+
 async function loadSystemInfo() {
   try {
     const sRes = await fetch('/ksapi/system');
@@ -145,6 +169,13 @@ async function loadSystemInfo() {
     if ($('sys-user')) $('sys-user').textContent = s.user;
     if ($('sys-cpus')) $('sys-cpus').textContent = s.cpus;
     if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
+
+    // VPS Info Dropdown
+    if ($('vps-cpu-model')) $('vps-cpu-model').textContent = r.cpu.model || 'N/A';
+    if ($('vps-cpu-cores')) $('vps-cpu-cores').textContent = r.cpu.count;
+    if ($('vps-ram-usage')) $('vps-ram-usage').textContent = `${r.ram.used.toFixed(1)}/${r.ram.total.toFixed(1)} GB`;
+    if ($('vps-disk-usage')) $('vps-disk-usage').textContent = `${r.disk.used.toFixed(1)}/${r.disk.total.toFixed(1)} GB`;
+    if ($('vps-ip')) $('vps-ip').textContent = s.ip;
 
     // Uptime
     const up = s.uptime;

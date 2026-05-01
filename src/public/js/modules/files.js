@@ -11,6 +11,7 @@ export class FileManager {
   _setupUI() {
     $('upload-btn')?.addEventListener('click', () => $('file-input').click());
     $('file-input')?.addEventListener('change', (e) => this.handleUpload(e));
+    $('new-file-btn')?.addEventListener('click', () => this.promptNewFile());
     $('new-folder-btn')?.addEventListener('click', () => this.promptNewFolder());
     $('files-refresh-btn')?.addEventListener('click', () => this.load());
 
@@ -127,10 +128,12 @@ export class FileManager {
         ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>'
         : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
 
+    const colorClass = this.getFileColorClass(f);
+
     row.innerHTML = `
         <div class="file-icon">${icon}</div>
         <div class="file-info">
-            <div class="file-name">${esc(f.name)}</div>
+            <div class="file-name ${colorClass}">${esc(f.name)}</div>
             ${!isParent ? `<div class="file-meta">${f.modified ? f.modified.split('T')[0] : ''}</div>` : ''}
         </div>
         <div class="file-size">${!f.isDirectory ? fmtBytes(f.size) : ''}</div>
@@ -195,6 +198,12 @@ export class FileManager {
   async openEditor(file) {
     this.activeFile = file;
     $('editor-filename').textContent = file.name;
+
+    // Header color based on type
+    const header = $('file-editor-modal').querySelector('.modal-header');
+    const colorClass = this.getFileColorClass(file);
+    header.style.borderBottom = colorClass ? `2px solid ${getComputedStyle(document.documentElement).getPropertyValue('--' + colorClass.replace('text-', '')) || 'var(--electric-blue)'}` : '1px solid var(--glass-border)';
+
     $('file-editor-modal').classList.remove('hidden');
     $('file-editor-text').value = 'LOADING...';
     try {
@@ -347,5 +356,53 @@ export class FileManager {
         bar.classList.remove('hidden');
         $('bulk-count').textContent = `${this.selectedPaths.size} ITEMS TAGGED`;
     } else bar.classList.add('hidden');
+  }
+
+  async promptNewFile() {
+    const name = prompt('NEW FILE IDENTIFIER:');
+    if (!name) return;
+    try {
+        const res = await fetch('/ksapi/files/write', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filePath: `${this.currentPath}/${name}`, content: '' })
+        });
+        const data = await res.json();
+        if (data.success) { showToast('FILE CREATED'); this.load(); }
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async promptNewFolder() {
+    const name = prompt('NEW FOLDER IDENTIFIER:');
+    if (!name) return;
+    try {
+        const res = await fetch('/ksapi/files/mkdir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: this.currentPath, name })
+        });
+        const data = await res.json();
+        if (data.success) { showToast('DIRECTORY CREATED'); this.load(); }
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  getFileColorClass(f) {
+      if (f.isDirectory) return '';
+      const ext = f.name.split('.').pop().toLowerCase();
+      const colors = {
+          'js': 'text-js',
+          'html': 'text-html',
+          'css': 'text-css',
+          'json': 'text-json',
+          'md': 'text-md',
+          'py': 'text-py',
+          'sh': 'text-sh',
+          'zip': 'text-zip',
+          'png': 'text-img',
+          'jpg': 'text-img',
+          'jpeg': 'text-img',
+          'svg': 'text-img'
+      };
+      return colors[ext] || '';
   }
 }
