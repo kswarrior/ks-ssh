@@ -18,7 +18,7 @@
     <div class="header-left">
         <div class="header-brand">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            KS SSH
+            <span>KS SSH</span>
         </div>
 
         <nav class="top-nav">
@@ -42,14 +42,21 @@
         <div class="dropdown-wrapper">
             <button class="icon-btn" id="vps-info-btn" title="VPS Information"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
             <div class="dropdown-menu hidden" id="vps-info-dropdown">
-                <div class="dropdown-header">VPS System Information</div>
-                <div class="dropdown-content">
-                    <div class="info-grid">
-                        <div class="info-label">CPU Model</div><div class="info-value" id="vps-cpu-model">--</div>
-                        <div class="info-label">Cores</div><div class="info-value" id="vps-cpu-cores">--</div>
-                        <div class="info-label">RAM</div><div class="info-value" id="vps-ram-usage">--</div>
-                        <div class="info-label">Disk</div><div class="info-value" id="vps-disk-usage">--</div>
-                        <div class="info-label">IP Address</div><div class="info-value text-blue" id="vps-ip">--</div>
+                <div class="dropdown-header">System Information (Neofetch)</div>
+                <div class="dropdown-content neofetch-layout">
+                    <pre id="vps-logo" class="neofetch-logo">🐧</pre>
+                    <div class="neofetch-details">
+                        <div class="nf-user-host"><span id="nf-user">user</span>@<span id="nf-host">host</span></div>
+                        <div class="nf-separator">-----------------</div>
+                        <div class="nf-row"><span class="nf-key">OS:</span> <span id="nf-os">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Host:</span> <span id="nf-platform">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Kernel:</span> <span id="nf-kernel">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Uptime:</span> <span id="nf-uptime">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Packages:</span> <span id="nf-packages">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Shell:</span> <span id="nf-shell">--</span></div>
+                        <div class="nf-row"><span class="nf-key">CPU:</span> <span id="nf-cpu">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Memory:</span> <span id="nf-mem">--</span></div>
+                        <div class="nf-row"><span class="nf-key">IP:</span> <span id="nf-ip" class="text-blue">--</span></div>
                     </div>
                 </div>
             </div>

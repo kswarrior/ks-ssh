@@ -169,18 +169,31 @@ async function loadSystemInfo() {
     if ($('sys-cpus')) $('sys-cpus').textContent = s.cpus;
     if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
 
-    // VPS Info Dropdown
-    if ($('vps-cpu-model')) $('vps-cpu-model').textContent = r.cpu.model || 'N/A';
-    if ($('vps-cpu-cores')) $('vps-cpu-cores').textContent = r.cpu.count;
-    if ($('vps-ram-usage')) $('vps-ram-usage').textContent = `${r.ram.used.toFixed(1)}/${r.ram.total.toFixed(1)} GB`;
-    if ($('vps-disk-usage')) $('vps-disk-usage').textContent = `${r.disk.used.toFixed(1)}/${r.disk.total.toFixed(1)} GB`;
-    if ($('vps-ip')) $('vps-ip').textContent = s.ip;
+    // VPS Info (Neofetch)
+    if ($('vps-logo')) $('vps-logo').textContent = s.logo || '🐧';
+    if ($('nf-user')) $('nf-user').textContent = s.user;
+    if ($('nf-host')) $('nf-host').textContent = s.hostname;
+    if ($('nf-os')) $('nf-os').textContent = s.osName;
+    if ($('nf-platform')) $('nf-platform').textContent = `${s.platform} ${s.arch}`;
+    if ($('nf-kernel')) $('nf-kernel').textContent = s.kernel;
+    if ($('nf-packages')) $('nf-packages').textContent = s.packages;
+    if ($('nf-shell')) $('nf-shell').textContent = s.shell;
+    if ($('nf-cpu')) $('nf-cpu').textContent = `${r.cpu.model} (${r.cpu.count})`;
+    if ($('nf-mem')) $('nf-mem').textContent = `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`;
+    if ($('nf-ip')) $('nf-ip').textContent = s.ip;
 
     // Uptime
     const up = s.uptime;
     const days = Math.floor(up / 86400);
     const hours = Math.floor((up % 86400) / 3600);
-    if ($('sys-uptime')) $('sys-uptime').textContent = `${days}d ${hours}h`;
+    const mins = Math.floor((up % 3600) / 60);
+    if ($('nf-uptime')) {
+        let utStr = '';
+        if (days > 0) utStr += `${days} days, `;
+        if (hours > 0) utStr += `${hours} hours, `;
+        utStr += `${mins} mins`;
+        $('nf-uptime').textContent = utStr;
+    }
 
     // Load
     if ($('sys-load')) $('sys-load').textContent = s.loadAvg.map(l => l.toFixed(2)).join(' ');

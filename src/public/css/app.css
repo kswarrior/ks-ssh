@@ -144,7 +144,7 @@ body {
   background: var(--night-900);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  width: 280px;
+  width: 340px;
   z-index: 1000;
   box-shadow: 0 10px 30px rgba(0,0,0,0.8);
   animation: dropdownIn 0.2s ease-out;
@@ -190,6 +190,32 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Neofetch Styling */
+.neofetch-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.neofetch-logo {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-blue);
+  margin: 0;
+  white-space: pre;
+}
+.neofetch-details {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  min-width: 0;
+}
+.nf-user-host { font-weight: 800; color: var(--text-blue); }
+.nf-separator { color: var(--text-dim); margin: 2px 0 4px; }
+.nf-row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-key { font-weight: 700; color: var(--text-blue); margin-right: 4px; }
 
 .icon-btn {
   background: none;
@@ -288,16 +314,18 @@ body {
   border-bottom: 1px solid var(--glass-border);
 }
 .hud-t-tab {
-  padding: 6px 12px;
-  border-radius: 4px;
+  padding: 6px 14px;
+  border-radius: 6px;
   background: var(--night-700);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text-dim);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
 }
 .hud-t-tab.active { background: var(--night-900); color: var(--text-pure); border: 1px solid var(--glass-border); }
 
@@ -498,22 +526,26 @@ body {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .hud-header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .hud-header::-webkit-scrollbar { display: none; }
 
   .header-left {
-    width: 100%;
-    justify-content: space-between;
+    gap: 12px;
   }
 
   .header-right {
-    width: 100%;
-    justify-content: space-between;
-    padding-top: 8px;
-    border-top: 1px solid var(--glass-border);
+    padding-top: 0;
+    border-top: none;
   }
+
+  .header-brand span { display: none; } /* Hide "KS SSH" text on tiny screens if needed */
 
   .header-stats {
     display: none;

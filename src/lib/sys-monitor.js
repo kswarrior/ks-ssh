@@ -111,6 +111,69 @@ class SystemMonitor {
 
   getSystemInfo() {
     this._fetchIp();
+
+    let osName = os.type();
+    let logo = '🐧'; // Default logo
+    let pkgs = 'N/A';
+
+    try {
+      if (fs.existsSync('/etc/os-release')) {
+        const release = fs.readFileSync('/etc/os-release', 'utf8');
+        const nameMatch = release.match(/^PRETTY_NAME="?([^"\n]+)"?/m);
+        if (nameMatch) osName = nameMatch[1];
+
+        const idMatch = release.match(/^ID=([^"\n]+)/m);
+        const osId = idMatch ? idMatch[1].toLowerCase() : '';
+
+        if (osId.includes('ubuntu')) {
+          logo = `
+   MMM.           .MMM
+   MMMMMMMMMMMMMMMMMMM
+   MMM   MMMMMMM   MMM
+   MMM   MMMMMMM   MMM
+   MMM   MMMMMMM   MMM
+   MMMMMMMMMMMMMMMMMMM
+   MMM.           .MMM
+`;
+        } else if (osId.includes('debian')) {
+          logo = `
+      _____
+     /  __ \\
+    /  /  \\_|
+    |  |
+    \\  \\__/|
+     \\____/
+`;
+        } else if (osId.includes('centos')) {
+          logo = `
+     _______
+    / _____ \\
+   / /     \\ \\
+   | |     | |
+   \\ \\_____/ /
+    \\_______/
+`;
+        } else if (osId.includes('arch')) {
+          logo = `
+       /\\
+      /  \\
+     /    \\
+    /      \\
+   /   /\\   \\
+  /___/  \\___\\
+`;
+        }
+      }
+    } catch {}
+
+    try {
+      if (fs.existsSync('/usr/bin/dpkg')) {
+        pkgs = execSync('dpkg-query -f \'${binary:Package}\\n\' -W | wc -l', { encoding: 'utf8', timeout: 500 }).trim() + ' (dpkg)';
+      } else if (fs.existsSync('/usr/bin/rpm')) {
+        pkgs = execSync('rpm -qa | wc -l', { encoding: 'utf8', timeout: 500 }).trim() + ' (rpm)';
+      }
+    } catch {}
+
     return {
       hostname: os.hostname(),
       platform: os.platform(),
@@ -121,7 +184,12 @@ class SystemMonitor {
       cpus: os.cpus().length,
       home: os.homedir(),
       user: os.userInfo().username,
-      ip: this.cachedIp
+      ip: this.cachedIp,
+      osName,
+      kernel: os.release(),
+      shell: process.env.SHELL || '/bin/sh',
+      packages: pkgs,
+      logo
     };
   }
 }
