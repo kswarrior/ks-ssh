@@ -7,6 +7,40 @@ const { execSync } = require('child_process');
 class SystemMonitor {
   constructor() {
     this.prevCpu = this._readCpu();
+    this.cachedIp = 'Loading...';
+    this.lastIpFetch = 0;
+    this._fetchIp();
+  }
+
+  _fetchIp() {
+    if (this.lastIpFetch && (Date.now() - this.lastIpFetch < 300000)) return;
+
+    // Fallback to local immediately if we have nothing
+    if (this.cachedIp === 'Loading...') this._fallbackIp();
+
+    const { exec } = require('child_process');
+    exec('curl -s --max-time 3 https://ifconfig.me', (error, stdout) => {
+      if (!error && stdout && stdout.trim()) {
+        this.cachedIp = stdout.trim();
+        this.lastIpFetch = Date.now();
+      } else {
+        this._fallbackIp();
+      }
+    });
+  }
+
+  _fallbackIp() {
+    try {
+      const nets = os.networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+          if (net.family === 'IPv4' && !net.internal) {
+            this.cachedIp = net.address;
+            return;
+          }
+        }
+      }
+    } catch {}
   }
 
   _readCpu() {
@@ -76,21 +110,7 @@ class SystemMonitor {
   }
 
   getSystemInfo() {
-    let ip = 'Unknown';
-    try {
-      ip = execSync('curl -s --max-time 2 https://ifconfig.me', { encoding: 'utf8' }).trim();
-    } catch {
-      try {
-        const nets = os.networkInterfaces();
-        for (const name of Object.keys(nets)) {
-          for (const net of nets[name]) {
-            if (net.family === 'IPv4' && !net.internal) { ip = net.address; break; }
-          }
-          if (ip !== 'Unknown') break;
-        }
-      } catch {}
-    }
-
+    this._fetchIp();
     return {
       hostname: os.hostname(),
       platform: os.platform(),
@@ -101,7 +121,7 @@ class SystemMonitor {
       cpus: os.cpus().length,
       home: os.homedir(),
       user: os.userInfo().username,
-      ip
+      ip: this.cachedIp
     };
   }
 }
