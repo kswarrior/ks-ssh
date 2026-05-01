@@ -7,6 +7,8 @@ export class TerminalManager {
     this.activeId = null;
     this.counter = 0;
     this.fontSize = 13;
+    this.ctrlActive = false;
+    this.altActive = false;
 
     this._setupUI();
   }
@@ -30,6 +32,43 @@ export class TerminalManager {
         if (keys[idx]) this.activate(keys[idx]);
       }
     });
+
+    // Mobile Keys
+    document.querySelectorAll('.kbd-key').forEach(btn => {
+        btn.onclick = (e) => {
+            e.preventDefault();
+            this.handleVirtualKey(btn.dataset.key);
+        };
+    });
+
+    if (window.innerWidth <= 768) {
+        $('mobile-kbd-bar').style.display = 'flex';
+    }
+  }
+
+  handleVirtualKey(key) {
+    if (!this.activeId) return;
+    const id = this.activeId;
+
+    let data = null;
+    switch(key) {
+        case 'CTRL':
+            this.ctrlActive = !this.ctrlActive;
+            document.querySelector('.kbd-key[data-key="CTRL"]').classList.toggle('active', this.ctrlActive);
+            return;
+        case 'ALT':
+            this.altActive = !this.altActive;
+            document.querySelector('.kbd-key[data-key="ALT"]').classList.toggle('active', this.altActive);
+            return;
+        case 'TAB': data = '\t'; break;
+        case 'ESC': data = '\x1b'; break;
+        case 'UP': data = '\x1b[A'; break;
+        case 'DOWN': data = '\x1b[B'; break;
+        case 'LEFT': data = '\x1b[D'; break;
+        case 'RIGHT': data = '\x1b[C'; break;
+    }
+
+    if (data) this.socket.emit('terminal:input', { id, data });
   }
 
   create(data = {}) {
@@ -90,7 +129,23 @@ export class TerminalManager {
     term.loadAddon(fit);
     term.open(container);
 
-    term.onData(data => this.socket.emit('terminal:input', { id, data }));
+    term.onData(data => {
+        if (this.ctrlActive) {
+            // CTRL + Key logic
+            const code = data.charCodeAt(0);
+            if (code >= 97 && code <= 122) { // a-z
+                data = String.fromCharCode(code - 96);
+            }
+            this.ctrlActive = false;
+            document.querySelector('.kbd-key[data-key="CTRL"]').classList.remove('active');
+        }
+        if (this.altActive) {
+            data = '\x1b' + data;
+            this.altActive = false;
+            document.querySelector('.kbd-key[data-key="ALT"]').classList.remove('active');
+        }
+        this.socket.emit('terminal:input', { id, data });
+    });
 
     this.terminals.set(id, { term, fit, num, name: displayName, tab, container });
 

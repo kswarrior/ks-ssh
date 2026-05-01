@@ -21,7 +21,19 @@
       </div>
     </div>
 
-    <div class="terminal-hud-content flex-1" id="terminals-area">
+    <div class="terminal-hud-content flex-1" id="terminals-area" style="position:relative;">
+      <!-- Mobile Keyboard Bar -->
+      <div id="mobile-kbd-bar" class="mobile-kbd-bar hidden">
+          <div class="kbd-key" data-key="CTRL">CTRL</div>
+          <div class="kbd-key" data-key="ALT">ALT</div>
+          <div class="kbd-key" data-key="TAB">TAB</div>
+          <div class="kbd-key" data-key="ESC">ESC</div>
+          <div class="kbd-key" data-key="UP">▲</div>
+          <div class="kbd-key" data-key="DOWN">▼</div>
+          <div class="kbd-key" data-key="LEFT">◀</div>
+          <div class="kbd-key" data-key="RIGHT">▶</div>
+      </div>
+
       <div id="terminals-empty" class="empty-state">
         <div class="empty-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>

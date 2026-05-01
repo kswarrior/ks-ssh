@@ -375,7 +375,7 @@ body {
 .btn-primary:active { transform: translateY(0); }
 
 /* ===== TERMINAL HUD ===== */
-.terminal-hud-wrapper { height: 100%; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.terminal-hud-wrapper { height: 100%; flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 .terminal-hud-tabs {
   display: flex;
   padding: 8px 16px;
@@ -398,6 +398,38 @@ body {
   transition: var(--transition-fast);
 }
 .hud-t-tab.active { background: var(--night-900); color: var(--text-pure); border: 1px solid var(--glass-border); }
+
+.mobile-kbd-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: var(--night-900);
+  border-top: 1px solid var(--glass-border);
+  display: none; /* Shown via JS on mobile */
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.kbd-key {
+  background: var(--night-700);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition-fast);
+}
+.kbd-key:active { background: var(--electric-blue); color: white; transform: translateY(-2px); }
+.kbd-key.active { background: var(--electric-blue); color: white; box-shadow: 0 0 8px var(--electric-blue-glow); }
 
 /* ===== UTILS ===== */
 .flex-1 { flex: 1; }
@@ -595,6 +627,10 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  .terminal-instance.active {
+    padding-bottom: 40px !important;
+  }
+
   .hud-header {
     flex-direction: row;
     align-items: center;
