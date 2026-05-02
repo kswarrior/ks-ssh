@@ -35,7 +35,7 @@
   --radius-hud: 8px;
   --shadow-hud: 0 4px 20px rgba(0, 0, 0, 0.6);
 
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.1s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -314,7 +314,7 @@ body {
   border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width var(--transition-fast);
   overflow: hidden;
   flex-shrink: 0;
 }

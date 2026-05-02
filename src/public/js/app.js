@@ -64,6 +64,7 @@ function setupCommandPalette() {
     ];
 
     window.addEventListener('keydown', (e) => {
+        // Command Palette (Ctrl+K)
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
             e.preventDefault();
             palette.classList.remove('hidden');
@@ -71,6 +72,20 @@ function setupCommandPalette() {
             input.focus();
             renderResults('');
         }
+
+        // Sidebar Toggle (Ctrl+B)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+            e.preventDefault();
+            toggleSidebar();
+        }
+
+        // New Terminal (Ctrl+Shift+T)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+            e.preventDefault();
+            terminals.create();
+            switchTab('terminals');
+        }
+
         if (e.key === 'Escape') palette.classList.add('hidden');
     });
 
@@ -157,7 +172,7 @@ function toggleSidebar(force) {
     if (nowOpen) files.load();
 
     // Always refit terminals when layout changes
-    setTimeout(() => terminals.refit(), 250);
+    setTimeout(() => terminals.refit(), 120);
 }
 
 function switchTab(tab) {
