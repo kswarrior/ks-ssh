@@ -14,6 +14,7 @@ jobs:
     - name: Install and Run
       run: |
         node -v || true
+        npm install
         npm run build
         chmod +x ks-ssh
         ./ks-ssh --port 3000
