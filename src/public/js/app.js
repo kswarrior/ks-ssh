@@ -13,7 +13,8 @@ function init() {
   terminals = new TerminalManager(socket);
   files = new FileManager();
   ports = new PortScanner();
-  processes = new ProcessManager();
+  window.processes = processes = new ProcessManager();
+  window.files = files; // For debugging and potentially some inline handlers
   // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
 
   setupNavigation();

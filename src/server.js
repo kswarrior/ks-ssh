@@ -62,7 +62,7 @@ app.get('/ksapi/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.get('/ksapi/system', (req, res) => res.json(sys.getSystemInfo()));
 
-app.get('/ksapi/resources', (req, res) => res.json(sys.getStats()));
+app.get('/ksapi/resources', async (req, res) => res.json(await sys.getStats()));
 
 app.get('/ksapi/tunnel', (req, res) => res.json(tunnel.getInfo()));
 
@@ -136,7 +136,9 @@ app.get('/ksapi/processes', (req, res) => {
 
 app.post('/ksapi/processes/kill', (req, res) => {
   try {
-    require('child_process').execSync(`kill -9 ${req.body.pid}`);
+    const pid = parseInt(req.body.pid);
+    if (isNaN(pid)) return res.status(400).json({ error: 'Invalid PID' });
+    process.kill(pid, 'SIGKILL');
     res.json({ success: true });
   } catch (err) { res.status(400).json({ error: err.message }); }
 });

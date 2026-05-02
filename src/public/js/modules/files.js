@@ -234,6 +234,10 @@ export class FileManager {
     this.activeFile = file;
     $('editor-filename').textContent = file.name;
 
+    const { icon, color } = this.getFileVisuals(file);
+    $('editor-icon').innerHTML = icon;
+    $('editor-icon').style.color = color;
+
     // Header color based on type
     const header = $('file-editor-modal').querySelector('.modal-header');
     const colorClass = this.getFileColorClass(file);
