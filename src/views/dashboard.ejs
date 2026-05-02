@@ -1,0 +1,71 @@
+<div class="tab-panel" id="tab-dashboard">
+  <div style="padding:20px; display:flex; flex-direction:column; height:100%; overflow-y:auto;">
+    <div style="margin-bottom:30px; padding:0 16px;">
+        <h1 style="font-weight:900; letter-spacing:-0.04em; font-size:28px; color:var(--text-pure);">Dashboard HUD</h1>
+        <p style="font-size:14px; color:var(--text-dim); margin-top:4px;">SYSTEM OVERVIEW & QUICK ACTIONS</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; padding:0 16px;">
+        <!-- System Health Card -->
+        <div style="background:var(--night-900); border:1px solid var(--glass-border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:12px; font-weight:800; color:var(--text-blue); text-transform:uppercase; letter-spacing:1px;">System Health</h3>
+                <div style="width:8px; height:8px; background:#22c55e; border-radius:50%; box-shadow:0 0 8px #22c55e;"></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;"><span>CPU Usage</span> <span id="dash-cpu-pct">0%</span></div>
+                    <div style="height:4px; background:var(--night-700); border-radius:2px; overflow:hidden;"><div id="dash-cpu-bar" style="height:100%; background:var(--text-blue); width:0%; transition:0.3s;"></div></div>
+                </div>
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;"><span>Memory</span> <span id="dash-mem-pct">0%</span></div>
+                    <div style="height:4px; background:var(--night-700); border-radius:2px; overflow:hidden;"><div id="dash-mem-bar" style="height:100%; background:#a855f7; width:0%; transition:0.3s;"></div></div>
+                </div>
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;"><span>Storage</span> <span id="dash-disk-pct">0%</span></div>
+                    <div style="height:4px; background:var(--night-700); border-radius:2px; overflow:hidden;"><div id="dash-disk-bar" style="height:100%; background:#f59e0b; width:0%; transition:0.3s;"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Card -->
+        <div style="background:var(--night-900); border:1px solid var(--glass-border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <h3 style="font-size:12px; font-weight:800; color:var(--text-blue); text-transform:uppercase; letter-spacing:1px;">Network Status</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-dim);">Public IP</span>
+                    <span id="dash-ip" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text-pure);">--.---.---.---</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-dim);">Latency</span>
+                    <span id="dash-latency" style="font-family:var(--font-mono); font-size:13px; color:#22c55e;">--ms</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-dim);">Uptime</span>
+                    <span id="dash-uptime" style="font-size:12px; color:var(--text-pure);">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div style="background:var(--night-900); border:1px solid var(--glass-border); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <h3 style="font-size:12px; font-weight:800; color:var(--text-blue); text-transform:uppercase; letter-spacing:1px;">Quick Actions</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button onclick="switchTab('terminals'); terminals.create()" class="btn-primary" style="padding:10px; font-size:11px; justify-content:center; background:var(--night-800); border-color:var(--glass-border);">NEW TERM</button>
+                <button onclick="switchTab('files');" class="btn-primary" style="padding:10px; font-size:11px; justify-content:center; background:var(--night-800); border-color:var(--glass-border);">BROWSE FILES</button>
+                <button onclick="switchTab('ports');" class="btn-primary" style="padding:10px; font-size:11px; justify-content:center; background:var(--night-800); border-color:var(--glass-border);">SCAN PORTS</button>
+                <button onclick="switchTab('processes');" class="btn-primary" style="padding:10px; font-size:11px; justify-content:center; background:var(--night-800); border-color:var(--glass-border);">VIEW TASKS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Sessions Section -->
+    <div style="margin-top:30px; padding:0 16px;">
+        <h3 style="font-size:12px; font-weight:800; color:var(--text-blue); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px;">Active Sessions</h3>
+        <div id="dash-sessions-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
+            <!-- Injected via JS -->
+            <div style="text-align:center; padding:20px; color:var(--text-dim); background:var(--night-900); border-radius:8px; border:1px dashed var(--glass-border); font-size:12px;">NO ACTIVE SESSIONS</div>
+        </div>
+    </div>
+  </div>
+</div>

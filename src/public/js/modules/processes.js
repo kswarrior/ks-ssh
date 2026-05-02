@@ -3,14 +3,33 @@ import { $, esc, showToast } from './utils.js';
 export class ProcessManager {
   constructor() {
     this.list = $('proc-list');
+    this.refreshTimer = null;
+    this.lastData = [];
+    this.filter = '';
     this._setupUI();
   }
 
   _setupUI() {
     $('proc-refresh-btn')?.addEventListener('click', () => this.load());
+    $('proc-search')?.addEventListener('input', (e) => {
+        this.filter = e.target.value.toLowerCase();
+        this.render(this.lastData);
+    });
+    $('proc-refresh-rate')?.addEventListener('change', (e) => {
+        this._setupAutoRefresh(parseInt(e.target.value));
+    });
+    this._setupAutoRefresh(5000);
   }
 
-  async load() {
+  _setupAutoRefresh(ms) {
+      if (this.refreshTimer) clearInterval(this.refreshTimer);
+      if (ms > 0) {
+          this.refreshTimer = setInterval(() => this.load(true), ms);
+      }
+  }
+
+  async load(isAuto = false) {
+    if (!isAuto) {
     this.list.innerHTML = `
         <div class="skeleton-row" style="grid-template-columns: 60px 1fr 60px 60px 40px; margin-bottom:10px;">
             <div class="skeleton skeleton-line"></div>
@@ -24,15 +43,20 @@ export class ProcessManager {
     try {
       const res = await fetch('/ksapi/processes');
       const data = await res.json();
-      this.render(data.processes || []);
+      this.lastData = data.processes || [];
+      this.render(this.lastData);
     } catch (err) {
       this.list.innerHTML = `<div style="color:#ef4444; text-align:center; padding:40px;">TASK ERROR: ${err.message}</div>`;
     }
   }
 
   render(procs) {
-    if (!procs.length) {
-      this.list.innerHTML = '<div style="text-align:center; padding:60px; color:var(--text-dim);">NO ACTIVE TASKS</div>';
+    const filtered = this.filter
+        ? procs.filter(p => p.name.toLowerCase().includes(this.filter) || p.pid.toString().includes(this.filter))
+        : procs;
+
+    if (!filtered.length) {
+      this.list.innerHTML = '<div style="text-align:center; padding:60px; color:var(--text-dim);">NO MATCHING TASKS</div>';
       return;
     }
 
@@ -44,7 +68,7 @@ export class ProcessManager {
             <div style="text-align:right;">MEM%</div>
             <div></div>
         </div>
-        ${procs.map(p => `
+        ${filtered.map(p => `
             <div class="proc-row" style="display:grid; grid-template-columns: 70px 1fr 60px 60px 40px; padding:10px 16px; align-items:center; border-bottom:1px solid var(--glass-border); transition:0.2s;">
                 <div style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim);">${p.pid}</div>
                 <div style="font-weight:600; color:var(--text-pure); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(p.name)}</div>

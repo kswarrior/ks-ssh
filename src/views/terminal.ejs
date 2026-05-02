@@ -17,8 +17,15 @@
               <button id="t-kill-all" class="icon-btn danger-hover" title="Kill All Sessions"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
               <button id="t-font-dec" class="icon-btn" title="Decrease Font"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
               <button id="t-font-inc" class="icon-btn" title="Increase Font"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+              <button id="t-find-btn" class="icon-btn" title="Find in Buffer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
               <button id="t-clear-btn" class="icon-btn" title="Clear Buffer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
           </div>
+      </div>
+
+      <div id="t-find-bar" class="hidden" style="display:flex; align-items:center; gap:10px; padding:6px 16px; background:var(--night-800); border-bottom:1px solid var(--glass-border);">
+          <input type="text" id="t-find-input" class="input-hud" placeholder="Find in buffer..." style="font-size:11px; padding:4px 10px; flex:1;" />
+          <div style="font-size:10px; color:var(--text-dim);" id="t-find-results">0 results</div>
+          <button id="t-find-close" class="icon-btn" style="padding:2px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
     </div>
 

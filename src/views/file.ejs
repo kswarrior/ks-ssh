@@ -19,7 +19,17 @@
         <input type="text" id="files-search" class="input-hud" placeholder="Search files in current directory..." style="font-size:12px; padding:8px 12px;" />
     </div>
 
-    <div id="files-list" class="files-list-vertical flex-1"></div>
+    <div style="display:flex; flex:1; overflow:hidden; gap:20px; padding:0 16px;">
+        <div id="files-sidebar" style="width:120px; flex-shrink:0; display:flex; flex-direction:column; gap:8px;">
+            <div style="font-size:10px; font-weight:800; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Quick Links</div>
+            <button onclick="files.load('/')" class="btn-primary" style="padding:6px 10px; font-size:11px; background:var(--night-800); border-color:var(--glass-border); justify-content:flex-start;">/ ROOT</button>
+            <button onclick="files.load('/home')" class="btn-primary" style="padding:6px 10px; font-size:11px; background:var(--night-800); border-color:var(--glass-border); justify-content:flex-start;">~ HOME</button>
+            <button onclick="files.load('/etc')" class="btn-primary" style="padding:6px 10px; font-size:11px; background:var(--night-800); border-color:var(--glass-border); justify-content:flex-start;">/etc</button>
+            <button onclick="files.load('/var/www')" class="btn-primary" style="padding:6px 10px; font-size:11px; background:var(--night-800); border-color:var(--glass-border); justify-content:flex-start;">/var/www</button>
+            <button onclick="files.load('/tmp')" class="btn-primary" style="padding:6px 10px; font-size:11px; background:var(--night-800); border-color:var(--glass-border); justify-content:flex-start;">/tmp</button>
+        </div>
+        <div id="files-list" class="files-list-vertical flex-1" style="padding:0;"></div>
+    </div>
 
     <div id="bulk-bar" class="hidden" style="margin: 16px; padding: 12px 20px; background: var(--night-800); border: 1px solid var(--glass-border); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
         <div id="bulk-count" style="font-weight:700; font-size:13px; color:var(--text-blue);">0 ITEMS SELECTED</div>

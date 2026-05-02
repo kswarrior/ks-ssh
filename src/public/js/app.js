@@ -26,7 +26,10 @@ function init() {
   setupThemes();
 
   // Initial tab
-  switchTab('terminals');
+  setTimeout(() => {
+      console.log('INIT SWITCH');
+      switchTab('dashboard');
+  }, 100);
 
   // HUD Update cycle
   updateHUD();
@@ -277,6 +280,8 @@ function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
   const items = document.querySelectorAll('.nav-item, .nav-link');
 
+  console.log('Switching to tab:', tab);
+
   // If tab is currently in side pane, we must move it back to primary workspace
   const sideContainer = $('side-pane-container');
   const primaryWorkspace = document.querySelector('.primary-workspace');
@@ -444,6 +449,32 @@ async function loadSystemInfo() {
     if ($('nf-disk-bar')) $('nf-disk-bar').style.width = `${r.disk.percent}%`;
 
     if ($('nf-ip')) $('nf-ip').textContent = s.ip;
+
+    // Dashboard Updates
+    if ($('dash-cpu-pct')) $('dash-cpu-pct').textContent = `${Math.round(r.cpu.percent)}%`;
+    if ($('dash-cpu-bar')) $('dash-cpu-bar').style.width = `${r.cpu.percent}%`;
+    if ($('dash-mem-pct')) $('dash-mem-pct').textContent = `${Math.round(r.ram.percent)}%`;
+    if ($('dash-mem-bar')) $('dash-mem-bar').style.width = `${r.ram.percent}%`;
+    if ($('dash-disk-pct')) $('dash-disk-pct').textContent = `${Math.round(r.disk.percent)}%`;
+    if ($('dash-disk-bar')) $('dash-disk-bar').style.width = `${r.disk.percent}%`;
+    if ($('dash-ip')) $('dash-ip').textContent = s.ip;
+    if ($('dash-latency')) $('dash-latency').textContent = $('hdr-latency')?.textContent || '--ms';
+    if ($('dash-uptime')) $('dash-uptime').textContent = $('nf-uptime')?.textContent || '--';
+
+    const dashSessions = $('dash-sessions-list');
+    if (dashSessions) {
+        const terms = Array.from(terminals.terminals.values());
+        if (terms.length > 0) {
+            dashSessions.innerHTML = terms.map(t => `
+                <div onclick="switchTab('terminals'); terminals.activate('${t.id}')" style="background:var(--night-800); border:1px solid var(--glass-border); border-radius:8px; padding:12px; cursor:pointer; transition:0.2s;">
+                    <div style="font-size:10px; font-weight:800; color:var(--text-blue); text-transform:uppercase; margin-bottom:4px;">Session ${t.num}</div>
+                    <div style="font-weight:700; color:var(--text-pure); font-size:14px; overflow:hidden; text-overflow:ellipsis;">${esc(t.name)}</div>
+                </div>
+            `).join('');
+        } else {
+            dashSessions.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-dim); background:var(--night-900); border-radius:8px; border:1px dashed var(--glass-border); font-size:12px;">NO ACTIVE SESSIONS</div>';
+        }
+    }
 
     // Per-core CPU
     const coreList = $('nf-cpu-cores-list');

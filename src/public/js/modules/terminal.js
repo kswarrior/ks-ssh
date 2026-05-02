@@ -18,6 +18,9 @@ export class TerminalManager {
     $('empty-new-term')?.addEventListener('click', () => this.create());
     $('add-term-btn')?.addEventListener('click', () => this.create());
     $('t-clear-btn')?.addEventListener('click', () => this.clearActive());
+    $('t-find-btn')?.addEventListener('click', () => this.toggleFind());
+    $('t-find-close')?.addEventListener('click', () => this.toggleFind(false));
+    $('t-find-input')?.addEventListener('input', (e) => this.findInActive(e.target.value));
     $('t-fit-btn')?.addEventListener('click', () => this.refit());
     $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
@@ -248,6 +251,34 @@ export class TerminalManager {
   clearActive() {
     const t = this.terminals.get(this.activeId);
     if (t) { t.term.clear(); showToast('HUD BUFFER CLEARED'); }
+  }
+
+  toggleFind(force) {
+    const bar = $('t-find-bar');
+    const input = $('t-find-input');
+    const show = force !== undefined ? force : bar.classList.contains('hidden');
+    bar.classList.toggle('hidden', !show);
+    if (show) input.focus();
+    else {
+        input.value = '';
+        $('t-find-results').textContent = '0 results';
+    }
+  }
+
+  findInActive(query) {
+      const t = this.terminals.get(this.activeId);
+      if (!t || !query) { $('t-find-results').textContent = '0 results'; return; }
+
+      let count = 0;
+      const buffer = t.term.buffer.active;
+      for (let i = 0; i < buffer.length; i++) {
+          const line = buffer.getLine(i);
+          if (line && line.translateToString().toLowerCase().includes(query.toLowerCase())) {
+              count++;
+          }
+      }
+      $('t-find-results').textContent = `${count} results`;
+      // Browser Ctrl+F is usually better for highlighting, but this provides a buffer-aware count
   }
 
   downloadActiveLog() {
