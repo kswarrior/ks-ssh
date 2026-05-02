@@ -11,12 +11,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download and Unzip
-      run: |
-        wget https://github.com/kswarrior/ks-ssh/releases/download/v1.0.0/ks-ssh
-
     - name: Install and Run
       run: |
         node -v || true
+        npm run build
         chmod +x ks-ssh
         ./ks-ssh --port 3000
