@@ -18,6 +18,7 @@ function init() {
   // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
 
   setupNavigation();
+  setupSidebar();
   setupSocket();
   setupModals();
   setupPortPreview();
@@ -120,8 +121,43 @@ function updateHUD() {
 
 function setupNavigation() {
   document.querySelectorAll('[data-tab]').forEach(btn => {
-    btn.onclick = () => switchTab(btn.dataset.tab);
+    btn.onclick = () => {
+        if (btn.dataset.tab === 'files') toggleSidebar();
+        else switchTab(btn.dataset.tab);
+    };
   });
+}
+
+function setupSidebar() {
+    const btn = $('sidebar-toggle-btn');
+    const sidebar = $('hud-sidebar');
+    if (!btn || !sidebar) return;
+
+    btn.onclick = () => toggleSidebar();
+
+    // Restore state
+    const saved = localStorage.getItem('ks-ssh-sidebar');
+    if (saved === 'open') {
+        sidebar.classList.remove('hidden');
+        files.load();
+    }
+}
+
+function toggleSidebar(force) {
+    const sidebar = $('hud-sidebar');
+    const isOpen = sidebar.classList.contains('hidden'); // This is flipped because we are toggling
+
+    if (force === true) sidebar.classList.remove('hidden');
+    else if (force === false) sidebar.classList.add('hidden');
+    else sidebar.classList.toggle('hidden');
+
+    const nowOpen = !sidebar.classList.contains('hidden');
+    localStorage.setItem('ks-ssh-sidebar', nowOpen ? 'open' : 'closed');
+
+    if (nowOpen) files.load();
+
+    // Always refit terminals when layout changes
+    setTimeout(() => terminals.refit(), 250);
 }
 
 function switchTab(tab) {
@@ -135,13 +171,6 @@ function switchTab(tab) {
   if (targetPanel) {
     targetPanel.classList.remove('hidden');
     document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
-  }
-
-  if (tab === 'files') {
-    files.load();
-    // Ensure navigation state is correct if called manually
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.querySelector(`.nav-link[data-tab="${tab}"]`)?.classList.add('active');
   }
   if (tab === 'ports') ports.load();
   if (tab === 'processes') processes.load();

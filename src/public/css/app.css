@@ -306,7 +306,30 @@ body {
   position: relative;
   overflow: hidden;
   display: flex;
+}
+
+.hud-sidebar {
+  width: 300px;
+  background: var(--night-900);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
   flex-direction: column;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.hud-sidebar.hidden {
+  width: 0;
+  border-right: none;
+}
+
+.hud-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
 .tab-panel {
@@ -626,6 +649,16 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  .hud-sidebar:not(.hidden) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 100;
+    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+  }
+
   .terminal-instance.active {
     padding-bottom: 40px !important;
   }
