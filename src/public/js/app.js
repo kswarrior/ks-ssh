@@ -151,10 +151,62 @@ function setupSidePane() {
         btn.onclick = () => switchSideTab(btn.dataset.sideTab);
     });
 
+    const resizer = $('hud-resizer');
+
+    // Draggable Logic
+    let isResizing = false;
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        resizer.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const width = window.innerWidth - e.clientX;
+        const constrainedWidth = Math.max(200, Math.min(window.innerWidth * 0.7, width));
+        pane.style.width = constrainedWidth + 'px';
+        localStorage.setItem('ks-ssh-sidepane-width', constrainedWidth);
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('active');
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+            terminals.refit();
+        }
+    });
+
+    // Touch Support
+    resizer.addEventListener('touchstart', (e) => {
+        isResizing = true;
+        resizer.classList.add('active');
+    });
+    window.addEventListener('touchmove', (e) => {
+        if (!isResizing) return;
+        const width = window.innerWidth - e.touches[0].clientX;
+        const constrainedWidth = Math.max(200, Math.min(window.innerWidth * 0.9, width));
+        pane.style.width = constrainedWidth + 'px';
+    });
+    window.addEventListener('touchend', () => {
+        if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('active');
+            terminals.refit();
+        }
+    });
+
     // Restore state
     const saved = localStorage.getItem('ks-ssh-sidepane');
+    const savedWidth = localStorage.getItem('ks-ssh-sidepane-width');
+    if (savedWidth) pane.style.width = savedWidth + 'px';
+
     if (saved === 'open') {
         pane.classList.remove('hidden');
+        resizer.classList.remove('hidden');
         const activeTab = localStorage.getItem('ks-ssh-sidetab') || 'files';
         switchSideTab(activeTab);
     }
@@ -162,9 +214,18 @@ function setupSidePane() {
 
 function toggleSidePane(force) {
     const pane = $('hud-secondary-pane');
-    if (force === true) pane.classList.remove('hidden');
-    else if (force === false) pane.classList.add('hidden');
-    else pane.classList.toggle('hidden');
+    const resizer = $('hud-resizer');
+
+    if (force === true) {
+        pane.classList.remove('hidden');
+        resizer.classList.remove('hidden');
+    } else if (force === false) {
+        pane.classList.add('hidden');
+        resizer.classList.add('hidden');
+    } else {
+        pane.classList.toggle('hidden');
+        resizer.classList.toggle('hidden');
+    }
 
     const nowOpen = !pane.classList.contains('hidden');
     localStorage.setItem('ks-ssh-sidepane', nowOpen ? 'open' : 'closed');
