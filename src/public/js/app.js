@@ -138,8 +138,16 @@ function updateHUD() {
 }
 
 function setupNavigation() {
-  document.querySelectorAll('[data-tab]').forEach(btn => {
-    btn.onclick = () => switchTab(btn.dataset.tab);
+  document.querySelectorAll('[data-tab], [data-side-tab]').forEach(btn => {
+    btn.onclick = () => {
+        if (btn.dataset.tab) switchTab(btn.dataset.tab);
+        if (btn.dataset.sideTab) switchSideTab(btn.dataset.sideTab);
+    };
+  });
+
+  $('mobile-more-btn')?.addEventListener('click', () => {
+      // Toggle side pane as overlay on mobile
+      toggleSidePane();
   });
 }
 
@@ -278,7 +286,7 @@ function switchSideTab(tab) {
 
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
-  const items = document.querySelectorAll('.nav-item, .nav-link');
+  const items = document.querySelectorAll('.nav-item, .nav-link, .dock-item');
 
   console.log('Switching to tab:', tab);
 
