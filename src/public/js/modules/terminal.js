@@ -5,8 +5,11 @@ export class TerminalManager {
     this.socket = socket;
     this.terminals = new Map();
     this.activeId = null;
+    this.splitActive = false;
     this.counter = 0;
     this.fontSize = 13;
+    this.ctrlActive = false;
+    this.altActive = false;
 
     this._setupUI();
   }
@@ -15,10 +18,62 @@ export class TerminalManager {
     $('empty-new-term')?.addEventListener('click', () => this.create());
     $('add-term-btn')?.addEventListener('click', () => this.create());
     $('t-clear-btn')?.addEventListener('click', () => this.clearActive());
+    $('t-find-btn')?.addEventListener('click', () => this.toggleFind());
+    $('t-find-close')?.addEventListener('click', () => this.toggleFind(false));
+    $('t-find-input')?.addEventListener('input', (e) => this.findInActive(e.target.value));
     $('t-fit-btn')?.addEventListener('click', () => this.refit());
     $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
+    $('t-rename-btn')?.addEventListener('click', () => this.renameActive());
+    $('t-kill-all')?.addEventListener('click', () => this.killAll());
+    $('t-split-btn')?.addEventListener('click', () => this.toggleSplit());
+    $('t-session-name')?.addEventListener('click', () => this.renameActive());
+
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey && e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key) - 1;
+        const keys = Array.from(this.terminals.keys());
+        if (keys[idx]) this.activate(keys[idx]);
+      }
+    });
+
+    // Mobile Keys
+    document.querySelectorAll('.kbd-key').forEach(btn => {
+        btn.onclick = (e) => {
+            e.preventDefault();
+            this.handleVirtualKey(btn.dataset.key);
+        };
+    });
+
+    if (window.innerWidth <= 768) {
+        $('mobile-kbd-bar').style.display = 'flex';
+    }
+  }
+
+  handleVirtualKey(key) {
+    if (!this.activeId) return;
+    const id = this.activeId;
+
+    let data = null;
+    switch(key) {
+        case 'CTRL':
+            this.ctrlActive = !this.ctrlActive;
+            document.querySelector('.kbd-key[data-key="CTRL"]').classList.toggle('active', this.ctrlActive);
+            return;
+        case 'ALT':
+            this.altActive = !this.altActive;
+            document.querySelector('.kbd-key[data-key="ALT"]').classList.toggle('active', this.altActive);
+            return;
+        case 'TAB': data = '\t'; break;
+        case 'ESC': data = '\x1b'; break;
+        case 'UP': data = '\x1b[A'; break;
+        case 'DOWN': data = '\x1b[B'; break;
+        case 'LEFT': data = '\x1b[D'; break;
+        case 'RIGHT': data = '\x1b[C'; break;
+    }
+
+    if (data) this.socket.emit('terminal:input', { id, data });
   }
 
   create(data = {}) {
@@ -33,15 +88,15 @@ export class TerminalManager {
     this._spawn({ id, num, restore: true });
   }
 
-  _spawn({ id, num, restore }) {
+  _spawn({ id, num, restore, name }) {
     const tabList = $('terminal-tabs-list');
     const tab = document.createElement('div');
     tab.className = 'hud-t-tab';
     tab.dataset.id = id;
+    const displayName = name || num;
     tab.innerHTML = `
-      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>UPLINK-${num.toString().padStart(2, '0')}</span>
-      <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px;">&times;</button>
+      <span class="tab-label">${displayName}</span>
+      <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px; font-size:14px; line-height:1;">&times;</button>
     `;
     tab.onclick = (e) => { if (!e.target.closest('.hud-t-tab-close')) this.activate(id); };
     tab.querySelector('.hud-t-tab-close').onclick = (e) => { e.stopPropagation(); this.confirmClose(id); };
@@ -49,9 +104,18 @@ export class TerminalManager {
 
     const area = $('terminals-area');
     const container = document.createElement('div');
-    container.style.cssText = "position:absolute; inset:0; display:none;";
+    container.style.cssText = "flex:1; height:100%; display:none; min-width: 0;";
     container.className = 'terminal-instance';
     container.id = `ti-${id}`;
+
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-term';
+    skeleton.innerHTML = `
+        <div class="skeleton skeleton-line short"></div>
+        <div class="skeleton skeleton-line mid"></div>
+        <div class="skeleton skeleton-line"></div>
+    `;
+    container.appendChild(skeleton);
     area.appendChild(container);
 
     const term = new Terminal({
@@ -70,45 +134,110 @@ export class TerminalManager {
     term.loadAddon(fit);
     term.open(container);
 
-    term.onData(data => this.socket.emit('terminal:input', { id, data }));
+    term.onData(data => {
+        if (this.ctrlActive) {
+            // CTRL + Key logic
+            const code = data.charCodeAt(0);
+            if (code >= 97 && code <= 122) { // a-z
+                data = String.fromCharCode(code - 96);
+            }
+            this.ctrlActive = false;
+            document.querySelector('.kbd-key[data-key="CTRL"]').classList.remove('active');
+        }
+        if (this.altActive) {
+            data = '\x1b' + data;
+            this.altActive = false;
+            document.querySelector('.kbd-key[data-key="ALT"]').classList.remove('active');
+        }
+        this.socket.emit('terminal:input', { id, data });
+    });
 
-    this.terminals.set(id, { term, fit, num, tab, container });
+    this.terminals.set(id, { term, fit, num, name: displayName, tab, container });
 
     $('terminals-empty').classList.add('hidden');
     $('terminal-toolbar').classList.remove('hidden');
 
     setTimeout(() => {
+      skeleton.remove();
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
-    }, 100);
+    }, 1000); // 1s artificial delay to show skeleton
 
     this.activate(id);
     this._save();
   }
 
   activate(id) {
-    if (this.activeId === id) return;
+    if (this.activeId === id && !this.splitActive) return;
     this.activeId = id;
 
-    this.terminals.forEach(t => {
-      t.tab.classList.remove('active');
-      t.container.style.display = 'none';
-      t.container.classList.remove('active');
-    });
+    const area = $('terminals-area');
+    area.style.display = 'flex'; // Ensure flex layout
+
+    if (!this.splitActive) {
+        this.terminals.forEach(t => {
+            t.tab.classList.remove('active');
+            t.container.style.display = 'none';
+            t.container.classList.remove('active');
+            t.container.style.borderRight = 'none';
+        });
+    } else {
+        const keys = Array.from(this.terminals.keys());
+        if (keys.length >= 2) {
+            const leftId = keys[0];
+            const rightId = id;
+            this.terminals.forEach((t, tid) => {
+                t.tab.classList.remove('active');
+                if (tid === leftId) {
+                    t.container.style.display = 'block';
+                    t.container.style.borderRight = '1px solid var(--glass-border)';
+                } else if (tid === rightId) {
+                    t.tab.classList.add('active');
+                    t.container.style.display = 'block';
+                    t.container.style.borderRight = 'none';
+                } else {
+                    t.container.style.display = 'none';
+                }
+            });
+        }
+    }
 
     const t = this.terminals.get(id);
     if (!t) return;
 
-    t.tab.classList.add('active');
-    t.container.style.display = 'block';
+    if (!this.splitActive) {
+        t.tab.classList.add('active');
+        t.container.style.display = 'block';
+    }
+
     t.container.classList.add('active');
-    $('t-session-name').textContent = `UPLINK-${t.num.toString().padStart(2, '0')} STATUS: ESTABLISHED`;
+    const displayNum = t.num.toString().padStart(2, '0');
+    $('t-session-name').textContent = `${t.name === t.num ? 'SESSION' : t.name.toUpperCase()}: ${displayNum} [ONLINE] ${this.splitActive ? '(SPLIT)' : ''}`;
 
     setTimeout(() => {
-      t.fit.fit();
+      this.terminals.forEach(termObj => { if (termObj.container.style.display === 'block') termObj.fit.fit(); });
       t.term.focus();
     }, 50);
+  }
+
+  toggleSplit() {
+      if (this.terminals.size < 2) { showToast('NEED 2+ TERMINALS FOR SPLIT', 'info'); return; }
+      this.splitActive = !this.splitActive;
+      $('t-split-btn').classList.toggle('active', this.splitActive);
+      this.activate(this.activeId);
+  }
+
+  renameActive() {
+    const t = this.terminals.get(this.activeId);
+    if (!t) return;
+    const newName = prompt('Enter session name:', t.name === t.num ? '' : t.name);
+    if (newName !== null) {
+      t.name = newName.trim() || t.num;
+      t.tab.querySelector('.tab-label').textContent = t.name;
+      this.activate(this.activeId); // Refresh toolbar text
+      this._save();
+    }
   }
 
   changeFontSize(delta) {
@@ -122,6 +251,34 @@ export class TerminalManager {
   clearActive() {
     const t = this.terminals.get(this.activeId);
     if (t) { t.term.clear(); showToast('HUD BUFFER CLEARED'); }
+  }
+
+  toggleFind(force) {
+    const bar = $('t-find-bar');
+    const input = $('t-find-input');
+    const show = force !== undefined ? force : bar.classList.contains('hidden');
+    bar.classList.toggle('hidden', !show);
+    if (show) input.focus();
+    else {
+        input.value = '';
+        $('t-find-results').textContent = '0 results';
+    }
+  }
+
+  findInActive(query) {
+      const t = this.terminals.get(this.activeId);
+      if (!t || !query) { $('t-find-results').textContent = '0 results'; return; }
+
+      let count = 0;
+      const buffer = t.term.buffer.active;
+      for (let i = 0; i < buffer.length; i++) {
+          const line = buffer.getLine(i);
+          if (line && line.translateToString().toLowerCase().includes(query.toLowerCase())) {
+              count++;
+          }
+      }
+      $('t-find-results').textContent = `${count} results`;
+      // Browser Ctrl+F is usually better for highlighting, but this provides a buffer-aware count
   }
 
   downloadActiveLog() {
@@ -171,6 +328,13 @@ export class TerminalManager {
     }
   }
 
+  killAll() {
+    if (confirm('Kill all active sessions?')) {
+      [...this.terminals.keys()].forEach(id => this.close(id));
+      showToast('ALL SESSIONS TERMINATED');
+    }
+  }
+
   refit() {
     if (this.activeId) {
       const t = this.terminals.get(this.activeId);
@@ -182,7 +346,7 @@ export class TerminalManager {
   }
 
   _save() {
-    const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num }));
+    const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num, name: t.name }));
     sessionStorage.setItem('ks-ssh-terms', JSON.stringify(data));
   }
 }

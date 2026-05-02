@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>KS SSH | HUD MASTER</title>
+  <title>KS SSH | HUD</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
@@ -14,88 +14,200 @@
 <body>
 <div id="app">
 
-  <header class="hud-panel hud-header">
-    <div class="hud-logo">
-      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      <span>KS SSH <span>HUD</span></span>
+    <header class="hud-header" style="background: #000; border-bottom: 2px solid var(--night-700);">
+    <div class="header-left">
+        <div class="header-brand" style="color: #fff; font-weight: 900;">
+            <div style="background: var(--electric-blue); color: #fff; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; margin-right: 8px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </div>
+            <span>KS SSH</span>
+        </div>
+
+        <nav class="top-nav">
+          <button id="split-view-btn" class="icon-btn" title="Toggle Split View" style="margin-right: 8px; color: var(--text-blue);"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg></button>
+          <div class="nav-link" data-tab="dashboard">Home</div>
+          <div class="nav-link" data-tab="terminals">Terminal</div>
+          <div class="nav-link" data-tab="files">Files</div>
+          <div class="nav-link" data-tab="ports">Ports</div>
+          <div class="nav-link" data-tab="processes">Tasks</div>
+        </nav>
+
+        <div class="header-stats">
+            <div class="header-stat-item">
+                <span id="hdr-ram-pct">0%</span> RAM
+            </div>
+            <div class="header-stat-item">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#22c55e" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+                <span id="hdr-latency">--ms</span>
+            </div>
+        </div>
     </div>
 
-    <div class="hud-stats">
-      <div class="hud-stat-item" id="tunnel-info-stat" style="display:none; border-color:var(--electric-cyan);">
-        <span class="hud-stat-label" style="color:var(--electric-cyan)">TUNNEL ACTIVE</span>
-        <span class="hud-stat-value" id="hud-tunnel-token" style="cursor:pointer;" title="Click to copy URL">---</span>
-      </div>
-      <div class="hud-stat-item">
-        <span class="hud-stat-label">Uptime</span>
-        <span class="hud-stat-value" id="hud-uptime">--:--:--</span>
-      </div>
-      <div class="hud-stat-item">
-        <span class="hud-stat-label">Session</span>
-        <span class="hud-stat-value" id="hud-session-count">0 ACTIVE</span>
-      </div>
-      <div class="hud-stat-item">
-        <span class="hud-stat-label">Host</span>
-        <span class="hud-stat-value" id="sys-host">DEVBOX</span>
-      </div>
+    <div class="header-right">
+        <div class="dropdown-wrapper">
+            <button class="icon-btn" id="theme-btn" title="Appearance" style="margin-right: 4px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
+            <div class="dropdown-menu hidden" id="theme-dropdown" style="width: 180px;">
+                <div class="dropdown-header">Theme HUD</div>
+                <div style="padding: 8px;">
+                    <div class="theme-opt" data-theme="default" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:var(--text-blue);">Electric Blue</div>
+                    <div class="theme-opt" data-theme="emerald" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:#10b981;">Emerald Cyber</div>
+                    <div class="theme-opt" data-theme="ruby" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:#ef4444;">Ruby Crimson</div>
+                    <div class="theme-opt" data-theme="gold" style="padding:8px 12px; cursor:pointer; border-radius:4px; font-size:12px; font-weight:600; color:#f59e0b;">Liquid Gold</div>
+                </div>
+            </div>
+
+            <button class="icon-btn" id="vps-info-btn" title="VPS Information"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+            <div class="dropdown-menu hidden" id="vps-info-dropdown">
+                <div class="dropdown-header">KS SSH — System Information</div>
+                <div class="dropdown-content neofetch-layout">
+                    <pre id="vps-logo" class="neofetch-logo">🐧</pre>
+                    <div class="neofetch-details">
+                        <div class="nf-user-host"><span id="nf-user">user</span>@<span id="nf-host">host</span></div>
+                        <div class="nf-separator">-----------------</div>
+                        <div class="nf-row"><span class="nf-key">OS:</span> <span id="nf-os">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Host:</span> <span id="nf-platform">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Kernel:</span> <span id="nf-kernel">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Uptime:</span> <span id="nf-uptime">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Packages:</span> <span id="nf-packages">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Shell:</span> <span id="nf-shell">--</span></div>
+                        <div class="nf-row"><span class="nf-key">CPU:</span> <span id="nf-cpu" style="color:var(--text-pure);">--</span></div>
+                        <div id="nf-cpu-cores-list" style="margin-top:4px;"></div>
+
+                        <div class="nf-row" style="margin-top:8px;"><span class="nf-key">Memory:</span> <span id="nf-mem">--</span></div>
+                        <div class="nf-bar-container"><div id="nf-mem-bar" class="nf-bar-fill" style="width: 0%;"></div></div>
+
+                        <div class="nf-row"><span class="nf-key">Disk:</span> <span id="nf-disk">--</span></div>
+                        <div class="nf-bar-container"><div id="nf-disk-bar" class="nf-bar-fill" style="width: 0%; background:#a855f7; box-shadow:0 0 6px rgba(168,85,247,0.4);"></div></div>
+
+                        <div class="nf-row"><span class="nf-key">IP:</span> <span id="nf-ip" class="text-blue" style="font-weight: 800;">--</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
   </header>
 
-  <nav class="hud-panel hud-nav">
-    <div class="hud-nav-item active" data-tab="terminals" title="Command HUD">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-    </div>
-    <div class="hud-nav-item" data-tab="ports" title="Network HUD">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-    </div>
-    <div class="hud-nav-item" data-tab="files" title="Storage HUD">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3h6l2 2h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
-    </div>
-    <div style="margin-top:auto; padding-bottom:12px;">
-        <button id="info-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-    </div>
-  </nav>
 
-  <main class="hud-panel hud-main">
-    <%- include('terminal') %>
-    <%- include('port') %>
-    <%- include('file') %>
+  <main class="hud-main">
+    <section class="hud-workspace primary-workspace">
+        <%- include('dashboard') %>
+        <%- include('terminal') %>
+        <%- include('file') %>
+        <%- include('port') %>
+
+        <div class="tab-panel hidden" id="tab-processes">
+            <div style="padding:20px; display:flex; flex-direction:column; height:100%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 16px;">
+                    <div>
+                        <h1 style="font-weight:900; letter-spacing:-0.04em; font-size:24px;">Process HUD</h1>
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+                        <p style="font-size:12px; color:var(--text-dim);">TOP RESOURCES BY CPU</p>
+                        <select id="proc-refresh-rate" style="background:var(--night-700); border:1px solid var(--glass-border); color:var(--text-main); font-size:10px; border-radius:4px; padding:2px 4px;">
+                            <option value="0">OFF</option>
+                            <option value="1000">1S</option>
+                            <option value="5000" selected>5S</option>
+                            <option value="10000">10S</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="proc-search" class="input-hud" placeholder="Filter tasks..." style="font-size:12px; padding:6px 12px; width:180px;" />
+                    <button id="proc-refresh-btn" class="btn-primary" style="padding:8px 16px; font-size:12px; box-shadow:none;">REFRESH</button>
+                    </div>
+                </div>
+                <div id="proc-list" class="flex-1 scroll-y" style="padding:0 16px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <div id="hud-resizer" class="hud-resizer hidden"></div>
+
+    <aside id="hud-secondary-pane" class="hud-side-pane hidden">
+        <nav class="side-nav">
+            <button class="side-nav-btn" data-side-tab="dashboard" title="Dashboard"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
+            <button class="side-nav-btn active" data-side-tab="files" title="Files"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg></button>
+            <button class="side-nav-btn" data-side-tab="terminals" title="Terminal"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></button>
+            <button class="side-nav-btn" data-side-tab="ports" title="Ports"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></button>
+            <button class="side-nav-btn" data-side-tab="processes" title="Tasks"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
+        </nav>
+        <div class="side-pane-content" id="side-pane-container">
+            <!-- Dynamic content injected here -->
+        </div>
+    </aside>
+
+    <!-- Port Preview Panel -->
+    <div id="port-preview-panel" class="port-preview-panel hidden">
+        <div class="preview-header">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="preview-dot"></div>
+                <div class="preview-title">Live Preview <span id="port-preview-badge">:0</span></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="port-preview-refresh" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+                <button id="port-preview-pop" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
+                <button id="port-preview-close" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+        </div>
+        <div class="preview-address-bar">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--text-dim);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span id="port-preview-url">localhost:0</span>
+        </div>
+        <div class="preview-body">
+            <iframe id="port-preview-iframe" src="about:blank"></iframe>
+        </div>
+    </div>
   </main>
 
-  <aside class="hud-panel hud-monitor">
-    <div class="hud-section-title">System Metrics</div>
-
-    <div class="hud-metric">
-      <div class="hud-metric-header"><span>Processor</span><span id="rm-cpu-label">0%</span></div>
-      <div class="hud-progress-track"><div id="rm-cpu-bar" class="hud-progress-fill" style="width:0%"></div></div>
+  <footer class="hud-footer">
+    <div id="footer-status">KS-SSH HUD ACTIVE</div>
+    <div style="display:flex; gap:12px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </div>
+  </footer>
 
-    <div class="hud-metric">
-      <div class="hud-metric-header"><span>Memory</span><span id="rm-ram-label">0%</span></div>
-      <div class="hud-progress-track"><div id="rm-ram-bar" class="hud-progress-fill" style="width:0%"></div></div>
-    </div>
-
-    <div class="hud-section-title" style="margin-top:20px;">Processor HUD</div>
-    <div id="rm-cores-container" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;"></div>
-
-    <div class="hud-section-title" style="margin-top:auto;">Network I/O</div>
-    <div style="font-family:var(--font-mono); font-size:12px; display:flex; flex-direction:column; gap:8px;">
-        <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-dim)">INBOUND</span>
-            <span id="rm-net-in" style="color:var(--electric-cyan)">0 B/s</span>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
-            <span style="color:var(--text-dim)">OUTBOUND</span>
-            <span id="rm-net-out" style="color:var(--electric-cyan)">0 B/s</span>
-        </div>
-    </div>
-  </aside>
+  <nav class="mobile-dock">
+      <button class="dock-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Home</span>
+      </button>
+      <button class="dock-item" data-tab="terminals">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>Term</span>
+      </button>
+      <button class="dock-item" data-tab="files">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>
+          <span>Files</span>
+      </button>
+      <button class="dock-item" data-tab="ports">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+          <span>Ports</span>
+      </button>
+      <button class="dock-item" data-tab="processes">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          <span>Tasks</span>
+      </button>
+      <button class="dock-item" id="mobile-more-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          <span>More</span>
+      </button>
+  </nav>
 
 </div>
 
 <%- include('partials/modals') %>
 
-<div class="toast-container" id="toast-container"></div>
+<!-- Command Palette -->
+<div id="cmd-palette" class="modal-overlay hidden">
+    <div class="modal" style="margin-top: 10vh; max-width: 600px;">
+        <div style="padding: 8px;">
+            <input type="text" id="cmd-input" class="input-hud" placeholder="Type a command or search..." autocomplete="off" />
+        </div>
+        <div id="cmd-results" class="scroll-y" style="max-height: 300px; padding: 4px;"></div>
+    </div>
+</div>
 
+<div class="toast-container" id="toast-container"></div>
 <%- include('partials/scripts') %>
 </body>
 </html>

@@ -1,33 +1,57 @@
 <div class="tab-panel" id="tab-terminals">
   <div class="terminal-hud-wrapper">
-    <div class="terminal-hud-tabs">
-      <div id="terminal-tabs-list" style="display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;"></div>
-      <button id="add-term-btn" style="background:var(--electric-cyan-dim); border:1px solid var(--electric-cyan); color:var(--electric-cyan); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
+    <div id="terminal-tabs-container" class="hidden">
+      <div style="padding: 10px 16px 0; font-size: 10px; font-weight: 800; color: var(--text-blue); text-transform: uppercase; letter-spacing: 1px;">Multi Terminal</div>
+      <div class="terminal-hud-tabs">
+        <div id="terminal-tabs-list" style="display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;"></div>
+        <button id="add-term-btn" style="background:var(--night-700); border:1px solid var(--glass-border); color:var(--text-dim); width:28px; height:28px; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <div id="terminal-toolbar" style="display:flex; align-items:center; justify-content:space-between; padding:6px 16px; background:var(--night-900); border-bottom:1px solid var(--glass-border);">
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-blue); font-weight:700; cursor:pointer;" id="t-session-name" title="Click to rename">TERMINAL-01</div>
+          <div style="display:flex; gap:12px;">
+              <button id="t-rename-btn" class="icon-btn" title="Rename Session"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button id="t-split-btn" class="icon-btn desktop-only" title="Toggle Split View"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg></button>
+              <button id="t-kill-all" class="icon-btn danger-hover" title="Kill All Sessions"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+              <button id="t-font-dec" class="icon-btn" title="Decrease Font"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+              <button id="t-font-inc" class="icon-btn" title="Increase Font"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+              <button id="t-find-btn" class="icon-btn" title="Find in Buffer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+              <button id="t-clear-btn" class="icon-btn" title="Clear Buffer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div>
+      </div>
+
+      <div id="t-find-bar" class="hidden" style="display:flex; align-items:center; gap:10px; padding:6px 16px; background:var(--night-800); border-bottom:1px solid var(--glass-border);">
+          <input type="text" id="t-find-input" class="input-hud" placeholder="Find in buffer..." style="font-size:11px; padding:4px 10px; flex:1;" />
+          <div style="font-size:10px; color:var(--text-dim);" id="t-find-results">0 results</div>
+          <button id="t-find-close" class="icon-btn" style="padding:2px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
     </div>
 
-    <div id="terminal-toolbar" class="hidden" style="display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:rgba(0,0,0,0.1); border-bottom:1px solid var(--glass-border);">
-        <div style="font-family:var(--font-mono); font-size:11px; color:var(--electric-cyan); font-weight:700;" id="t-session-name">HUD-TERMINAL-01</div>
-        <div style="display:flex; gap:8px;">
-            <button id="t-font-dec" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-            <button id="t-font-inc" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-            <div style="width:1px; height:12px; background:var(--glass-border); margin:0 4px;"></div>
-            <button id="t-clear-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-            <button id="t-download-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-        </div>
-    </div>
+    <div class="terminal-hud-content flex-1" id="terminals-area" style="position:relative;">
+      <!-- Mobile Keyboard Bar -->
+      <div id="mobile-kbd-bar" class="mobile-kbd-bar hidden">
+          <div class="kbd-key" data-key="CTRL">CTRL</div>
+          <div class="kbd-key" data-key="ALT">ALT</div>
+          <div class="kbd-key" data-key="TAB">TAB</div>
+          <div class="kbd-key" data-key="ESC">ESC</div>
+          <div class="kbd-key" data-key="UP">▲</div>
+          <div class="kbd-key" data-key="DOWN">▼</div>
+          <div class="kbd-key" data-key="LEFT">◀</div>
+          <div class="kbd-key" data-key="RIGHT">▶</div>
+      </div>
 
-    <div class="terminal-hud-content" id="terminals-area">
-      <div id="terminals-empty" style="height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; text-align:center;">
-        <div style="width:100px; height:100px; border:2px dashed var(--glass-border); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--glass-border);">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      <div id="terminals-empty" class="empty-state">
+        <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         </div>
-        <div>
-            <h2 style="font-weight:900; letter-spacing:-0.03em; margin-bottom:4px;">Command HUD Ready</h2>
-            <p style="color:var(--text-dim); font-size:13px;">Establish a secure uplink to begin system management.</p>
-        </div>
-        <button id="empty-new-term" style="background:var(--electric-cyan); color:var(--obsidian); border:none; padding:12px 32px; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 0 20px var(--electric-cyan-glow);">INITIALIZE UPLINK</button>
+        <h2 class="empty-title">No Terminals Open</h2>
+        <p class="empty-subtitle">Click "New Terminal" to start a session</p>
+        <button id="empty-new-term" class="btn-primary">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Terminal
+        </button>
       </div>
     </div>
   </div>

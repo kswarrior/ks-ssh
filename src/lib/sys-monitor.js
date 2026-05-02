@@ -6,12 +6,119 @@ const { execSync } = require('child_process');
 
 class SystemMonitor {
   constructor() {
-    this.prevCpu = this._readCpu();
+    this.prevCpu = [];
+    this.cachedIp = 'Loading...';
+    this.lastIpFetch = 0;
+    this.cachedSystemInfo = null;
+    this._init();
   }
 
-  _readCpu() {
+  async _init() {
+    this.prevCpu = await this._readCpu();
+    this._fetchIp();
+    this._cacheSystemInfo();
+  }
+
+  _cacheSystemInfo() {
+    let osName = os.type();
+    let logo = '🐧';
+    let pkgs = 'N/A';
+
     try {
-      const lines = fs.readFileSync('/proc/stat', 'utf8').split('\n').filter(l => /^cpu/.test(l));
+      if (fs.existsSync('/etc/os-release')) {
+        const release = fs.readFileSync('/etc/os-release', 'utf8');
+        const nameMatch = release.match(/^PRETTY_NAME="?([^"\n]+)"?/m);
+        if (nameMatch) osName = nameMatch[1];
+
+        const idMatch = release.match(/^ID=([^"\n]+)/m);
+        const osId = idMatch ? idMatch[1].toLowerCase() : '';
+
+        if (osId.includes('ubuntu')) {
+          logo = `
+         _
+     ---(_)---
+   /  /  |  \\  \\
+  |  |   |   |  |
+   \\  \\  |  /  /
+     ---(_)---
+`;
+        } else if (osId.includes('debian')) {
+          logo = `
+      _____
+     /  __ \\
+    /  /  \\_|
+    |  |
+    \\  \\__/|
+     \\____/
+`;
+        } else if (osId.includes('centos')) {
+          logo = `
+     _______
+    / _____ \\
+   / /     \\ \\
+   | |     | |
+   \\ \\_____/ /
+    \\_______/
+`;
+        } else if (osId.includes('arch')) {
+          logo = `
+       /\\
+      /  \\
+     /    \\
+    /      \\
+   /   /\\   \\
+  /___/  \\___\\
+`;
+        }
+      }
+    } catch {}
+
+    try {
+      if (fs.existsSync('/usr/bin/dpkg')) {
+        pkgs = execSync('dpkg-query -f \'${binary:Package}\\n\' -W | wc -l', { encoding: 'utf8', timeout: 500 }).trim() + ' (dpkg)';
+      } else if (fs.existsSync('/usr/bin/rpm')) {
+        pkgs = execSync('rpm -qa | wc -l', { encoding: 'utf8', timeout: 500 }).trim() + ' (rpm)';
+      }
+    } catch {}
+
+    this.cachedSystemInfo = { osName, logo, pkgs };
+  }
+
+  _fetchIp() {
+    if (this.lastIpFetch && (Date.now() - this.lastIpFetch < 300000)) return;
+
+    // Fallback to local immediately if we have nothing
+    if (this.cachedIp === 'Loading...') this._fallbackIp();
+
+    const { exec } = require('child_process');
+    exec('curl -s --max-time 3 https://ifconfig.me', (error, stdout) => {
+      if (!error && stdout && stdout.trim()) {
+        this.cachedIp = stdout.trim();
+        this.lastIpFetch = Date.now();
+      } else {
+        this._fallbackIp();
+      }
+    });
+  }
+
+  _fallbackIp() {
+    try {
+      const nets = os.networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+          if (net.family === 'IPv4' && !net.internal) {
+            this.cachedIp = net.address;
+            return;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  async _readCpu() {
+    try {
+      const data = await fs.promises.readFile('/proc/stat', 'utf8');
+      const lines = data.split('\n').filter(l => /^cpu/.test(l));
       return lines.map(line => {
         const nums = line.split(/\s+/).slice(1).map(Number);
         return { total: nums.reduce((a, b) => a + b, 0), idle: nums[3] + (nums[4] || 0) };
@@ -19,8 +126,18 @@ class SystemMonitor {
     } catch { return []; }
   }
 
-  getStats() {
-    const currentCpu = this._readCpu();
+  async getStats() {
+    const currentCpu = await this._readCpu();
+    if (this.prevCpu.length === 0) {
+      this.prevCpu = currentCpu;
+      return {
+        ram: { total: 0, used: 0, percent: 0 },
+        cpu: { percent: 0, cores: [], model: '', count: 0 },
+        disk: { total: 0, used: 0, percent: 0 },
+        network: { in: 0, out: 0 },
+        temp: null
+      };
+    }
     const calcPct = (a, b) => {
       if (!a || !b) return 0;
       const td = b.total - a.total, id = b.idle - a.idle;
@@ -44,14 +161,15 @@ class SystemMonitor {
 
     let cpuModel = '';
     try {
-      const info = fs.readFileSync('/proc/cpuinfo', 'utf8');
+      const info = await fs.promises.readFile('/proc/cpuinfo', 'utf8');
       const m = info.match(/model name\s*:\s*(.+)/);
       if (m) cpuModel = m[1].trim().replace(/\s+/g, ' ');
     } catch {}
 
     let netIn = 0, netOut = 0;
     try {
-      const devs = fs.readFileSync('/proc/net/dev', 'utf8').split('\n').slice(2);
+      const data = await fs.promises.readFile('/proc/net/dev', 'utf8');
+      const devs = data.split('\n').slice(2);
       for (const line of devs) {
         const p = line.trim().split(/\s+/);
         if (p.length > 9 && !p[0].startsWith('lo:')) { netIn += parseInt(p[1]) || 0; netOut += parseInt(p[9]) || 0; }
@@ -61,7 +179,7 @@ class SystemMonitor {
     let temp = null;
     try {
       if (fs.existsSync('/sys/class/thermal/thermal_zone0/temp')) {
-        const t = fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8').trim();
+        const t = (await fs.promises.readFile('/sys/class/thermal/thermal_zone0/temp', 'utf8')).trim();
         if (t) temp = parseInt(t) / 1000;
       }
     } catch {}
@@ -76,6 +194,10 @@ class SystemMonitor {
   }
 
   getSystemInfo() {
+    this._fetchIp();
+
+    const info = this.cachedSystemInfo || { osName: os.type(), logo: '🐧', pkgs: 'N/A' };
+
     return {
       hostname: os.hostname(),
       platform: os.platform(),
@@ -85,7 +207,13 @@ class SystemMonitor {
       loadAvg: os.loadavg(),
       cpus: os.cpus().length,
       home: os.homedir(),
-      user: os.userInfo().username
+      user: os.userInfo().username,
+      ip: this.cachedIp,
+      osName: info.osName,
+      kernel: os.release(),
+      shell: process.env.SHELL || '/bin/sh',
+      packages: info.pkgs,
+      logo: info.logo
     };
   }
 }

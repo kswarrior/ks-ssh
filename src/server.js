@@ -62,7 +62,7 @@ app.get('/ksapi/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.get('/ksapi/system', (req, res) => res.json(sys.getSystemInfo()));
 
-app.get('/ksapi/resources', (req, res) => res.json(sys.getStats()));
+app.get('/ksapi/resources', async (req, res) => res.json(await sys.getStats()));
 
 app.get('/ksapi/tunnel', (req, res) => res.json(tunnel.getInfo()));
 
@@ -120,6 +120,27 @@ app.get('/ksapi/files/read', (req, res) => {
 app.post('/ksapi/files/write', (req, res) => {
   try { fs.writeFileSync(req.body.filePath, req.body.content || ''); res.json({ success: true }); }
   catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.get('/ksapi/processes', (req, res) => {
+  try {
+    const output = require('child_process').execSync('ps -eo pid,ppid,user,%cpu,%mem,comm --sort=-%cpu | head -n 50', { encoding: 'utf8' });
+    const lines = output.trim().split('\n');
+    const data = lines.slice(1).map(l => {
+      const parts = l.trim().split(/\s+/);
+      return { pid: parts[0], ppid: parts[1], user: parts[2], cpu: parts[3], mem: parts[4], name: parts.slice(5).join(' ') };
+    });
+    res.json({ processes: data });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/ksapi/processes/kill', (req, res) => {
+  try {
+    const pid = parseInt(req.body.pid);
+    if (isNaN(pid)) return res.status(400).json({ error: 'Invalid PID' });
+    process.kill(pid, 'SIGKILL');
+    res.json({ success: true });
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 // Proxy logic (kept in server.js for simplicity of middleware integration)
