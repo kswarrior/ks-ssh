@@ -18,7 +18,7 @@ function init() {
   // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
 
   setupNavigation();
-  setupSidebar();
+  setupSidePane();
   setupSocket();
   setupModals();
   setupPortPreview();
@@ -136,53 +136,98 @@ function updateHUD() {
 
 function setupNavigation() {
   document.querySelectorAll('[data-tab]').forEach(btn => {
-    btn.onclick = () => {
-        if (btn.dataset.tab === 'files') toggleSidebar();
-        else switchTab(btn.dataset.tab);
-    };
+    btn.onclick = () => switchTab(btn.dataset.tab);
   });
 }
 
-function setupSidebar() {
-    const btn = $('sidebar-toggle-btn');
-    const sidebar = $('hud-sidebar');
-    if (!btn || !sidebar) return;
+function setupSidePane() {
+    const btn = $('split-view-btn');
+    const pane = $('hud-secondary-pane');
+    if (!btn || !pane) return;
 
-    btn.onclick = () => toggleSidebar();
+    btn.onclick = () => toggleSidePane();
+
+    document.querySelectorAll('.side-nav-btn').forEach(btn => {
+        btn.onclick = () => switchSideTab(btn.dataset.sideTab);
+    });
 
     // Restore state
-    const saved = localStorage.getItem('ks-ssh-sidebar');
+    const saved = localStorage.getItem('ks-ssh-sidepane');
     if (saved === 'open') {
-        sidebar.classList.remove('hidden');
-        files.load();
+        pane.classList.remove('hidden');
+        const activeTab = localStorage.getItem('ks-ssh-sidetab') || 'files';
+        switchSideTab(activeTab);
     }
 }
 
-function toggleSidebar(force) {
-    const sidebar = $('hud-sidebar');
-    const isOpen = sidebar.classList.contains('hidden'); // This is flipped because we are toggling
+function toggleSidePane(force) {
+    const pane = $('hud-secondary-pane');
+    if (force === true) pane.classList.remove('hidden');
+    else if (force === false) pane.classList.add('hidden');
+    else pane.classList.toggle('hidden');
 
-    if (force === true) sidebar.classList.remove('hidden');
-    else if (force === false) sidebar.classList.add('hidden');
-    else sidebar.classList.toggle('hidden');
+    const nowOpen = !pane.classList.contains('hidden');
+    localStorage.setItem('ks-ssh-sidepane', nowOpen ? 'open' : 'closed');
 
-    const nowOpen = !sidebar.classList.contains('hidden');
-    localStorage.setItem('ks-ssh-sidebar', nowOpen ? 'open' : 'closed');
+    if (nowOpen) {
+        const activeTab = localStorage.getItem('ks-ssh-sidetab') || 'files';
+        switchSideTab(activeTab);
+    }
 
-    if (nowOpen) files.load();
-
-    // Always refit terminals when layout changes
     setTimeout(() => terminals.refit(), 120);
+}
+
+function switchSideTab(tab) {
+    const activePrimary = document.querySelector('.nav-link.active')?.dataset.tab;
+    if (tab === activePrimary) {
+        showToast('TAB ALREADY ACTIVE IN PRIMARY VIEW', 'info');
+        return;
+    }
+
+    document.querySelectorAll('.side-nav-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.sideTab === tab);
+    });
+    localStorage.setItem('ks-ssh-sidetab', tab);
+
+    const container = $('side-pane-container');
+
+    // Move existing content back to primary before switching
+    const currentInSide = container.firstElementChild;
+    if (currentInSide) {
+        document.querySelector('.primary-workspace').appendChild(currentInSide);
+        currentInSide.classList.add('hidden');
+    }
+
+    container.innerHTML = '';
+
+    const original = $(`tab-${tab}`);
+    if (original) {
+        container.appendChild(original);
+        original.classList.remove('hidden');
+
+        if (tab === 'files') files.load();
+        if (tab === 'ports') ports.load();
+        if (tab === 'processes') processes.load();
+        if (tab === 'terminals') setTimeout(() => terminals.refit(), 50);
+    }
 }
 
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
   const items = document.querySelectorAll('.nav-item, .nav-link');
 
+  // If tab is currently in side pane, we must move it back to primary workspace
+  const sideContainer = $('side-pane-container');
+  const primaryWorkspace = document.querySelector('.primary-workspace');
+  const targetPanel = $(`tab-${tab}`);
+
+  if (targetPanel && sideContainer.contains(targetPanel)) {
+      primaryWorkspace.appendChild(targetPanel);
+  }
+
   panels.forEach(p => p.classList.add('hidden'));
   items.forEach(b => b.classList.remove('active'));
 
-  const targetPanel = $(`tab-${tab}`);
   if (targetPanel) {
     targetPanel.classList.remove('hidden');
     document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
