@@ -423,6 +423,14 @@ function setupThemes() {
     }
 }
 
+function updateEl(id, text, styleProp = 'textContent') {
+    const el = $(id);
+    if (el) {
+        if (styleProp === 'style.width') el.style.width = text;
+        else el[styleProp] = text;
+    }
+}
+
 async function loadSystemInfo() {
   try {
     const sRes = await fetch('/ksapi/system');
@@ -431,43 +439,55 @@ async function loadSystemInfo() {
     const rRes = await fetch('/ksapi/resources');
     const r = await rRes.json();
 
-    if ($('hdr-host-id')) $('hdr-host-id').textContent = s.hostname.substring(0, 12);
-    if ($('hdr-ram-pct')) $('hdr-ram-pct').textContent = `${Math.round(r.ram.percent)}%`;
+    updateEl('hdr-host-id', s.hostname.substring(0, 12));
+    updateEl('hdr-ram-pct', `${Math.round(r.ram.percent)}%`);
 
-    if ($('sys-host')) $('sys-host').textContent = s.hostname;
-    if ($('sys-os')) $('sys-os').textContent = `${s.platform}/${s.arch}`;
-    if ($('sys-user')) $('sys-user').textContent = s.user;
-    if ($('sys-cpus')) $('sys-cpus').textContent = s.cpus;
-    if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
+    updateEl('sys-host', s.hostname);
+    updateEl('sys-os', `${s.platform}/${s.arch}`);
+    updateEl('sys-user', s.user);
+    updateEl('sys-cpus', s.cpus);
+    updateEl('sys-mem', `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`);
 
     // VPS Info
-    if ($('vps-logo')) $('vps-logo').textContent = s.logo || '🐧';
-    if ($('nf-user')) $('nf-user').textContent = s.user;
-    if ($('nf-host')) $('nf-host').textContent = s.hostname;
-    if ($('nf-os')) $('nf-os').textContent = s.osName;
-    if ($('nf-platform')) $('nf-platform').textContent = `${s.platform} ${s.arch}`;
-    if ($('nf-kernel')) $('nf-kernel').textContent = s.kernel;
-    if ($('nf-packages')) $('nf-packages').textContent = s.packages;
-    if ($('nf-shell')) $('nf-shell').textContent = s.shell;
-    if ($('nf-cpu')) $('nf-cpu').textContent = `${r.cpu.model} (${r.cpu.count})`;
-    if ($('nf-mem')) $('nf-mem').textContent = `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`;
-    if ($('nf-mem-bar')) $('nf-mem-bar').style.width = `${r.ram.percent}%`;
+    updateEl('vps-logo', s.logo || '🐧');
+    updateEl('nf-user', s.user);
+    updateEl('nf-host', s.hostname);
+    updateEl('nf-os', s.osName);
+    updateEl('nf-platform', `${s.platform} ${s.arch}`);
+    updateEl('nf-kernel', s.kernel);
+    updateEl('nf-packages', s.packages);
+    updateEl('nf-shell', s.shell);
+    updateEl('nf-cpu', `${r.cpu.model} (${r.cpu.count})`);
+    updateEl('nf-mem', `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`);
+    updateEl('nf-mem-bar', `${r.ram.percent}%`, 'style.width');
 
-    if ($('nf-disk')) $('nf-disk').textContent = `${r.disk.used.toFixed(1)}GB / ${r.disk.total.toFixed(1)}GB`;
-    if ($('nf-disk-bar')) $('nf-disk-bar').style.width = `${r.disk.percent}%`;
+    updateEl('nf-disk', `${r.disk.used.toFixed(1)}GB / ${r.disk.total.toFixed(1)}GB`);
+    updateEl('nf-disk-bar', `${r.disk.percent}%`, 'style.width');
 
-    if ($('nf-ip')) $('nf-ip').textContent = s.ip;
+    updateEl('nf-ip', s.ip);
 
     // Dashboard Updates
-    if ($('dash-cpu-pct')) $('dash-cpu-pct').textContent = `${Math.round(r.cpu.percent)}%`;
-    if ($('dash-cpu-bar')) $('dash-cpu-bar').style.width = `${r.cpu.percent}%`;
-    if ($('dash-mem-pct')) $('dash-mem-pct').textContent = `${Math.round(r.ram.percent)}%`;
-    if ($('dash-mem-bar')) $('dash-mem-bar').style.width = `${r.ram.percent}%`;
-    if ($('dash-disk-pct')) $('dash-disk-pct').textContent = `${Math.round(r.disk.percent)}%`;
-    if ($('dash-disk-bar')) $('dash-disk-bar').style.width = `${r.disk.percent}%`;
-    if ($('dash-ip')) $('dash-ip').textContent = s.ip;
-    if ($('dash-latency')) $('dash-latency').textContent = $('hdr-latency')?.textContent || '--ms';
-    if ($('dash-uptime')) $('dash-uptime').textContent = $('nf-uptime')?.textContent || '--';
+    updateEl('dash-cpu-pct', `${Math.round(r.cpu.percent)}%`);
+    updateEl('dash-cpu-bar', `${r.cpu.percent}%`, 'style.width');
+    updateEl('dash-mem-pct', `${Math.round(r.ram.percent)}%`);
+    updateEl('dash-mem-bar', `${r.ram.percent}%`, 'style.width');
+    updateEl('dash-disk-pct', `${Math.round(r.disk.percent)}%`);
+    updateEl('dash-disk-bar', `${r.disk.percent}%`, 'style.width');
+    updateEl('dash-ip', s.ip);
+    updateEl('dash-latency', $('hdr-latency')?.textContent || '--ms');
+
+    // Uptime Calculation
+    const up = s.uptime;
+    const days = Math.floor(up / 86400);
+    const hours = Math.floor((up % 86400) / 3600);
+    const mins = Math.floor((up % 3600) / 60);
+    let utStr = '';
+    if (days > 0) utStr += `${days} days, `;
+    if (hours > 0) utStr += `${hours} hours, `;
+    utStr += `${mins} mins`;
+
+    updateEl('nf-uptime', utStr);
+    updateEl('dash-uptime', utStr);
 
     const dashSessions = $('dash-sessions-list');
     if (dashSessions) {
@@ -498,21 +518,7 @@ async function loadSystemInfo() {
         `).join('');
     }
 
-    // Uptime
-    const up = s.uptime;
-    const days = Math.floor(up / 86400);
-    const hours = Math.floor((up % 86400) / 3600);
-    const mins = Math.floor((up % 3600) / 60);
-    if ($('nf-uptime')) {
-        let utStr = '';
-        if (days > 0) utStr += `${days} days, `;
-        if (hours > 0) utStr += `${hours} hours, `;
-        utStr += `${mins} mins`;
-        $('nf-uptime').textContent = utStr;
-    }
-
-    // Load
-    if ($('sys-load')) $('sys-load').textContent = s.loadAvg.map(l => l.toFixed(2)).join(' ');
+    updateEl('sys-load', s.loadAvg.map(l => l.toFixed(2)).join(' '));
 
   } catch (err) {
       console.error('HUD update error:', err);
