@@ -2,6 +2,7 @@
 'use strict';
 
 const express = require('express');
+const ejs = require('ejs');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -30,7 +31,12 @@ const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 app.set('view engine', 'ejs');
+app.engine('ejs', ejs.renderFile);
 app.set('views', path.join(__dirname, 'views'));
+
+if (process.pkg) {
+    console.log('[PKG] Internal Views Path:', path.join(__dirname, 'views'));
+}
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(PUBLIC_DIR));
