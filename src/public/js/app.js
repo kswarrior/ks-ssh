@@ -3,18 +3,19 @@ import { FileManager } from './modules/files.js';
 import { PortScanner } from './modules/ports.js';
 import { ResourceMonitor } from './modules/res-mon.js';
 import { ProcessManager } from './modules/processes.js';
-import { $, showToast, fmtBytes } from './modules/utils.js';
+import { $, showToast, fmtBytes, esc } from './modules/utils.js';
 
 let socket, terminals, files, ports, processes, resMon;
 let startTime = Date.now();
 
 function init() {
   socket = io();
-  terminals = new TerminalManager(socket);
+  window.terminals = terminals = new TerminalManager(socket);
   files = new FileManager();
   ports = new PortScanner();
   window.processes = processes = new ProcessManager();
-  window.files = files; // For debugging and potentially some inline handlers
+  window.files = files;
+  window.ports = ports;
   // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
 
   setupNavigation();
@@ -28,7 +29,7 @@ function init() {
   // Initial tab
   setTimeout(() => {
       console.log('INIT SWITCH');
-      switchTab('dashboard');
+      switchTab('terminals');
   }, 100);
 
   // HUD Update cycle
@@ -79,7 +80,7 @@ function setupCommandPalette() {
         // Sidebar Toggle (Ctrl+B)
         if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
             e.preventDefault();
-            toggleSidebar();
+            toggleSidePane();
         }
 
         // New Terminal (Ctrl+Shift+T)
@@ -284,6 +285,7 @@ function switchSideTab(tab) {
     }
 }
 
+window.switchTab = switchTab;
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
   const items = document.querySelectorAll('.nav-item, .nav-link, .dock-item');
@@ -449,7 +451,7 @@ async function loadSystemInfo() {
     updateEl('sys-mem', `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`);
 
     // VPS Info
-    updateEl('vps-logo', s.logo || '🐧');
+    updateEl('vps-logo', s.logo || '\u{1F427}');
     updateEl('nf-user', s.user);
     updateEl('nf-host', s.hostname);
     updateEl('nf-os', s.osName);
@@ -466,16 +468,6 @@ async function loadSystemInfo() {
 
     updateEl('nf-ip', s.ip);
 
-    // Dashboard Updates
-    updateEl('dash-cpu-pct', `${Math.round(r.cpu.percent)}%`);
-    updateEl('dash-cpu-bar', `${r.cpu.percent}%`, 'style.width');
-    updateEl('dash-mem-pct', `${Math.round(r.ram.percent)}%`);
-    updateEl('dash-mem-bar', `${r.ram.percent}%`, 'style.width');
-    updateEl('dash-disk-pct', `${Math.round(r.disk.percent)}%`);
-    updateEl('dash-disk-bar', `${r.disk.percent}%`, 'style.width');
-    updateEl('dash-ip', s.ip);
-    updateEl('dash-latency', $('hdr-latency')?.textContent || '--ms');
-
     // Uptime Calculation
     const up = s.uptime;
     const days = Math.floor(up / 86400);
@@ -487,22 +479,6 @@ async function loadSystemInfo() {
     utStr += `${mins} mins`;
 
     updateEl('nf-uptime', utStr);
-    updateEl('dash-uptime', utStr);
-
-    const dashSessions = $('dash-sessions-list');
-    if (dashSessions) {
-        const terms = Array.from(terminals.terminals.values());
-        if (terms.length > 0) {
-            dashSessions.innerHTML = terms.map(t => `
-                <div onclick="switchTab('terminals'); terminals.activate('${t.id}')" style="background:var(--night-800); border:1px solid var(--glass-border); border-radius:8px; padding:12px; cursor:pointer; transition:0.2s;">
-                    <div style="font-size:10px; font-weight:800; color:var(--text-blue); text-transform:uppercase; margin-bottom:4px;">Session ${t.num}</div>
-                    <div style="font-weight:700; color:var(--text-pure); font-size:14px; overflow:hidden; text-overflow:ellipsis;">${esc(t.name)}</div>
-                </div>
-            `).join('');
-        } else {
-            dashSessions.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-dim); background:var(--night-900); border-radius:8px; border:1px dashed var(--glass-border); font-size:12px;">NO ACTIVE SESSIONS</div>';
-        }
-    }
 
     // Per-core CPU
     const coreList = $('nf-cpu-cores-list');
