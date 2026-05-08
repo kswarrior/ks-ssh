@@ -1,0 +1,20 @@
+name: Restore Main to Specific Commit
+
+on:
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout specific commit
+        uses: actions/checkout@v4
+        with:
+          ref: '0fa1b4a75ea90f8204d450932221cf5ab5746f65'
+          fetch-depth: 0 # Fetches all history so we can push to main
+
+      - name: Force push to main
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git push origin HEAD:main --force
