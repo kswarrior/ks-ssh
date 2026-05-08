@@ -10,18 +10,35 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Get all history so we can find the commit
+          ref: main
 
-      - name: Reset and Force Push
+      - name: Download Target Commit and Replace Code
+        run: |
+          # 1. Download the code from that specific commit directly from GitHub
+          curl -L -o commit.zip https://github.com/kswebsite/ssh/archive/0fa1b4a75ea90f8204d450932221cf5ab5746f65.zip
+          
+          # 2. Extract the zip file
+          unzip -q commit.zip
+          
+          # 3. Remove current files in 'main' (except the hidden .git tracking folder and our downloads)
+          find . -maxdepth 1 ! -name '.git' ! -name 'ssh-0fa1b4a75ea90f8204d450932221cf5ab5746f65' ! -name 'commit.zip' ! -name '.' -exec rm -rf {} +
+          
+          # 4. Copy the extracted files into the main root directory
+          cp -a ssh-0fa1b4a75ea90f8204d450932221cf5ab5746f65/. .
+          
+          # 5. Clean up the downloaded zip and temp folder
+          rm -rf ssh-0fa1b4a75ea90f8204d450932221cf5ab5746f65 commit.zip
+
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Manually fetch the specific commit if it's missing
-          git fetch origin 0fa1b4a75ea90f8204d450932221cf5ab5746f65
+          # Add all the new files and record removed files
+          git add -A
           
-          # Point the local state to that commit
-          git reset --hard 0fa1b4a75ea90f8204d450932221cf5ab5746f65
+          # Commit the restoration (If there are no changes, it will exit gracefully)
+          git commit -m "Restore codebase to match commit 0fa1b4a" || echo "No changes to commit"
           
-          # Force push back to main
-          git push origin HEAD:main --force
+          # Push normally to main
+          git push origin main
