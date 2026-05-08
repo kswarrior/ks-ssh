@@ -39,6 +39,7 @@ export class FileManager {
     $('ctx-download')?.addEventListener('click', () => { this.download(this.activeFile.path); this.closeContextMenu(); });
     $('ctx-edit')?.addEventListener('click', () => { this.openEditor(this.activeFile); this.closeContextMenu(); });
     $('ctx-rename')?.addEventListener('click', () => { this.promptRename(this.activeFile); this.closeContextMenu(); });
+    $('ctx-copy-path')?.addEventListener('click', () => { this.copyToClipboard(this.activeFile.path); this.closeContextMenu(); });
     $('ctx-delete')?.addEventListener('click', () => { this.optimisticDelete(this.activeFile); this.closeContextMenu(); });
 
     // Global click to close menu/modals
@@ -51,6 +52,9 @@ export class FileManager {
 
     // Editor Save
     $('editor-save-btn')?.addEventListener('click', () => this.saveFile());
+
+    // Search
+    $('files-search')?.addEventListener('input', (e) => this.filterList(e.target.value));
   }
 
   async load(dirPath = this.currentPath) {
@@ -110,13 +114,33 @@ export class FileManager {
   }
 
   render(data) {
+    this.allFiles = data.files || [];
+    this.parentPath = (data.path !== '/') ? data.parent : null;
+    this._draw();
+  }
+
+  _draw(filter = '') {
     const list = $('files-list');
     if (!list) return;
     list.innerHTML = '';
-    if (data.parent && data.path !== '/') {
-        list.appendChild(this.createRow({ name: '..', isDirectory: true, path: data.parent }));
+
+    if (this.parentPath && !filter) {
+        list.appendChild(this.createRow({ name: '..', isDirectory: true, path: this.parentPath }));
     }
-    data.files.forEach(f => list.appendChild(this.createRow(f)));
+
+    const filtered = filter
+        ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter.toLowerCase()))
+        : this.allFiles;
+
+    filtered.forEach(f => list.appendChild(this.createRow(f)));
+
+    if (filtered.length === 0 && this.allFiles.length > 0) {
+        list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim);">NO MATCHES FOUND</div>`;
+    }
+  }
+
+  filterList(val) {
+      this._draw(val);
   }
 
   createRow(f) {
@@ -124,14 +148,11 @@ export class FileManager {
     row.className = 'file-row';
     const isParent = f.name === '..';
 
-    const icon = f.isDirectory
-        ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>'
-        : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
-
+    const { icon, color } = this.getFileVisuals(f);
     const colorClass = this.getFileColorClass(f);
 
     row.innerHTML = `
-        <div class="file-icon">${icon}</div>
+        <div class="file-icon" style="color: ${color}">${icon}</div>
         <div class="file-info">
             <div class="file-name ${colorClass}">${esc(f.name)}</div>
             ${!isParent ? `<div class="file-meta">${f.modified ? f.modified.split('T')[0] : ''}</div>` : ''}
@@ -318,6 +339,14 @@ export class FileManager {
     window.location.href = `/ksapi/files/download?path=${encodeURIComponent(path)}`;
   }
 
+  copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+          showToast('PATH COPIED TO CLIPBOARD');
+      }).catch(() => {
+          showToast('CLIPBOARD ACCESS DENIED', 'error');
+      });
+  }
+
   optimisticDelete(file) {
     if (!confirm(`PURGE ${file.name}?`)) return;
 
@@ -386,22 +415,48 @@ export class FileManager {
     } catch (err) { showToast(err.message, 'error'); }
   }
 
+  getFileVisuals(f) {
+    if (f.name === '..') return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><path d="M6 12h12"/></svg>', color: 'var(--text-dim)' };
+
+    if (f.isDirectory) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>', color: '#fbbf24' };
+
+    const ext = f.name.split('.').pop().toLowerCase();
+
+    // Code
+    if (['js', 'ts', 'jsx', 'tsx'].includes(ext)) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>', color: '#f7df1e' };
+    if (['html', 'htm'].includes(ext)) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><path d="M11 13l-2 2 2 2"/><path d="M13 17l2-2-2-2"/></svg>', color: '#e34f26' };
+    if (ext === 'css') return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><path d="M9 13v4h2"/><path d="M15 13v4h-2"/></svg>', color: '#1572b6' };
+    if (ext === 'py') return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><path d="M10 13a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/></svg>', color: '#3776ab' };
+    if (['json', 'yml', 'yaml'].includes(ext)) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><path d="M8 13h1"/><path d="M8 15h1"/><path d="M8 17h1"/></svg>', color: '#8bc34a' };
+
+    // Media
+    if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', color: '#ab47bc' };
+    if (['mp4', 'mov', 'avi', 'webm'].includes(ext)) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>', color: '#ef4444' };
+
+    // Archives
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3"/><path d="M21 12v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9"/><path d="M10 3v18"/><path d="M14 3v18"/><path d="M3 8h18"/><path d="M3 12h18"/></svg>', color: '#ffca28' };
+
+    // Docs
+    if (ext === 'md') return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><path d="M9 13l2 2 2-2"/><path d="M12 17V15"/></svg>', color: '#00b0ff' };
+
+    // Default
+    return { icon: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>', color: 'var(--text-dim)' };
+  }
+
   getFileColorClass(f) {
       if (f.isDirectory) return '';
       const ext = f.name.split('.').pop().toLowerCase();
       const colors = {
-          'js': 'text-js',
+          'js': 'text-js', 'ts': 'text-js',
           'html': 'text-html',
           'css': 'text-css',
-          'json': 'text-json',
+          'json': 'text-json', 'yml': 'text-json', 'yaml': 'text-json',
           'md': 'text-md',
           'py': 'text-py',
           'sh': 'text-sh',
-          'zip': 'text-zip',
-          'png': 'text-img',
-          'jpg': 'text-img',
-          'jpeg': 'text-img',
-          'svg': 'text-img'
+          'zip': 'text-zip', 'tar': 'text-zip', 'gz': 'text-zip',
+          'png': 'text-img', 'jpg': 'text-img', 'jpeg': 'text-img', 'svg': 'text-img', 'gif': 'text-img',
+          'mp4': 'text-danger', 'mov': 'text-danger'
       };
       return colors[ext] || '';
   }
