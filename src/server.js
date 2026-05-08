@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const multer = require('multer');
+const ejs = require('ejs');
 
 // Modules
 const TunnelManager = require('./lib/tunnel');
@@ -29,6 +30,7 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+app.engine('ejs', ejs.renderFile);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
