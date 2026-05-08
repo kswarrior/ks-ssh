@@ -1,13 +1,13 @@
 <div class="tab-panel hidden" id="tab-ports">
-  <div style="padding:20px; display:flex; flex-direction:column; height:100%;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 16px;">
-        <div>
-            <h1 style="font-weight:900; letter-spacing:-0.04em; font-size:24px;">Network HUD</h1>
-            <p style="font-size:12px; color:var(--text-dim); margin-top:4px;">ACTIVE NETWORK INTERFACES</p>
+  <div class="hud-container">
+    <div class="hud-view-header">
+        <div class="hud-title-wrap">
+            <h1>Network HUD</h1>
+            <p class="hud-subtitle">ACTIVE NETWORK INTERFACES</p>
         </div>
-        <button id="ports-refresh-btn" class="btn-primary" style="padding:8px 16px; font-size:12px; box-shadow:none;">SCAN PORTS</button>
+        <button id="ports-refresh-btn" class="btn-primary">SCAN PORTS</button>
     </div>
 
-    <div id="ports-list" class="flex-1 scroll-y" style="padding:0 16px; display:flex; flex-direction:column; gap:8px;"></div>
+    <div id="ports-list" class="flex-1 hud-list-container"></div>
   </div>
 </div>

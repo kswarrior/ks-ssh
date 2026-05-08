@@ -68,9 +68,11 @@ export class TerminalManager {
       fontFamily: '"JetBrains Mono", monospace',
       theme: {
         background: 'transparent',
-        foreground: '#06b6d4',
-        cursor: '#06b6d4',
-        selection: 'rgba(6, 182, 212, 0.3)'
+        foreground: '#00a2ff',
+        cursor: '#00a2ff',
+        selection: 'rgba(0, 162, 255, 0.3)',
+        black: '#000000',
+        brightBlack: '#666666'
       },
       allowProposedApi: true
     });

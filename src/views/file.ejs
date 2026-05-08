@@ -1,12 +1,12 @@
 <div class="tab-panel hidden" id="tab-files">
-  <div style="padding:20px; display:flex; flex-direction:column; height:100%;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 16px;">
-        <div>
-            <h1 style="font-weight:900; letter-spacing:-0.04em; font-size:24px;">Storage HUD</h1>
-            <div id="breadcrumb" style="font-family:var(--font-mono); font-size:11px; color:var(--text-blue); margin-top:4px;">/ROOT</div>
+  <div class="hud-container">
+    <div class="hud-view-header">
+        <div class="hud-title-wrap">
+            <h1>Storage HUD</h1>
+            <div id="breadcrumb" class="breadcrumb">/ROOT</div>
         </div>
-        <div style="display:flex; gap:10px;">
-            <button id="upload-btn" class="btn-primary" style="padding:8px 16px; font-size:12px; box-shadow:none;">UPLOAD</button>
+        <div class="hud-action-group">
+            <button id="upload-btn" class="btn-primary">UPLOAD</button>
             <button id="url-upload-btn" class="icon-btn" title="Upload from URL"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
             <button id="select-btn" class="icon-btn" title="Toggle Multi-Select"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg></button>
             <button id="new-file-btn" class="icon-btn" title="New File"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
@@ -17,11 +17,11 @@
 
     <div id="files-list" class="files-list-vertical flex-1"></div>
 
-    <div id="bulk-bar" class="hidden" style="margin: 16px; padding: 12px 20px; background: var(--night-800); border: 1px solid var(--glass-border); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
-        <div id="bulk-count" style="font-weight:700; font-size:13px; color:var(--text-blue);">0 ITEMS SELECTED</div>
-        <div style="display:flex; gap:10px;">
-            <button id="bulk-zip" class="btn-primary" style="padding:6px 12px; font-size:11px; background:var(--night-700); box-shadow:none;">MAKE ZIP</button>
-            <button id="bulk-delete" class="btn-primary" style="padding:6px 12px; font-size:11px; background:#ef4444; box-shadow:none;">DELETE</button>
+    <div id="bulk-bar" class="hidden bulk-bar">
+        <div id="bulk-count" class="bulk-count">0 ITEMS SELECTED</div>
+        <div class="hud-action-group">
+            <button id="bulk-zip" class="btn-primary" style="background:var(--night-700); box-shadow:none; padding:8px 16px;">MAKE ZIP</button>
+            <button id="bulk-delete" class="btn-primary" style="background:#ef4444; box-shadow:none; padding:8px 16px;">DELETE</button>
             <button id="bulk-cancel" class="icon-btn" style="padding:4px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
     </div>
@@ -44,12 +44,12 @@
     <div class="modal">
         <div class="modal-header"><h3>Upload from URL</h3><button class="icon-btn modal-close">&times;</button></div>
         <div class="modal-body">
-            <div style="margin-bottom:12px;"><label style="font-size:12px; color:var(--text-dim);">RESOURCE URL</label></div>
+            <div style="margin-bottom:12px;"><label class="hud-subtitle" style="margin-top:0;">RESOURCE URL</label></div>
             <input type="text" id="upload-url-input" class="input-hud" placeholder="https://example.com/file.zip" />
         </div>
         <div class="modal-footer">
-            <button class="icon-btn modal-close" style="font-size:13px; font-weight:600;">CANCEL</button>
-            <button id="url-upload-confirm" class="btn-primary" style="padding:8px 20px; font-size:13px;">UPLOAD</button>
+            <button class="icon-btn modal-close" style="font-size:13px; font-weight:600; text-transform:uppercase;">CANCEL</button>
+            <button id="url-upload-confirm" class="btn-primary">UPLOAD</button>
         </div>
     </div>
 </div>
@@ -62,8 +62,8 @@
             <textarea id="file-editor-text" class="textarea-hud"></textarea>
         </div>
         <div class="modal-footer">
-            <button class="icon-btn modal-close" style="font-size:13px; font-weight:600;">DISCARD</button>
-            <button id="editor-save-btn" class="btn-primary" style="padding:8px 20px; font-size:13px;">SAVE CHANGES</button>
+            <button class="icon-btn modal-close" style="font-size:13px; font-weight:600; text-transform:uppercase;">DISCARD</button>
+            <button id="editor-save-btn" class="btn-primary">SAVE CHANGES</button>
         </div>
     </div>
 </div>

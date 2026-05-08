@@ -1,17 +1,17 @@
 <div class="tab-panel" id="tab-terminals">
   <div class="terminal-hud-wrapper">
     <div id="terminal-tabs-container" class="hidden">
-      <div style="padding: 10px 16px 0; font-size: 10px; font-weight: 800; color: var(--text-blue); text-transform: uppercase; letter-spacing: 1px;">Multi Terminal</div>
+      <div class="terminal-tabs-label">Multi Terminal</div>
       <div class="terminal-hud-tabs">
-        <div id="terminal-tabs-list" style="display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;"></div>
-        <button id="add-term-btn" style="background:var(--night-700); border:1px solid var(--glass-border); color:var(--text-dim); width:28px; height:28px; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div id="terminal-tabs-list"></div>
+        <button id="add-term-btn" class="terminal-add-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
 
-      <div id="terminal-toolbar" style="display:flex; align-items:center; justify-content:space-between; padding:6px 16px; background:var(--night-900); border-bottom:1px solid var(--glass-border);">
-          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-blue); font-weight:700;" id="t-session-name">TERMINAL-01</div>
-          <div style="display:flex; gap:12px;">
+      <div id="terminal-toolbar" class="terminal-toolbar">
+          <div class="terminal-session-info" id="t-session-name">TERMINAL-01</div>
+          <div class="hud-action-group">
               <button id="t-font-dec" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
               <button id="t-font-inc" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
               <button id="t-clear-btn" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
