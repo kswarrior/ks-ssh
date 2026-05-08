@@ -6,6 +6,10 @@ on:
 jobs:
   restore:
     runs-on: ubuntu-latest
+    # This block is CRITICAL to fix the 403 error
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -14,31 +18,25 @@ jobs:
 
       - name: Download Target Commit and Replace Code
         run: |
-          # 1. Download the code from that specific commit directly from GitHub
-          curl -L -o commit.zip https://github.com/kswebsite/ssh/archive/0fa1b4a75ea90f8204d450932221cf5ab5746f65.zip
+          # 1. Download specifically from the kswarrior/ks-ssh repo
+          curl -L -o commit.zip https://github.com/kswarrior/ks-ssh/archive/26ba2ff91cc2cdc80a823171c24d4dd8fa5f2295.zip
           
-          # 2. Extract the zip file
+          # 2. Extract
           unzip -q commit.zip
           
-          # 3. Remove current files in 'main' (except the hidden .git tracking folder and our downloads)
-          find . -maxdepth 1 ! -name '.git' ! -name 'ssh-0fa1b4a75ea90f8204d450932221cf5ab5746f65' ! -name 'commit.zip' ! -name '.' -exec rm -rf {} +
+          # 3. Clean current directory (keeping .git and the new folder)
+          find . -maxdepth 1 ! -name '.git' ! -name 'ks-ssh-26ba2ff91cc2cdc80a823171c24d4dd8fa5f2295' ! -name 'commit.zip' ! -name '.' -exec rm -rf {} +
           
-          # 4. Copy the extracted files into the main root directory
-          cp -a ssh-0fa1b4a75ea90f8204d450932221cf5ab5746f65/. .
+          # 4. Move files to root
+          cp -a ks-ssh-26ba2ff91cc2cdc80a823171c24d4dd8fa5f2295/. .
           
-          # 5. Clean up the downloaded zip and temp folder
-          rm -rf ssh-0fa1b4a75ea90f8204d450932221cf5ab5746f65 commit.zip
+          # 5. Cleanup
+          rm -rf ks-ssh-26ba2ff91cc2cdc80a823171c24d4dd8fa5f2295 commit.zip
 
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Add all the new files and record removed files
           git add -A
-          
-          # Commit the restoration (If there are no changes, it will exit gracefully)
-          git commit -m "Restore codebase to match commit 0fa1b4a" || echo "No changes to commit"
-          
-          # Push normally to main
+          git commit -m "Restore codebase to match commit 26ba2ff" || echo "No changes to commit"
           git push origin main
