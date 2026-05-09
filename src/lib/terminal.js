@@ -8,7 +8,7 @@ class TerminalManager {
   constructor(io) {
     this.io = io;
     this.sessions = new Map();
-    this.GRACE_PERIOD = 5 * 60 * 1000; // 5 mins
+    this.GRACE_PERIOD = 24 * 60 * 60 * 1000; // 24 hours
     this.MAX_BUFFER = 128 * 1024;
     this.TRIM_SIZE = 64 * 1024;
   }

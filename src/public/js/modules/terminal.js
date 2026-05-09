@@ -247,6 +247,21 @@ export class TerminalManager {
 
   _save() {
     const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num }));
-    sessionStorage.setItem('ks-ssh-terms', JSON.stringify(data));
+    localStorage.setItem('ks-ssh-terms', JSON.stringify(data));
+  }
+
+  restoreSessions() {
+    const data = localStorage.getItem('ks-ssh-terms');
+    if (data) {
+        try {
+            const saved = JSON.parse(data);
+            saved.forEach(s => {
+                this.restore(s.id, s.num);
+            });
+        } catch (e) {
+            console.error('Failed to restore sessions:', e);
+            localStorage.removeItem('ks-ssh-terms');
+        }
+    }
   }
 }

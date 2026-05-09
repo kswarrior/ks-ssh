@@ -23,6 +23,9 @@ function init() {
   // Initial tab
   switchTab('terminals');
 
+  // Restore terminal sessions
+  terminals.restoreSessions();
+
   // HUD Update cycle
   updateHUD();
   setInterval(updateHUD, 1000);
