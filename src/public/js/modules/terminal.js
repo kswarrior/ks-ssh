@@ -19,6 +19,58 @@ export class TerminalManager {
     $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
+
+    this._setupKeypad();
+  }
+
+  _setupKeypad() {
+    this.modifiers = { ctrl: false, alt: false };
+    document.querySelectorAll('.t-key').forEach(btn => {
+      btn.onclick = (e) => {
+        const key = btn.dataset.key;
+        if (btn.classList.contains('key-toggle')) {
+          this.modifiers[key] = !this.modifiers[key];
+          btn.classList.toggle('active', this.modifiers[key]);
+        } else {
+          this.sendKey(key);
+          // If we had modifiers active and it was a non-toggle key, maybe clear them?
+          // Usually CTRL/ALT stay active until manually toggled off in mobile shells.
+          // But for now let's just send the key.
+        }
+      };
+    });
+  }
+
+  sendKey(key) {
+    const t = this.terminals.get(this.activeId);
+    if (!t) return;
+
+    let code = '';
+    switch (key) {
+      case 'esc': code = '\x1b'; break;
+      case 'tab': code = '\t'; break;
+      case 'backspace': code = '\x7f'; break;
+      case 'delete': code = '\x1b[3~'; break;
+      case 'arrowup': code = '\x1b[A'; break;
+      case 'arrowdown': code = '\x1b[B'; break;
+      case 'arrowright': code = '\x1b[C'; break;
+      case 'arrowleft': code = '\x1b[D'; break;
+    }
+
+    if (this.modifiers.ctrl || this.modifiers.alt) {
+        // This is complex for all keys, but for basic ones:
+        // Handled by xterm.js usually, but we are manually sending data.
+        // For simplicity, if CTRL is on and it's a key like 'c' (not handled here yet), we'd need more.
+        // The keypad only has special keys for now.
+    }
+
+    if (code) {
+        let finalCode = code;
+        // Basic modifier support for arrows etc could be added here if needed
+        this.socket.emit('terminal:input', { id: this.activeId, data: finalCode });
+    }
+
+    t.term.focus();
   }
 
   create(data = {}) {

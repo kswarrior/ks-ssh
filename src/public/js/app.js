@@ -55,8 +55,11 @@ function updateHUD() {
   const count = terminals.terminals.size;
   const empty = $('terminals-empty');
   const tabs = $('terminal-tabs-container');
+  const keypad = $('terminal-keypad');
+
   if (empty) empty.classList.toggle('hidden', count > 0);
   if (tabs) tabs.classList.toggle('hidden', count === 0);
+  if (keypad) keypad.classList.toggle('hidden', count === 0);
 
   loadSystemInfo();
 }
@@ -131,6 +134,10 @@ function setupPortPreview() {
   $('port-preview-close')?.addEventListener('click', () => {
     $('port-preview-panel').classList.add('hidden');
     $('port-preview-iframe').src = 'about:blank';
+  });
+  $('port-preview-refresh')?.addEventListener('click', () => {
+    const iframe = $('port-preview-iframe');
+    if (iframe) iframe.src = iframe.src;
   });
 }
 
