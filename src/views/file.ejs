@@ -17,6 +17,23 @@
 
     <div id="files-list" class="files-list-vertical flex-1"></div>
 
+    <!-- Create Panel (Subpage) -->
+    <div id="files-create-panel" class="hidden flex-1" style="padding:20px;">
+        <div class="label-box"><label class="breadcrumb-flat">CREATE NEW RESOURCE</label></div>
+        <div class="flex-center-gap-12" style="margin-bottom:20px;">
+            <button class="btn-primary create-type-btn active" data-type="file">FILE</button>
+            <button class="btn-primary btn-secondary create-type-btn" data-type="folder">FOLDER</button>
+        </div>
+
+        <div class="label-box"><label class="breadcrumb-flat">NAME / IDENTIFIER</label></div>
+        <input type="text" id="create-name-input" class="input-hud" placeholder="e.g. config.json" style="margin-bottom:24px;" />
+
+        <div class="flex-center-gap-12">
+            <button id="create-cancel-btn" class="btn-primary btn-secondary">CANCEL</button>
+            <button id="create-confirm-btn" class="btn-primary">CONFIRM CREATE</button>
+        </div>
+    </div>
+
     <div id="bulk-bar" class="hidden bulk-bar">
         <div id="bulk-count" class="bulk-count">0 ITEMS</div>
         <div class="hud-action-group">

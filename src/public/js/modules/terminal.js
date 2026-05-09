@@ -18,6 +18,9 @@ export class TerminalManager {
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
 
+    $('t-scrollback-btn')?.addEventListener('click', () => this.clearActive());
+    $('t-download-log')?.addEventListener('click', () => this.downloadLog());
+
     this._setupKeypad();
   }
 
@@ -196,6 +199,26 @@ export class TerminalManager {
   clearActive() {
     const t = this.terminals.get(this.activeId);
     if (t) { t.term.clear(); showToast('HUD BUFFER CLEARED'); }
+  }
+
+  downloadLog() {
+      const t = this.terminals.get(this.activeId);
+      if (!t) return;
+      // This is a simplified version, it only downloads what's currently in the visible buffer
+      // or we can use a more advanced approach.
+      const entries = t.term.buffer.active;
+      let text = '';
+      for (let i = 0; i < entries.length; i++) {
+          text += entries.getLine(i).translateToString() + '\n';
+      }
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `terminal-${this.activeId}-log.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('LOG DOWNLOADED');
   }
 
   confirmClose(id) {

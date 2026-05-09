@@ -19,6 +19,7 @@ function init() {
   setupModals();
   setupPortPreview();
   setupVPSInfo();
+  setupSettings();
 
   // Initial tab
   switchTab('terminals');
@@ -64,9 +65,12 @@ function updateHUD() {
   const header = $('terminal-header-area');
   const keypad = $('terminal-keypad');
 
+  const sbar = $('terminal-secondary-bar');
+
   if (empty) empty.classList.toggle('hidden', count > 0);
   if (header) header.classList.toggle('hidden', count === 0);
   if (keypad) keypad.classList.toggle('hidden', count === 0);
+  if (sbar) sbar.classList.toggle('hidden', count === 0);
 
   loadSystemInfo();
 }
@@ -146,6 +150,44 @@ function setupPortPreview() {
     const iframe = $('port-preview-iframe');
     if (iframe) iframe.src = iframe.src;
   });
+}
+
+function setupSettings() {
+    const btn = $('settings-btn');
+    const modal = $('settings-modal');
+    if (!btn || !modal) return;
+
+    btn.onclick = () => modal.classList.remove('hidden');
+
+    const saved = localStorage.getItem('ks-ssh-settings');
+    let settings = saved ? JSON.parse(saved) : { color: '#00a2ff', fontSize: 13, opacity: 0.85 };
+
+    const apply = (s) => {
+        document.documentElement.style.setProperty('--electric-blue', s.color);
+        document.documentElement.style.setProperty('--glass', `rgba(0, 0, 0, ${s.opacity})`);
+        if (terminals) terminals.changeFontSize(s.fontSize - terminals.fontSize);
+
+        $('font-size-val').textContent = `${s.fontSize}px`;
+        $('opacity-val').textContent = s.opacity;
+        $('settings-font-size').value = s.fontSize;
+        $('settings-opacity').value = s.opacity;
+
+        document.querySelectorAll('.color-swatch').forEach(sw => {
+            sw.classList.toggle('active', sw.dataset.color === s.color);
+            sw.style.border = sw.dataset.color === s.color ? '2px solid #fff' : 'none';
+        });
+
+        localStorage.setItem('ks-ssh-settings', JSON.stringify(s));
+    };
+
+    $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
+    $('settings-opacity').oninput = (e) => { settings.opacity = parseFloat(e.target.value); apply(settings); };
+
+    document.querySelectorAll('.color-swatch').forEach(sw => {
+        sw.onclick = () => { settings.color = sw.dataset.color; apply(settings); };
+    });
+
+    apply(settings);
 }
 
 function setupVPSInfo() {

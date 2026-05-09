@@ -367,6 +367,17 @@ body {
   overflow-x: auto;
   scrollbar-width: none;
 }
+
+.terminal-secondary-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #050505;
+  border-bottom: 1px solid var(--glass-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.terminal-secondary-bar::-webkit-scrollbar { display: none; }
 .terminal-keypad::-webkit-scrollbar { display: none; }
 
 .keypad-row {
@@ -643,6 +654,19 @@ body {
   animation: shimmer 1.5s infinite linear;
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.skeleton-row {
+    display: grid;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+.skeleton-icon { width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0; }
+.skeleton-line { height: 10px; border-radius: 4px; margin-bottom: 6px; background: #111; width: 100%; }
+.skeleton-line.short { width: 40%; }
+.skeleton-line.mid { width: 70%; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {

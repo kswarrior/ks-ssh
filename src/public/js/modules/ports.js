@@ -12,17 +12,12 @@ export class PortScanner {
 
   async load() {
     this.list.innerHTML = `
-      <div class="skeleton-row" style="grid-template-columns: 40px 1fr 80px; background:var(--night-900); border:1px solid var(--glass-border); border-radius:8px; margin-bottom:8px;">
-        <div class="skeleton skeleton-icon"></div>
+      <div class="skeleton-row" style="grid-template-columns: 40px 1fr 80px; background:var(--night-900); border:1px solid var(--glass-border); border-radius:8px; margin-bottom:8px; padding:12px 20px;">
+        <div class="skeleton skeleton-icon" style="width:40px; height:40px; border-radius:6px;"></div>
         <div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line mid"></div></div>
-        <div class="skeleton skeleton-icon"></div>
+        <div class="skeleton skeleton-line" style="width:80px; height:28px; border-radius:6px;"></div>
       </div>
-      <div class="skeleton-row" style="grid-template-columns: 40px 1fr 80px; background:var(--night-900); border:1px solid var(--glass-border); border-radius:8px; margin-bottom:8px;">
-        <div class="skeleton skeleton-icon"></div>
-        <div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line mid"></div></div>
-        <div class="skeleton skeleton-icon"></div>
-      </div>
-    `;
+    `.repeat(3);
     try {
       const res = await fetch('/ksapi/ports');
       const data = await res.json();

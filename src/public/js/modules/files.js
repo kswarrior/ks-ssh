@@ -11,8 +11,8 @@ export class FileManager {
   _setupUI() {
     $('upload-btn')?.addEventListener('click', () => $('file-input').click());
     $('file-input')?.addEventListener('change', (e) => this.handleUpload(e));
-    $('new-file-btn')?.addEventListener('click', () => this.promptNewFile());
-    $('new-folder-btn')?.addEventListener('click', () => this.promptNewFolder());
+    $('new-file-btn')?.addEventListener('click', () => this.showCreatePanel('file'));
+    $('new-folder-btn')?.addEventListener('click', () => this.showCreatePanel('folder'));
     $('files-refresh-btn')?.addEventListener('click', () => this.load());
 
     // URL Upload
@@ -51,30 +51,72 @@ export class FileManager {
 
     // Editor Save
     $('editor-save-btn')?.addEventListener('click', () => this.saveFile());
+
+    // Create Panel
+    $('create-cancel-btn')?.addEventListener('click', () => this.hideCreatePanel());
+    $('create-confirm-btn')?.addEventListener('click', () => this.handleCreate());
+    document.querySelectorAll('.create-type-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.create-type-btn').forEach(b => {
+                b.classList.add('btn-secondary');
+                b.classList.remove('active');
+            });
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('active');
+            this.createType = btn.dataset.type;
+        };
+    });
+  }
+
+  showCreatePanel(type) {
+      this.createType = type;
+      $('files-list').classList.add('hidden');
+      $('files-create-panel').classList.remove('hidden');
+      $('create-name-input').value = '';
+      $('create-name-input').focus();
+      document.querySelectorAll('.create-type-btn').forEach(b => {
+          const active = b.dataset.type === type;
+          b.classList.toggle('active', active);
+          b.classList.toggle('btn-secondary', !active);
+      });
+  }
+
+  hideCreatePanel() {
+      $('files-list').classList.remove('hidden');
+      $('files-create-panel').classList.add('hidden');
+  }
+
+  async handleCreate() {
+      const name = $('create-name-input').value;
+      if (!name) return;
+      if (this.createType === 'file') await this._createFile(name);
+      else await this._createFolder(name);
+      this.hideCreatePanel();
   }
 
   async load(dirPath = this.currentPath) {
     const list = $('files-list');
+    this.hideCreatePanel();
     list.innerHTML = `
-        <div class="skeleton-row">
+        <div class="skeleton-row" style="grid-template-columns: 32px 1fr auto 40px; gap:12px;">
             <div class="skeleton skeleton-icon"></div>
             <div><div class="skeleton skeleton-line mid"></div><div class="skeleton skeleton-line short"></div></div>
-            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line" style="width:60px;"></div>
             <div class="skeleton skeleton-icon"></div>
         </div>
-        <div class="skeleton-row">
+        <div class="skeleton-row" style="grid-template-columns: 32px 1fr auto 40px; gap:12px;">
             <div class="skeleton skeleton-icon"></div>
             <div><div class="skeleton skeleton-line mid"></div><div class="skeleton skeleton-line short"></div></div>
-            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line" style="width:40px;"></div>
             <div class="skeleton skeleton-icon"></div>
         </div>
-        <div class="skeleton-row">
+        <div class="skeleton-row" style="grid-template-columns: 32px 1fr auto 40px; gap:12px;">
             <div class="skeleton skeleton-icon"></div>
             <div><div class="skeleton skeleton-line mid"></div><div class="skeleton skeleton-line short"></div></div>
-            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line" style="width:80px;"></div>
             <div class="skeleton skeleton-icon"></div>
         </div>
-    `;
+    `.repeat(4);
     this.exitSelectMode();
     try {
       const res = await fetch(`/ksapi/files?path=${encodeURIComponent(dirPath)}`);
@@ -359,9 +401,7 @@ export class FileManager {
     } else bar.classList.add('hidden');
   }
 
-  async promptNewFile() {
-    const name = prompt('NEW FILE IDENTIFIER:');
-    if (!name) return;
+  async _createFile(name) {
     try {
         const res = await fetch('/ksapi/files/write', {
             method: 'POST',
@@ -373,9 +413,7 @@ export class FileManager {
     } catch (err) { showToast(err.message, 'error'); }
   }
 
-  async promptNewFolder() {
-    const name = prompt('NEW FOLDER IDENTIFIER:');
-    if (!name) return;
+  async _createFolder(name) {
     try {
         const res = await fetch('/ksapi/files/mkdir', {
             method: 'POST',
