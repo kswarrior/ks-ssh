@@ -220,4 +220,5 @@ async function fetchTunnelInfo() {
   } catch {}
 }
 
+window.switchTab = switchTab;
 init();

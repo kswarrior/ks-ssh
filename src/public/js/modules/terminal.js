@@ -138,6 +138,7 @@ export class TerminalManager {
 
     $('terminals-empty').classList.add('hidden');
     $('terminal-toolbar').classList.remove('hidden');
+    $('terminal-tabs-container').classList.remove('hidden');
 
     setTimeout(() => {
       skeleton.remove();
@@ -166,7 +167,6 @@ export class TerminalManager {
     t.tab.classList.add('active');
     t.container.style.display = 'block';
     t.container.classList.add('active');
-    $('t-session-name').textContent = `SESSION: ${t.num.toString().padStart(2, '0')} STATUS: ONLINE`;
 
     setTimeout(() => {
       t.fit.fit();
@@ -230,6 +230,7 @@ export class TerminalManager {
         this.activeId = null;
         $('terminals-empty').classList.remove('hidden');
         $('terminal-toolbar').classList.add('hidden');
+        $('terminal-tabs-container').classList.add('hidden');
       }
     }
   }
