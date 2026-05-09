@@ -124,9 +124,7 @@ export class FileManager {
     row.className = 'file-row';
     const isParent = f.name === '..';
 
-    const icon = f.isDirectory
-        ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>'
-        : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+    const icon = this.getFileIcon(f);
 
     const colorClass = this.getFileColorClass(f);
 
@@ -202,7 +200,10 @@ export class FileManager {
     // Header color based on type
     const header = $('file-editor-modal').querySelector('.modal-header');
     const colorClass = this.getFileColorClass(file);
-    header.style.borderBottom = colorClass ? `2px solid ${getComputedStyle(document.documentElement).getPropertyValue('--' + colorClass.replace('text-', '')) || 'var(--electric-blue)'}` : '1px solid var(--glass-border)';
+    const colorValue = colorClass ? getComputedStyle(document.documentElement).getPropertyValue('--' + colorClass.replace('text-', '')) : 'var(--electric-blue)';
+    header.style.borderBottom = `2px solid ${colorValue}`;
+    header.style.background = colorValue.trim() ? `${colorValue}11` : 'transparent';
+    $('editor-filename').className = colorClass;
 
     $('file-editor-modal').classList.remove('hidden');
     $('file-editor-text').value = 'LOADING...';
@@ -386,22 +387,34 @@ export class FileManager {
     } catch (err) { showToast(err.message, 'error'); }
   }
 
+  getFileIcon(f) {
+      if (f.isDirectory) return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>';
+
+      const ext = f.name.split('.').pop().toLowerCase();
+      const codeIcons = ['js', 'ts', 'html', 'css', 'py', 'sh', 'c', 'cpp', 'java', 'go', 'php'];
+      const imgIcons = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
+      const zipIcons = ['zip', 'rar', 'tar', 'gz', '7z'];
+
+      if (codeIcons.includes(ext)) return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
+      if (imgIcons.includes(ext)) return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+      if (zipIcons.includes(ext)) return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v20"/><path d="M14 2v20"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>';
+
+      return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+  }
+
   getFileColorClass(f) {
       if (f.isDirectory) return '';
       const ext = f.name.split('.').pop().toLowerCase();
       const colors = {
-          'js': 'text-js',
+          'js': 'text-js', 'ts': 'text-js',
           'html': 'text-html',
           'css': 'text-css',
           'json': 'text-json',
           'md': 'text-md',
           'py': 'text-py',
           'sh': 'text-sh',
-          'zip': 'text-zip',
-          'png': 'text-img',
-          'jpg': 'text-img',
-          'jpeg': 'text-img',
-          'svg': 'text-img'
+          'zip': 'text-zip', 'rar': 'text-zip', 'tar': 'text-zip', 'gz': 'text-zip',
+          'png': 'text-img', 'jpg': 'text-img', 'jpeg': 'text-img', 'svg': 'text-img', 'webp': 'text-img'
       };
       return colors[ext] || '';
   }

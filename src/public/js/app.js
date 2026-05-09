@@ -37,6 +37,10 @@ function init() {
   fetchTunnelInfo();
   setInterval(fetchTunnelInfo, 30000);
 
+  window.FileManager = files;
+  window.TerminalManager = terminals;
+  window.PortScanner = ports;
+
   $('info-btn')?.addEventListener('click', () => {
     showToast('KS-SSH HUD MASTER v2.0.0', 'info');
   });

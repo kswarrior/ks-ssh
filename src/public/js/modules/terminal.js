@@ -54,7 +54,6 @@ export class TerminalManager {
             case 'arrowdown': code = '\x1b[B'; break;
             case 'arrowright': code = '\x1b[C'; break;
             case 'arrowleft': code = '\x1b[D'; break;
-            case 'c': code = this.modifiers.ctrl ? '\x03' : 'c'; break;
         }
     }
 
@@ -128,7 +127,23 @@ export class TerminalManager {
     term.loadAddon(fit);
     term.open(container);
 
-    term.onData(data => this.socket.emit('terminal:input', { id, data }));
+    term.onData(data => {
+        if (this.modifiers.ctrl) {
+            // Handle CTRL modifier for text input
+            if (data.length === 1) {
+                const charCode = data.charCodeAt(0);
+                // Convert a-z to 1-26 (Control codes)
+                if (charCode >= 97 && charCode <= 122) { // a-z
+                    data = String.fromCharCode(charCode - 96);
+                } else if (charCode >= 65 && charCode <= 90) { // A-Z
+                    data = String.fromCharCode(charCode - 64);
+                }
+            }
+            this.modifiers.ctrl = false;
+            document.querySelector('.t-key[data-key="ctrl"]')?.classList.remove('active');
+        }
+        this.socket.emit('terminal:input', { id, data });
+    });
 
     this.terminals.set(id, { term, fit, num, tab, container });
 

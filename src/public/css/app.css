@@ -423,6 +423,8 @@ body {
   align-items: center;
   margin-bottom: 12px;
   padding: 0 4px;
+  gap: 12px;
+  min-width: 0;
 }
 .hud-view-header h1 {
   font-size: 20px;
@@ -430,6 +432,13 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-title-wrap {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .hud-action-group { display: flex; align-items: center; gap: 8px; }
@@ -445,6 +454,10 @@ body {
   display: inline-block;
   margin-top: 4px;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .breadcrumb-flat { font-size: 10px; font-weight: 700; color: var(--electric-blue); text-transform: uppercase; }
 .breadcrumb-no-margin {
@@ -493,8 +506,8 @@ body {
 .file-row.selected { background: var(--electric-blue-dim); }
 
 .file-name { font-size: 13px; font-weight: 500; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-meta { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); }
-.file-size { font-size: 11px; color: var(--text-dim); text-align: right; font-family: var(--font-mono); }
+.file-meta { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); white-space: nowrap; }
+.file-size { font-size: 11px; color: var(--text-dim); text-align: right; font-family: var(--font-mono); white-space: nowrap; }
 
 .bulk-bar {
   position: fixed;
@@ -638,5 +651,9 @@ body {
   .header-stats { display: none; }
   .nav-link { padding: 5px 8px; font-size: 10px; }
   .file-row { grid-template-columns: 32px 1fr 40px; }
+  .file-meta, .file-size { display: none; }
   .hud-footer { display: none; }
+  .btn-primary span, .btn-primary { padding: 6px 10px; }
+  .hud-action-group { gap: 4px; }
+  .hud-view-header h1 { font-size: 16px; }
 }
