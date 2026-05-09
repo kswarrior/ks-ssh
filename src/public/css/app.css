@@ -730,10 +730,7 @@ body {
     justify-content: space-between;
     padding: 8px 12px;
     flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-  .hud-header::-webkit-scrollbar { display: none; }
 
   .header-left {
     gap: 12px;
