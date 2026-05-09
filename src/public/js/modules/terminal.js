@@ -15,8 +15,6 @@ export class TerminalManager {
     $('empty-new-term')?.addEventListener('click', () => this.create());
     $('add-term-btn')?.addEventListener('click', () => this.create());
     $('t-clear-btn')?.addEventListener('click', () => this.clearActive());
-    $('t-fit-btn')?.addEventListener('click', () => this.refit());
-    $('t-download-btn')?.addEventListener('click', () => this.downloadActiveLog());
     $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
     $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
 
@@ -33,9 +31,6 @@ export class TerminalManager {
           btn.classList.toggle('active', this.modifiers[key]);
         } else {
           this.sendKey(key);
-          // If we had modifiers active and it was a non-toggle key, maybe clear them?
-          // Usually CTRL/ALT stay active until manually toggled off in mobile shells.
-          // But for now let's just send the key.
         }
       };
     });
@@ -46,29 +41,30 @@ export class TerminalManager {
     if (!t) return;
 
     let code = '';
-    switch (key) {
-      case 'esc': code = '\x1b'; break;
-      case 'tab': code = '\t'; break;
-      case 'backspace': code = '\x7f'; break;
-      case 'delete': code = '\x1b[3~'; break;
-      case 'arrowup': code = '\x1b[A'; break;
-      case 'arrowdown': code = '\x1b[B'; break;
-      case 'arrowright': code = '\x1b[C'; break;
-      case 'arrowleft': code = '\x1b[D'; break;
-    }
 
-    if (this.modifiers.ctrl || this.modifiers.alt) {
-        // This is complex for all keys, but for basic ones:
-        // Handled by xterm.js usually, but we are manually sending data.
-        // For simplicity, if CTRL is on and it's a key like 'c' (not handled here yet), we'd need more.
-        // The keypad only has special keys for now.
+    // Check for CTRL+C specifically if that was the user's pain point
+    if (this.modifiers.ctrl && key === 'c') {
+        code = '\x03';
+    } else {
+        switch (key) {
+            case 'esc': code = '\x1b'; break;
+            case 'tab': code = '\t'; break;
+            case 'backspace': code = '\x7f'; break;
+            case 'arrowup': code = '\x1b[A'; break;
+            case 'arrowdown': code = '\x1b[B'; break;
+            case 'arrowright': code = '\x1b[C'; break;
+            case 'arrowleft': code = '\x1b[D'; break;
+            case 'c': code = this.modifiers.ctrl ? '\x03' : 'c'; break;
+        }
     }
 
     if (code) {
-        let finalCode = code;
-        // Basic modifier support for arrows etc could be added here if needed
-        this.socket.emit('terminal:input', { id: this.activeId, data: finalCode });
+        this.socket.emit('terminal:input', { id: this.activeId, data: code });
     }
+
+    // Auto-clear modifiers after use for better UX on mobile?
+    // Usually no, but let's see. If I press CTRL then C, I want it to send \x03.
+    // If I press just C and CTRL is on, I send \x03.
 
     t.term.focus();
   }
@@ -145,7 +141,7 @@ export class TerminalManager {
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
-    }, 1000); // 1s artificial delay to show skeleton
+    }, 500);
 
     this.activate(id);
     this._save();
@@ -185,25 +181,6 @@ export class TerminalManager {
   clearActive() {
     const t = this.terminals.get(this.activeId);
     if (t) { t.term.clear(); showToast('HUD BUFFER CLEARED'); }
-  }
-
-  downloadActiveLog() {
-    const t = this.terminals.get(this.activeId);
-    if (!t) return;
-    let content = "";
-    const buffer = t.term.buffer.active;
-    for (let i = 0; i < buffer.length; i++) {
-        const line = buffer.getLine(i);
-        if (line) content += line.translateToString() + "\n";
-    }
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `uplink-${t.num}-log.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('LOG DOWNLOADED');
   }
 
   confirmClose(id) {

@@ -1,32 +1,32 @@
 <div class="modal-overlay hidden" id="term-close-modal">
-  <div class="modal">
-    <div class="modal-header"><h3>Close Terminal</h3><button class="modal-close" id="term-close-modal-x">&times;</button></div>
-    <div class="modal-body">
-      <p>Type <strong>KS SSH</strong> to confirm.</p>
-      <input type="text" id="term-close-input" />
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" id="term-close-cancel">Cancel</button>
-      <button class="btn-danger" id="term-close-confirm" disabled>Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Port Preview Panel -->
-<div class="modal-overlay hidden" id="port-preview-panel">
-    <div class="modal" style="max-width: 90vw; width: 1000px; height: 85vh; display: flex; flex-direction: column;">
-        <div class="modal-header">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <h3 id="port-preview-url" style="font-family:var(--font-mono); font-size:14px; color:var(--text-dim);">localhost:0000</h3>
-                <span id="port-preview-badge" class="breadcrumb" style="margin-top:0;">:0000</span>
-            </div>
-            <button class="icon-btn" id="port-preview-close">&times;</button>
-        </div>
-        <div class="modal-body" style="flex:1; padding:0; background: white;">
-            <iframe id="port-preview-iframe" style="width:100%; height:100%; border:none;" src="about:blank"></iframe>
+    <div class="modal modal-sm">
+        <div class="modal-header"><h3>Close Terminal</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body">
+            <p class="modal-p-main">Are you sure you want to kill this terminal session?</p>
+            <p class="modal-p-sub">Type <span class="text-blue">KS SSH</span> to confirm:</p>
+            <input type="text" id="term-close-input" class="input-hud" placeholder="KS SSH" />
         </div>
         <div class="modal-footer">
-            <button class="btn-primary" id="port-preview-refresh" style="padding:8px 16px; font-size:12px;">REFRESH PAGE</button>
+            <button class="icon-btn modal-close btn-text-hud" id="term-close-cancel">CANCEL</button>
+            <button id="term-close-confirm" class="btn-primary btn-danger" disabled>CLOSE SESSION</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="port-preview-panel">
+    <div class="modal modal-port-preview">
+        <div class="modal-header">
+            <div class="flex-center-gap-12">
+                <h3 id="port-preview-url" class="mono-dim-14">localhost:0000</h3>
+                <span id="port-preview-badge" class="breadcrumb-no-margin">:0000</span>
+            </div>
+            <button class="icon-btn" id="port-preview-close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body flex-1 modal-body-flush bg-white">
+            <iframe id="port-preview-iframe" class="full-iframe" src="about:blank"></iframe>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" id="port-preview-refresh">REFRESH PAGE</button>
         </div>
     </div>
 </div>

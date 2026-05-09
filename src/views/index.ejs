@@ -17,7 +17,7 @@
   <header class="hud-header">
     <div class="header-left">
         <div class="header-brand">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
             <span>KS SSH</span>
         </div>
 
@@ -29,11 +29,11 @@
 
         <div class="header-stats">
             <div class="header-stat-item">
-                <span id="hdr-ram-pct">0%</span> RAM
+                <span id="hdr-ram-pct" class="header-stat-value">0%</span> RAM
             </div>
             <div class="header-stat-item">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#22c55e" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
-                <span id="hdr-latency">--ms</span>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--electric-blue)" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+                <span id="hdr-latency" class="header-stat-value">--ms</span>
             </div>
         </div>
     </div>
@@ -42,7 +42,7 @@
         <div class="dropdown-wrapper">
             <button class="icon-btn" id="vps-info-btn" title="VPS Information"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
             <div class="dropdown-menu hidden" id="vps-info-dropdown">
-                <div class="dropdown-header">System Information (Neofetch)</div>
+                <div class="dropdown-header">System Information</div>
                 <div class="dropdown-content neofetch-layout">
                     <pre id="vps-logo" class="neofetch-logo">🐧</pre>
                     <div class="neofetch-details">
@@ -72,10 +72,10 @@
   </main>
 
   <footer class="hud-footer">
-    <div id="footer-status">No buttons yet — press + to add one</div>
-    <div style="display:flex; gap:12px;">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <div id="footer-status">READY FOR OPERATION</div>
+    <div class="footer-right">
+        <span class="text-blue">KS-SSH HUD v2.0</span>
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
     </div>
   </footer>
 

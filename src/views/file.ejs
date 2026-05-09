@@ -3,7 +3,7 @@
     <div class="hud-view-header">
         <div class="hud-title-wrap">
             <h1>Storage HUD</h1>
-            <div id="breadcrumb" class="breadcrumb">/ROOT</div>
+            <div id="breadcrumb" class="breadcrumb">/root</div>
         </div>
         <div class="hud-action-group">
             <button id="upload-btn" class="btn-primary">UPLOAD</button>
@@ -18,11 +18,11 @@
     <div id="files-list" class="files-list-vertical flex-1"></div>
 
     <div id="bulk-bar" class="hidden bulk-bar">
-        <div id="bulk-count" class="bulk-count">0 ITEMS SELECTED</div>
+        <div id="bulk-count" class="bulk-count">0 ITEMS</div>
         <div class="hud-action-group">
-            <button id="bulk-zip" class="btn-primary" style="background:var(--night-700); box-shadow:none; padding:8px 16px;">MAKE ZIP</button>
-            <button id="bulk-delete" class="btn-primary" style="background:#ef4444; box-shadow:none; padding:8px 16px;">DELETE</button>
-            <button id="bulk-cancel" class="icon-btn" style="padding:4px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button id="bulk-zip" class="btn-primary btn-secondary">ZIP</button>
+            <button id="bulk-delete" class="btn-primary btn-danger">DELETE</button>
+            <button id="bulk-cancel" class="icon-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
     </div>
   </div>
@@ -35,7 +35,7 @@
     <div class="menu-item" id="ctx-download"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</div>
     <div class="menu-item" id="ctx-edit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</div>
     <div class="menu-item" id="ctx-rename"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Rename</div>
-    <div style="height:1px; background:var(--glass-border); margin:4px 0;"></div>
+    <div class="menu-divider"></div>
     <div class="menu-item danger" id="ctx-delete"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</div>
 </div>
 
@@ -44,11 +44,11 @@
     <div class="modal">
         <div class="modal-header"><h3>Upload from URL</h3><button class="icon-btn modal-close">&times;</button></div>
         <div class="modal-body">
-            <div style="margin-bottom:12px;"><label class="hud-subtitle" style="margin-top:0;">RESOURCE URL</label></div>
+            <div class="label-box"><label class="breadcrumb-flat">RESOURCE URL</label></div>
             <input type="text" id="upload-url-input" class="input-hud" placeholder="https://example.com/file.zip" />
         </div>
         <div class="modal-footer">
-            <button class="icon-btn modal-close" style="font-size:13px; font-weight:600; text-transform:uppercase;">CANCEL</button>
+            <button class="icon-btn modal-close btn-text-hud">CANCEL</button>
             <button id="url-upload-confirm" class="btn-primary">UPLOAD</button>
         </div>
     </div>
@@ -56,13 +56,13 @@
 
 <!-- Editor Modal -->
 <div class="modal-overlay hidden" id="file-editor-modal">
-    <div class="modal modal-editor">
+    <div class="modal modal-lg">
         <div class="modal-header"><h3 id="editor-filename">editor.txt</h3><button class="icon-btn modal-close">&times;</button></div>
-        <div class="modal-body" style="padding:0;">
+        <div class="modal-body modal-body-flush">
             <textarea id="file-editor-text" class="textarea-hud"></textarea>
         </div>
         <div class="modal-footer">
-            <button class="icon-btn modal-close" style="font-size:13px; font-weight:600; text-transform:uppercase;">DISCARD</button>
+            <button class="icon-btn modal-close btn-text-hud">DISCARD</button>
             <button id="editor-save-btn" class="btn-primary">SAVE CHANGES</button>
         </div>
     </div>
