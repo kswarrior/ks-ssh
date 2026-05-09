@@ -54,11 +54,11 @@ function updateHUD() {
   // Active Sessions
   const count = terminals.terminals.size;
   const empty = $('terminals-empty');
-  const tabs = $('terminal-tabs-container');
+  const header = $('terminal-header-area');
   const keypad = $('terminal-keypad');
 
   if (empty) empty.classList.toggle('hidden', count > 0);
-  if (tabs) tabs.classList.toggle('hidden', count === 0);
+  if (header) header.classList.toggle('hidden', count === 0);
   if (keypad) keypad.classList.toggle('hidden', count === 0);
 
   loadSystemInfo();

@@ -1,50 +1,57 @@
 <div class="tab-panel" id="tab-terminals">
-  <div class="terminal-hud-wrapper">
-    <div id="terminal-tabs-container" class="hidden">
-      <div class="terminal-hud-tabs">
-        <div id="terminal-tabs-list"></div>
-        <button id="add-term-btn" class="terminal-add-btn">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-      </div>
+  <div class="terminal-hud-wrapper" style="display: flex; flex-direction: column; height: 100%;">
 
-      <div id="terminal-toolbar" class="terminal-toolbar">
-          <div class="hud-action-group">
-              <button id="t-font-dec" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-              <button id="t-font-inc" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-              <button id="t-clear-btn" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+    <!-- TOP SECTION: Tabs, Actions, and Keypad -->
+    <div id="terminal-header-area" class="hidden" style="display: flex; flex-direction: column; background: var(--night-900); border-bottom: 1px solid var(--glass-border);">
+        <!-- Tabs & Basic Actions -->
+        <div id="terminal-tabs-container" style="display: flex; align-items: center; padding: 2px 8px; min-height: 32px;">
+          <div style="display: flex; align-items: center; gap: 4px; flex: 1; overflow: hidden;">
+            <div id="terminal-tabs-list" style="display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;"></div>
+            <button id="add-term-btn" class="terminal-add-btn" style="width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; background: var(--night-800); border: 1px solid var(--glass-border); color: var(--text-dim);">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
           </div>
-      </div>
-    </div>
 
-    <div class="terminal-hud-content flex-1" id="terminals-area" style="position:relative;"></div>
+          <div class="hud-action-group" style="display: flex; gap: 2px; margin-left: 8px; flex-shrink: 0;">
+              <button id="t-font-dec" class="icon-btn" style="padding: 2px; color: var(--text-dim);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+              <button id="t-font-inc" class="icon-btn" style="padding: 2px; color: var(--text-dim);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+              <button id="t-clear-btn" class="icon-btn" style="padding: 2px; color: var(--text-dim);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div>
+        </div>
 
-    <div id="terminal-keypad" class="terminal-keypad hidden">
-        <div class="keypad-row">
-            <button class="t-key" data-key="esc">ESC</button>
-            <button class="t-key" data-key="tab">TAB</button>
-            <button class="t-key" data-key="backspace">BKSP</button>
-            <button class="t-key" data-key="delete">DEL</button>
-            <div class="key-separator"></div>
-            <button class="t-key key-toggle" data-key="ctrl">CTRL</button>
-            <button class="t-key key-toggle" data-key="alt">ALT</button>
-            <div class="key-separator"></div>
-            <button class="t-key" data-key="arrowup">↑</button>
-            <button class="t-key" data-key="arrowdown">↓</button>
-            <button class="t-key" data-key="arrowleft">←</button>
-            <button class="t-key" data-key="arrowright">→</button>
+        <!-- Keypad (Ultra Compact) -->
+        <div id="terminal-keypad" class="terminal-keypad hidden" style="border-top: 1px solid var(--glass-border); padding: 2px 8px; background: var(--obsidian); overflow-x: auto; scrollbar-width: none;">
+            <div class="keypad-row" style="display: flex; gap: 3px; align-items: center; min-width: max-content;">
+                <button class="t-key" data-key="esc" style="padding: 2px 6px; font-size: 10px; min-width: 32px; height: 24px;">ESC</button>
+                <button class="t-key" data-key="tab" style="padding: 2px 6px; font-size: 10px; min-width: 32px; height: 24px;">TAB</button>
+                <button class="t-key" data-key="backspace" style="padding: 2px 6px; font-size: 10px; min-width: 32px; height: 24px;">BKSP</button>
+                <div class="key-separator" style="height: 12px; margin: 0 1px;"></div>
+                <button class="t-key key-toggle" data-key="ctrl" style="padding: 2px 6px; font-size: 10px; min-width: 32px; height: 24px;">CTRL</button>
+                <button class="t-key key-toggle" data-key="alt" style="padding: 2px 6px; font-size: 10px; min-width: 32px; height: 24px;">ALT</button>
+                <div class="key-separator" style="height: 12px; margin: 0 1px;"></div>
+                <button class="t-key" data-key="arrowup" style="padding: 2px 4px; font-size: 10px; min-width: 24px; height: 24px;">↑</button>
+                <button class="t-key" data-key="arrowdown" style="padding: 2px 4px; font-size: 10px; min-width: 24px; height: 24px;">↓</button>
+                <button class="t-key" data-key="arrowleft" style="padding: 2px 4px; font-size: 10px; min-width: 24px; height: 24px;">←</button>
+                <button class="t-key" data-key="arrowright" style="padding: 2px 4px; font-size: 10px; min-width: 24px; height: 24px;">→</button>
+            </div>
         </div>
     </div>
-      <div id="terminals-empty" class="empty-state">
-        <div class="empty-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-        </div>
-        <h2 class="empty-title">No Terminals Open</h2>
-        <p class="empty-subtitle">Click "New Terminal" to start a session</p>
-        <button id="empty-new-term" class="btn-primary">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Terminal
-        </button>
+
+    <!-- MAIN TERMINAL AREA -->
+    <div class="terminal-hud-content flex-1" id="terminals-area" style="position:relative; background: #000; overflow: hidden;"></div>
+
+    <!-- EMPTY STATE -->
+    <div id="terminals-empty" class="empty-state" style="flex: 1;">
+      <div class="empty-icon" style="width: 40px; height: 40px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       </div>
+      <h2 class="empty-title" style="font-size: 14px;">No Terminals Open</h2>
+      <p class="empty-subtitle" style="font-size: 11px; margin-bottom: 12px;">Start a session</p>
+      <button id="empty-new-term" class="btn-primary" style="padding: 6px 12px; font-size: 11px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Terminal
+      </button>
+    </div>
+
   </div>
 </div>

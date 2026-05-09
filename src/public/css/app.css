@@ -45,7 +45,7 @@ body {
   background: var(--obsidian);
   color: var(--text-main);
   font-family: var(--font-hud);
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   background-image:
@@ -57,7 +57,7 @@ body {
 
 /* ===== LAYOUT ===== */
 #app {
-  height: 100vh;
+  height: 100dvh;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
@@ -69,11 +69,11 @@ body {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
+  padding: 8px 16px;
   background: rgba(8, 8, 8, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--glass-border);
-  gap: 12px;
+  gap: 8px;
   z-index: 100;
 }
 
@@ -108,12 +108,12 @@ body {
 }
 
 .nav-link {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-dim);
   cursor: pointer;
   transition: var(--transition-fast);
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: 7px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -333,13 +333,13 @@ body {
 .btn-primary:active { transform: translateY(0); }
 
 /* ===== GENERIC HUD LAYOUT ===== */
-.hud-container { padding: 24px; display: flex; flex-direction: column; height: 100%; }
+.hud-container { padding: 12px; display: flex; flex-direction: column; height: 100%; }
 .hud-view-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 0 8px;
+  margin-bottom: 12px;
+  padding: 0 4px;
 }
 .hud-title-wrap h1 {
   font-weight: 900;
@@ -728,20 +728,16 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: 6px 10px;
     flex-wrap: nowrap;
   }
 
   .header-left {
-    gap: 12px;
+    gap: 8px;
   }
 
-  .header-right {
-    padding-top: 0;
-    border-top: none;
-  }
-
-  .header-brand span { display: none; } /* Hide "KS SSH" text on tiny screens if needed */
+  .header-brand svg { width: 18px; height: 18px; }
+  .header-brand span { display: none; }
 
   .header-stats {
     display: none;
@@ -749,11 +745,13 @@ body {
 
   .top-nav {
     margin-right: 0;
-    gap: 16px;
+    gap: 4px;
+    padding: 2px;
   }
 
   .nav-link {
-    font-size: 13px;
+    font-size: 11px;
+    padding: 4px 8px;
   }
 
   .file-size {
@@ -762,10 +760,21 @@ body {
 
   .file-row {
     grid-template-columns: 32px 1fr 40px;
+    padding: 6px 8px;
   }
+
+  .hud-container { padding: 8px; }
+  .hud-title-wrap h1 { font-size: 20px; }
 
   .dropdown-menu {
     width: 90vw;
     right: -12px;
+  }
+
+  .hud-footer { display: none; }
+
+  /* Make terminal even larger */
+  .terminal-hud-content {
+      padding: 0 !important;
   }
 }

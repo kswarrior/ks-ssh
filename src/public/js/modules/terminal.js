@@ -137,8 +137,8 @@ export class TerminalManager {
     this.terminals.set(id, { term, fit, num, tab, container });
 
     $('terminals-empty').classList.add('hidden');
-    $('terminal-toolbar').classList.remove('hidden');
-    $('terminal-tabs-container').classList.remove('hidden');
+    $('terminal-header-area')?.classList.remove('hidden');
+    $('terminal-keypad')?.classList.remove('hidden');
 
     setTimeout(() => {
       skeleton.remove();
@@ -229,8 +229,8 @@ export class TerminalManager {
       else {
         this.activeId = null;
         $('terminals-empty').classList.remove('hidden');
-        $('terminal-toolbar').classList.add('hidden');
-        $('terminal-tabs-container').classList.add('hidden');
+        $('terminal-header-area')?.classList.add('hidden');
+        $('terminal-keypad')?.classList.add('hidden');
       }
     }
   }
