@@ -693,3 +693,55 @@ body {
   .hud-action-group { gap: 4px; }
   .hud-view-header h1 { font-size: 16px; }
 }
+
+/* Security Lock Overlay */
+.security-lock {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.lock-content {
+    max-width: 400px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.lock-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    color: #ff3e3e;
+}
+
+.lock-title {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.lock-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #888;
+    margin-bottom: 32px;
+}
+
+.lock-action {
+    margin-bottom: 48px;
+}
+
+.lock-footer {
+    font-size: 12px;
+    color: #444;
+    letter-spacing: 1px;
+    font-weight: 700;
+}

@@ -38,9 +38,9 @@ function init() {
   fetchTunnelInfo();
   setInterval(fetchTunnelInfo, 30000);
 
-  window.FileManager = files;
-  window.TerminalManager = terminals;
-  window.PortScanner = ports;
+  window.fileManager = files;
+  window.terminalManager = terminals;
+  window.portScanner = ports;
 
   $('info-btn')?.addEventListener('click', () => {
     showToast('KS-SSH HUD MASTER v2.0.0', 'info');
@@ -328,5 +328,37 @@ async function fetchTunnelInfo() {
   } catch {}
 }
 
+function checkSecurity() {
+    const official = 'ssh.ksw.workers.dev';
+    const isOfficial = window.location.hostname === official;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (!isOfficial && !isLocal) {
+        const overlay = document.createElement('div');
+        overlay.className = 'security-lock';
+        overlay.innerHTML = `
+            <div class="lock-content">
+                <div class="lock-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h1 class="lock-title">UNAUTHORIZED DOMAIN</h1>
+                <p class="lock-text">This HUD is running on an insecure or unauthorized mirror. To protect your data and credentials, please use the official terminal.</p>
+                <div class="lock-action">
+                    <a href="https://ssh.ksw.workers.dev/" class="btn-primary">ACCESS OFFICIAL HUD</a>
+                </div>
+                <div class="lock-footer">
+                    ©️ KS Warrior
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+}
+
 window.switchTab = switchTab;
+checkSecurity();
 init();
