@@ -30,10 +30,13 @@ export class TerminalManager {
     this._setupKeypad();
   }
 
-  showActionPanel() {
+  showActionPanel(action = null) {
+      this.editingActionId = action ? action.id : null;
       $('terminal-action-panel').classList.remove('hidden');
-      $('action-label').value = '';
-      $('action-code').value = '';
+      $('action-label').value = action ? action.label : '';
+      $('action-code').value = action ? action.code : '';
+      $('action-type').value = action ? action.type : 'code';
+      $('action-save-btn').textContent = action ? 'UPDATE ACTION' : 'SAVE ACTION';
   }
 
   hideActionPanel() {
@@ -47,12 +50,18 @@ export class TerminalManager {
 
       if (!label || !code) return;
 
-      this.customActions.push({ label, code, type, id: Date.now() });
-      localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+      if (this.editingActionId) {
+          const idx = this.customActions.findIndex(a => a.id === this.editingActionId);
+          if (idx !== -1) this.customActions[idx] = { ...this.customActions[idx], label, code, type };
+          showToast('ACTION UPDATED');
+      } else {
+          this.customActions.push({ label, code, type, id: Date.now() });
+          showToast('ACTION SAVED');
+      }
 
+      localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
       this.renderCustomActions();
       this.hideActionPanel();
-      showToast('ACTION SAVED');
   }
 
   renderCustomActions() {
@@ -66,20 +75,65 @@ export class TerminalManager {
           btn.style.minWidth = 'auto';
           btn.style.padding = '0 10px';
           btn.textContent = action.label.toUpperCase();
-          btn.onclick = () => this.executeCustomAction(action);
 
-          // Right click to delete
+          let holdTimer;
+          const startHold = () => {
+              holdTimer = setTimeout(() => {
+                  this.showActionContextMenu(action, btn);
+              }, 600);
+          };
+          const clearHold = () => clearTimeout(holdTimer);
+
+          btn.onclick = () => {
+              if (this.isHolding) return;
+              this.executeCustomAction(action);
+          };
+          btn.onmousedown = startHold;
+          btn.onmouseup = clearHold;
+          btn.onmouseleave = clearHold;
+          btn.ontouchstart = startHold;
+          btn.ontouchend = clearHold;
+
           btn.oncontextmenu = (e) => {
               e.preventDefault();
-              if (confirm(`DELETE ACTION "${action.label}"?`)) {
-                  this.customActions = this.customActions.filter(a => a.id !== action.id);
-                  localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-                  this.renderCustomActions();
-              }
+              this.showActionContextMenu(action, btn);
           };
 
           list.appendChild(btn);
       });
+  }
+
+  showActionContextMenu(action, btn) {
+      this.isHolding = true;
+      setTimeout(() => this.isHolding = false, 300);
+
+      const menu = document.createElement('div');
+      menu.className = 'context-menu';
+      menu.style.left = btn.getBoundingClientRect().left + 'px';
+      menu.style.top = (btn.getBoundingClientRect().bottom + 5) + 'px';
+
+      menu.innerHTML = `
+          <div class="menu-item" id="act-edit">EDIT</div>
+          <div class="menu-item danger" id="act-delete">DELETE</div>
+      `;
+
+      document.body.appendChild(menu);
+
+      menu.querySelector('#act-edit').onclick = () => {
+          this.showActionPanel(action);
+          menu.remove();
+      };
+      menu.querySelector('#act-delete').onclick = () => {
+          if (confirm(`PURGE "${action.label}"?`)) {
+              this.customActions = this.customActions.filter(a => a.id !== action.id);
+              localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+              this.renderCustomActions();
+          }
+          menu.remove();
+      };
+
+      const closeMenu = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', closeMenu); } };
+      setTimeout(() => document.addEventListener('click', closeMenu), 10);
   }
 
   executeCustomAction(action) {
@@ -359,6 +413,8 @@ export class TerminalManager {
     if (data) {
         try {
             const saved = JSON.parse(data);
+            // Sort by num to preserve order
+            saved.sort((a, b) => a.num - b.num);
             saved.forEach(s => {
                 this.restore(s.id, s.num);
             });

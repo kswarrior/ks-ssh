@@ -171,12 +171,21 @@ function setupSettings() {
         termBg: '#000000',
         termCursor: '#00a2ff',
         cursorStyle: 'block',
-        cursorBlink: true
+        cursorBlink: true,
+        filesSize: 13,
+        filesColor: '#ffffff',
+        portsSize: 13,
+        portsColor: '#ffffff'
     };
 
     const apply = (s) => {
         document.documentElement.style.setProperty('--electric-blue', s.color);
         document.documentElement.style.setProperty('--glass', `rgba(0, 0, 0, ${s.opacity})`);
+
+        document.documentElement.style.setProperty('--files-fs', `${s.filesSize}px`);
+        document.documentElement.style.setProperty('--files-color', s.filesColor);
+        document.documentElement.style.setProperty('--ports-fs', `${s.portsSize}px`);
+        document.documentElement.style.setProperty('--ports-color', s.portsColor);
 
         if (terminals) {
             terminals.changeFontSize(s.fontSize - terminals.fontSize);
@@ -202,6 +211,14 @@ function setupSettings() {
         $('settings-cursor-style').value = s.cursorStyle;
         $('settings-cursor-blink').checked = s.cursorBlink;
 
+        $('settings-files-size').value = s.filesSize;
+        $('files-size-val').textContent = `${s.filesSize}px`;
+        $('settings-files-color').value = s.filesColor;
+
+        $('settings-ports-size').value = s.portsSize;
+        $('ports-size-val').textContent = `${s.portsSize}px`;
+        $('settings-ports-color').value = s.portsColor;
+
         document.querySelectorAll('.color-swatch').forEach(sw => {
             sw.classList.toggle('active', sw.dataset.color === s.color);
             sw.style.border = sw.dataset.color === s.color ? '2px solid #fff' : 'none';
@@ -218,6 +235,12 @@ function setupSettings() {
     $('settings-term-cursor').oninput = (e) => { settings.termCursor = e.target.value; apply(settings); };
     $('settings-cursor-style').onchange = (e) => { settings.cursorStyle = e.target.value; apply(settings); };
     $('settings-cursor-blink').onchange = (e) => { settings.cursorBlink = e.target.checked; apply(settings); };
+
+    $('settings-files-size').oninput = (e) => { settings.filesSize = parseInt(e.target.value); apply(settings); };
+    $('settings-files-color').oninput = (e) => { settings.filesColor = e.target.value; apply(settings); };
+
+    $('settings-ports-size').oninput = (e) => { settings.portsSize = parseInt(e.target.value); apply(settings); };
+    $('settings-ports-color').oninput = (e) => { settings.portsColor = e.target.value; apply(settings); };
 
     document.querySelectorAll('.color-swatch').forEach(sw => {
         sw.onclick = () => { settings.color = sw.dataset.color; apply(settings); };

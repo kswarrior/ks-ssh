@@ -495,6 +495,17 @@ body {
 .text-zip { color: var(--zip); }
 .text-img { color: var(--img); }
 
+.icon-js { color: var(--js); }
+.icon-html { color: var(--html); }
+.icon-css { color: var(--css); }
+.icon-json { color: var(--json); }
+.icon-md { color: var(--md); }
+.icon-py { color: var(--py); }
+.icon-sh { color: var(--sh); }
+.icon-zip { color: var(--zip); }
+.icon-img { color: var(--img); }
+.folder-vibrant { color: var(--electric-blue); filter: drop-shadow(0 0 5px var(--electric-blue-glow)); }
+
 /* ===== STORAGE HUD ===== */
 .files-list-vertical {
   display: flex;
@@ -517,7 +528,7 @@ body {
 .file-row:hover { background: #080808; }
 .file-row.selected { background: var(--electric-blue-dim); }
 
-.file-name { font-size: 13px; font-weight: 500; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-name { font-size: var(--files-fs, 13px); font-weight: 500; color: var(--files-color, #fff); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-meta { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); white-space: nowrap; }
 .file-size { font-size: 11px; color: var(--text-dim); text-align: right; font-family: var(--font-mono); white-space: nowrap; }
 

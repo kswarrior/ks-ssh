@@ -39,7 +39,7 @@ export class PortScanner {
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
             </div>
             <div style="display:flex; flex-direction:column; gap:2px;">
-              <div style="font-family:var(--font-mono); font-weight:700; color:var(--text-pure); font-size:16px;">:${p.port}</div>
+              <div style="font-family:var(--font-mono); font-weight:700; color:var(--ports-color, var(--text-pure)); font-size:var(--ports-fs, 16px);">:${p.port}</div>
               <div style="font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">${esc(p.process)} • ${p.address === '0.0.0.0' ? 'PUBLIC' : 'LOCAL'}</div>
             </div>
         </div>

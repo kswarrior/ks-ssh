@@ -170,8 +170,10 @@ export class FileManager {
 
     const colorClass = this.getFileColorClass(f);
 
+    const iconClass = f.isDirectory ? 'folder-vibrant' : (colorClass ? colorClass.replace('text-', 'icon-') : '');
+
     row.innerHTML = `
-        <div class="file-icon">${icon}</div>
+        <div class="file-icon ${iconClass}">${icon}</div>
         <div class="file-info">
             <div class="file-name ${colorClass}">${esc(f.name)}</div>
             ${!isParent ? `<div class="file-meta">${f.modified ? f.modified.split('T')[0] : ''}</div>` : ''}
