@@ -18,9 +18,41 @@
             </div>
 
             <div class="label-box"><label class="breadcrumb-flat">BACKGROUND GLASS OPACITY</label></div>
-            <div class="flex-center-gap-12 space-t-8">
+            <div class="flex-center-gap-12 space-t-8" style="margin-bottom:20px;">
                 <input type="range" id="settings-opacity" min="0.5" max="1" step="0.05" value="0.85" style="flex:1;" />
                 <span id="opacity-val" class="mono-dim-14">0.85</span>
+            </div>
+
+            <div class="label-box"><label class="breadcrumb-flat">TERMINAL COLORS</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="flex-wrap: wrap; gap: 16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="color" id="settings-term-text" value="#00a2ff" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                    <span class="mono-dim-14">TEXT</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="color" id="settings-term-bg" value="#000000" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                    <span class="mono-dim-14">BG</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="color" id="settings-term-cursor" value="#00a2ff" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                    <span class="mono-dim-14">CURSOR</span>
+                </div>
+            </div>
+
+            <div class="label-box" style="margin-top:20px;"><label class="breadcrumb-flat">CURSOR STYLE</label></div>
+            <div class="flex-center-gap-12 space-t-8">
+                <select id="settings-cursor-style" class="input-hud" style="flex:1;">
+                    <option value="block">BLOCK</option>
+                    <option value="underline">UNDERLINE</option>
+                    <option value="bar">BAR</option>
+                </select>
+            </div>
+
+            <div class="flex-center-gap-12 space-t-8" style="margin-top:20px;">
+                <label class="breadcrumb-flat" style="flex:1; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="settings-cursor-blink" checked style="width:16px; height:16px;" />
+                    CURSOR BLINKING
+                </label>
             </div>
         </div>
         <div class="modal-footer">

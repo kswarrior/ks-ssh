@@ -160,17 +160,44 @@ function setupSettings() {
     btn.onclick = () => modal.classList.remove('hidden');
 
     const saved = localStorage.getItem('ks-ssh-settings');
-    let settings = saved ? JSON.parse(saved) : { color: '#00a2ff', fontSize: 13, opacity: 0.85 };
+    let settings = saved ? JSON.parse(saved) : {
+        color: '#00a2ff',
+        fontSize: 13,
+        opacity: 0.85,
+        termText: '#00a2ff',
+        termBg: '#000000',
+        termCursor: '#00a2ff',
+        cursorStyle: 'block',
+        cursorBlink: true
+    };
 
     const apply = (s) => {
         document.documentElement.style.setProperty('--electric-blue', s.color);
         document.documentElement.style.setProperty('--glass', `rgba(0, 0, 0, ${s.opacity})`);
-        if (terminals) terminals.changeFontSize(s.fontSize - terminals.fontSize);
+
+        if (terminals) {
+            terminals.changeFontSize(s.fontSize - terminals.fontSize);
+            terminals.updateTheme({
+                foreground: s.termText,
+                background: s.termBg === '#000000' ? 'transparent' : s.termBg,
+                cursor: s.termCursor
+            });
+            terminals.updateOptions({
+                cursorStyle: s.cursorStyle,
+                cursorBlink: s.cursorBlink
+            });
+        }
 
         $('font-size-val').textContent = `${s.fontSize}px`;
         $('opacity-val').textContent = s.opacity;
         $('settings-font-size').value = s.fontSize;
         $('settings-opacity').value = s.opacity;
+
+        $('settings-term-text').value = s.termText;
+        $('settings-term-bg').value = s.termBg;
+        $('settings-term-cursor').value = s.termCursor;
+        $('settings-cursor-style').value = s.cursorStyle;
+        $('settings-cursor-blink').checked = s.cursorBlink;
 
         document.querySelectorAll('.color-swatch').forEach(sw => {
             sw.classList.toggle('active', sw.dataset.color === s.color);
@@ -182,6 +209,12 @@ function setupSettings() {
 
     $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
     $('settings-opacity').oninput = (e) => { settings.opacity = parseFloat(e.target.value); apply(settings); };
+
+    $('settings-term-text').oninput = (e) => { settings.termText = e.target.value; apply(settings); };
+    $('settings-term-bg').oninput = (e) => { settings.termBg = e.target.value; apply(settings); };
+    $('settings-term-cursor').oninput = (e) => { settings.termCursor = e.target.value; apply(settings); };
+    $('settings-cursor-style').onchange = (e) => { settings.cursorStyle = e.target.value; apply(settings); };
+    $('settings-cursor-blink').onchange = (e) => { settings.cursorBlink = e.target.checked; apply(settings); };
 
     document.querySelectorAll('.color-swatch').forEach(sw => {
         sw.onclick = () => { settings.color = sw.dataset.color; apply(settings); };

@@ -250,6 +250,23 @@ export class TerminalManager {
     }
   }
 
+  updateTheme(theme) {
+      this.terminals.forEach(t => {
+          t.term.options.theme = {
+              ...t.term.options.theme,
+              ...theme
+          };
+      });
+  }
+
+  updateOptions(options) {
+      this.terminals.forEach(t => {
+          Object.keys(options).forEach(key => {
+              t.term.options[key] = options[key];
+          });
+      });
+  }
+
   refit() {
     if (this.activeId) {
       const t = this.terminals.get(this.activeId);
