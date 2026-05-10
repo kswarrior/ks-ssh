@@ -376,6 +376,7 @@ body {
   border-bottom: 1px solid var(--glass-border);
   overflow-x: auto;
   scrollbar-width: none;
+  align-items: center;
 }
 .terminal-secondary-bar::-webkit-scrollbar { display: none; }
 .terminal-keypad::-webkit-scrollbar { display: none; }

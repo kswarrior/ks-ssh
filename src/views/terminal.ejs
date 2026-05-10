@@ -13,10 +13,7 @@
           </div>
 
           <div class="hud-action-group">
-              <button id="t-font-dec" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-              <button id="t-font-inc" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
               <button id="t-clear-btn" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-              <button id="t-custom-btn" class="btn-primary" style="padding: 2px 8px; font-size: 9px; height: 24px;">CUSTOM ACTION</button>
           </div>
         </div>
 
@@ -25,6 +22,14 @@
             <button id="t-scrollback-btn" class="t-key" style="min-width:auto; padding:0 10px;">CLEAR SCROLLBACK</button>
             <button id="t-download-log" class="t-key" style="min-width:auto; padding:0 10px;">DOWNLOAD LOG</button>
             <button id="t-split-toggle" class="t-key" style="min-width:auto; padding:0 10px;">SPLIT VIEW</button>
+        </div>
+
+        <!-- Custom Actions Bar -->
+        <div id="terminal-custom-bar" class="terminal-secondary-bar hidden" style="border-top: none;">
+            <div id="custom-actions-list" class="flex-1 keypad-row" style="min-height:24px;"></div>
+            <button id="add-custom-action-btn" class="terminal-add-btn" style="flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
         </div>
 
         <!-- Keypad (Ultra Compact) -->
@@ -46,7 +51,31 @@
     </div>
 
     <!-- MAIN TERMINAL AREA -->
-    <div class="terminal-hud-content" id="terminals-area"></div>
+    <div class="terminal-hud-content" id="terminals-area">
+        <!-- Action Subpage -->
+        <div id="terminal-action-panel" class="hidden" style="position:absolute; inset:0; background:var(--obsidian); z-index:10; padding:20px;">
+            <div class="label-box"><label class="breadcrumb-flat">CUSTOM TERMINAL ACTION</label></div>
+            <div style="margin-bottom:20px;">
+                <div class="label-box"><label class="breadcrumb-flat">TYPE</label></div>
+                <select id="action-type" class="input-hud">
+                    <option value="code">RUN CODE / COMMAND</option>
+                    <option value="timer">TIMER (SECONDS)</option>
+                </select>
+            </div>
+            <div style="margin-bottom:20px;">
+                <div class="label-box"><label class="breadcrumb-flat">LABEL</label></div>
+                <input type="text" id="action-label" class="input-hud" placeholder="e.g. Update System" />
+            </div>
+            <div style="margin-bottom:24px;">
+                <div class="label-box"><label class="breadcrumb-flat">CODE / VALUE</label></div>
+                <textarea id="action-code" class="textarea-hud" style="height:100px;" placeholder="apt update && apt upgrade -y"></textarea>
+            </div>
+            <div class="flex-center-gap-12">
+                <button id="action-cancel-btn" class="btn-primary btn-secondary">CANCEL</button>
+                <button id="action-save-btn" class="btn-primary">SAVE ACTION</button>
+            </div>
+        </div>
+    </div>
 
     <!-- EMPTY STATE -->
     <div id="terminals-empty" class="empty-state">

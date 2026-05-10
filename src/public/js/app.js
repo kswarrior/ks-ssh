@@ -72,6 +72,9 @@ function updateHUD() {
   if (keypad) keypad.classList.toggle('hidden', count === 0);
   if (sbar) sbar.classList.toggle('hidden', count === 0);
 
+  const cbar = $('terminal-custom-bar');
+  if (cbar) cbar.classList.toggle('hidden', count === 0);
+
   loadSystemInfo();
 }
 

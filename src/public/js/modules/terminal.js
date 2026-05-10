@@ -15,13 +15,85 @@ export class TerminalManager {
     $('empty-new-term')?.addEventListener('click', () => this.create());
     $('add-term-btn')?.addEventListener('click', () => this.create());
     $('t-clear-btn')?.addEventListener('click', () => this.clearActive());
-    $('t-font-inc')?.addEventListener('click', () => this.changeFontSize(1));
-    $('t-font-dec')?.addEventListener('click', () => this.changeFontSize(-1));
 
     $('t-scrollback-btn')?.addEventListener('click', () => this.clearActive());
     $('t-download-log')?.addEventListener('click', () => this.downloadLog());
 
+    // Custom Actions
+    $('add-custom-action-btn')?.addEventListener('click', () => this.showActionPanel());
+    $('action-cancel-btn')?.addEventListener('click', () => this.hideActionPanel());
+    $('action-save-btn')?.addEventListener('click', () => this.saveCustomAction());
+
+    this.customActions = JSON.parse(localStorage.getItem('ks-ssh-custom-actions') || '[]');
+    this.renderCustomActions();
+
     this._setupKeypad();
+  }
+
+  showActionPanel() {
+      $('terminal-action-panel').classList.remove('hidden');
+      $('action-label').value = '';
+      $('action-code').value = '';
+  }
+
+  hideActionPanel() {
+      $('terminal-action-panel').classList.add('hidden');
+  }
+
+  saveCustomAction() {
+      const label = $('action-label').value;
+      const code = $('action-code').value;
+      const type = $('action-type').value;
+
+      if (!label || !code) return;
+
+      this.customActions.push({ label, code, type, id: Date.now() });
+      localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+
+      this.renderCustomActions();
+      this.hideActionPanel();
+      showToast('ACTION SAVED');
+  }
+
+  renderCustomActions() {
+      const list = $('custom-actions-list');
+      if (!list) return;
+      list.innerHTML = '';
+
+      this.customActions.forEach(action => {
+          const btn = document.createElement('button');
+          btn.className = 't-key';
+          btn.style.minWidth = 'auto';
+          btn.style.padding = '0 10px';
+          btn.textContent = action.label.toUpperCase();
+          btn.onclick = () => this.executeCustomAction(action);
+
+          // Right click to delete
+          btn.oncontextmenu = (e) => {
+              e.preventDefault();
+              if (confirm(`DELETE ACTION "${action.label}"?`)) {
+                  this.customActions = this.customActions.filter(a => a.id !== action.id);
+                  localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+                  this.renderCustomActions();
+              }
+          };
+
+          list.appendChild(btn);
+      });
+  }
+
+  executeCustomAction(action) {
+      if (action.type === 'code') {
+          this.socket.emit('terminal:input', { id: this.activeId, data: action.code + '\n' });
+      } else if (action.type === 'timer') {
+          const sec = parseInt(action.code);
+          if (isNaN(sec)) return;
+          showToast(`TIMER STARTED: ${sec}s`);
+          setTimeout(() => {
+              showToast(`TIMER ELAPSED: ${action.label}`, 'info');
+              // Play a sound or notify?
+          }, sec * 1000);
+      }
   }
 
   _setupKeypad() {
