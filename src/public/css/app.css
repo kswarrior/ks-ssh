@@ -55,7 +55,7 @@ body {
 /* ===== LAYOUT ===== */
 #app {
   height: 100dvh;
-  display: grid;
+  display: none; /* Block by default for security, revealed by app.js */
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
 }

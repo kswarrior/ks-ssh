@@ -381,6 +381,9 @@ function checkSecurity() {
             </div>
         `;
         document.body.appendChild(overlay);
+    } else {
+        const app = $('app');
+        if (app) app.style.display = 'grid';
     }
 }
 
