@@ -9,10 +9,21 @@ let startTime = Date.now();
 
 function init() {
   socket = io();
-  terminals = new TerminalManager(socket);
-  files = new FileManager();
-  ports = new PortScanner();
-  // resMon = new ResourceMonitor(); // Disabled as stats are now integrated
+
+  try {
+      terminals = new TerminalManager(socket);
+      window.terminalManager = terminals;
+  } catch (e) { console.error("Terminal init failed", e); }
+
+  try {
+      files = new FileManager();
+      window.fileManager = files;
+  } catch (e) { console.error("File manager init failed", e); }
+
+  try {
+      ports = new PortScanner();
+      window.portScanner = ports;
+  } catch (e) { console.error("Port scanner init failed", e); }
 
   setupNavigation();
   setupSocket();
@@ -25,7 +36,7 @@ function init() {
   switchTab('terminals');
 
   // Restore terminal sessions
-  terminals.restoreSessions();
+  if (terminals) terminals.restoreSessions();
 
   // HUD Update cycle
   updateHUD();
@@ -37,10 +48,6 @@ function init() {
   // Initial tunnel check
   fetchTunnelInfo();
   setInterval(fetchTunnelInfo, 30000);
-
-  window.fileManager = files;
-  window.terminalManager = terminals;
-  window.portScanner = ports;
 
   $('info-btn')?.addEventListener('click', () => {
     showToast('KS-SSH HUD MASTER v2.0.0', 'info');
@@ -88,23 +95,26 @@ function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
   const items = document.querySelectorAll('.nav-item, .nav-link, .dock-item');
 
-  panels.forEach(p => p.classList.add('hidden'));
+  panels.forEach(p => {
+      p.classList.add('hidden');
+      p.style.display = 'none';
+  });
   items.forEach(b => b.classList.remove('active'));
 
   const targetPanel = $(`tab-${tab}`);
   if (targetPanel) {
     targetPanel.classList.remove('hidden');
+    targetPanel.style.display = 'flex';
     document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
   }
 
-  if (tab === 'files') {
+  if (tab === 'files' && files) {
     files.load();
-    // Ensure navigation state is correct if called manually
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.querySelector(`.nav-link[data-tab="${tab}"]`)?.classList.add('active');
   }
-  if (tab === 'ports') ports.load();
-  if (tab === 'terminals') {
+  if (tab === 'ports' && ports) {
+    ports.load();
+  }
+  if (tab === 'terminals' && terminals) {
     setTimeout(() => terminals.refit(), 50);
   }
 }

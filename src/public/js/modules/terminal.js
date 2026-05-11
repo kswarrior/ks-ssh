@@ -160,7 +160,7 @@ export class TerminalManager {
 
   _setupKeypad() {
     this.modifiers = { ctrl: false, alt: false };
-    document.querySelectorAll('.t-key').forEach(btn => {
+    document.querySelectorAll('.t-key[data-key]').forEach(btn => {
       btn.onclick = (e) => {
         const key = btn.dataset.key;
         if (btn.classList.contains('key-toggle')) {
@@ -179,9 +179,12 @@ export class TerminalManager {
 
     let code = '';
 
-    // Check for CTRL+C specifically if that was the user's pain point
-    if (this.modifiers.ctrl && key === 'c') {
+    if ((this.modifiers.ctrl && key === 'c') || key === 'ctrl-c') {
         code = '\x03';
+        if (key === 'ctrl-c') {
+            this.modifiers.ctrl = false;
+            document.querySelectorAll('.t-key[data-key="ctrl"]').forEach(b => b.classList.remove('active'));
+        }
     } else {
         switch (key) {
             case 'esc': code = '\x1b'; break;
@@ -191,6 +194,7 @@ export class TerminalManager {
             case 'arrowdown': code = '\x1b[B'; break;
             case 'arrowright': code = '\x1b[C'; break;
             case 'arrowleft': code = '\x1b[D'; break;
+            case 'c': code = 'c'; break;
         }
     }
 
@@ -430,7 +434,7 @@ export class TerminalManager {
             // Sort by num to preserve order
             saved.sort((a, b) => a.num - b.num);
             saved.forEach(s => {
-                this.create(s);
+                this.restore(s.id, s.num);
             });
         } catch (e) {
             console.error('Failed to restore sessions:', e);
