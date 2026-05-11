@@ -162,7 +162,11 @@ function setupSettings() {
 
     btn.onclick = () => modal.classList.remove('hidden');
 
-    const saved = localStorage.getItem('ks-ssh-settings');
+    let saved = null;
+    try {
+        saved = localStorage.getItem('ks-ssh-settings');
+    } catch (e) {}
+
     let settings = saved ? JSON.parse(saved) : {
         color: '#00a2ff',
         fontSize: 13,
@@ -224,7 +228,9 @@ function setupSettings() {
             sw.style.border = sw.dataset.color === s.color ? '2px solid #fff' : 'none';
         });
 
-        localStorage.setItem('ks-ssh-settings', JSON.stringify(s));
+        try {
+            localStorage.setItem('ks-ssh-settings', JSON.stringify(s));
+        } catch (e) {}
     };
 
     $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
@@ -285,7 +291,7 @@ async function loadSystemInfo() {
     if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
 
     // VPS Info (Neofetch)
-    if ($('vps-logo')) $('vps-logo').textContent = s.logo || '🐧';
+    if ($('vps-logo')) $('vps-logo').textContent = s.logo || '\u{1F427}';
     if ($('nf-user')) $('nf-user').textContent = s.user;
     if ($('nf-host')) $('nf-host').textContent = s.hostname;
     if ($('nf-os')) $('nf-os').textContent = s.osName;
@@ -370,7 +376,7 @@ function checkSecurity() {
                     <a href="https://ssh.ksw.workers.dev/" class="btn-primary">ACCESS OFFICIAL HUD</a>
                 </div>
                 <div class="lock-footer">
-                    ©️ KS Warrior
+                    \u{00A9}\u{FE0F} KS Warrior
                 </div>
             </div>
         `;

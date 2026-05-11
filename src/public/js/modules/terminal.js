@@ -24,7 +24,11 @@ export class TerminalManager {
     $('action-cancel-btn')?.addEventListener('click', () => this.hideActionPanel());
     $('action-save-btn')?.addEventListener('click', () => this.saveCustomAction());
 
-    this.customActions = JSON.parse(localStorage.getItem('ks-ssh-custom-actions') || '[]');
+    try {
+        this.customActions = JSON.parse(localStorage.getItem('ks-ssh-custom-actions') || '[]');
+    } catch (e) {
+        this.customActions = [];
+    }
     this.renderCustomActions();
 
     this._setupKeypad();
@@ -59,7 +63,9 @@ export class TerminalManager {
           showToast('ACTION SAVED');
       }
 
-      localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+      try {
+          localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+      } catch (e) {}
       this.renderCustomActions();
       this.hideActionPanel();
   }
@@ -126,7 +132,9 @@ export class TerminalManager {
       menu.querySelector('#act-delete').onclick = () => {
           if (confirm(`PURGE "${action.label}"?`)) {
               this.customActions = this.customActions.filter(a => a.id !== action.id);
-              localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+              try {
+                  localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
+              } catch (e) {}
               this.renderCustomActions();
           }
           menu.remove();
@@ -405,11 +413,17 @@ export class TerminalManager {
 
   _save() {
     const data = [...this.terminals.entries()].map(([id, t]) => ({ id, num: t.num }));
-    localStorage.setItem('ks-ssh-terms', JSON.stringify(data));
+    try {
+        localStorage.setItem('ks-ssh-terms', JSON.stringify(data));
+    } catch (e) {}
   }
 
   restoreSessions() {
-    const data = localStorage.getItem('ks-ssh-terms');
+    let data = null;
+    try {
+        data = localStorage.getItem('ks-ssh-terms');
+    } catch (e) {}
+
     if (data) {
         try {
             const saved = JSON.parse(data);

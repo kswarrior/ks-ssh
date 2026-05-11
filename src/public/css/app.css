@@ -753,3 +753,12 @@ body {
     margin-right: 15px;
     letter-spacing: 0.5px;
 }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.security-lock {
+    animation: fadeIn 0.3s ease-out;
+}
