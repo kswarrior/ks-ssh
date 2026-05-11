@@ -76,7 +76,10 @@
     <div class="modal modal-lg">
         <div class="modal-header"><h3 id="editor-filename">editor.txt</h3><button class="icon-btn modal-close">&times;</button></div>
         <div class="modal-body modal-body-flush">
-            <textarea id="file-editor-text" class="textarea-hud"></textarea>
+            <div class="editor-container">
+                <pre id="editor-highlight" class="editor-highlight"></pre>
+                <textarea id="file-editor-text" class="textarea-hud" spellcheck="false"></textarea>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="icon-btn modal-close btn-text-hud">DISCARD</button>

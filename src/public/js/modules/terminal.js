@@ -430,7 +430,7 @@ export class TerminalManager {
             // Sort by num to preserve order
             saved.sort((a, b) => a.num - b.num);
             saved.forEach(s => {
-                this.restore(s.id, s.num);
+                this.create(s);
             });
         } catch (e) {
             console.error('Failed to restore sessions:', e);

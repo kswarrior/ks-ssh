@@ -86,7 +86,7 @@ function setupNavigation() {
 
 function switchTab(tab) {
   const panels = document.querySelectorAll('.tab-panel');
-  const items = document.querySelectorAll('.nav-item, .nav-link');
+  const items = document.querySelectorAll('.nav-item, .nav-link, .dock-item');
 
   panels.forEach(p => p.classList.add('hidden'));
   items.forEach(b => b.classList.remove('active'));

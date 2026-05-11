@@ -49,8 +49,29 @@ export class FileManager {
         }
     });
 
-    // Editor Save
+    // Editor Save & Highlight sync
     $('editor-save-btn')?.addEventListener('click', () => this.saveFile());
+
+    const editor = $('file-editor-text');
+    const highlight = $('editor-highlight');
+    if (editor && highlight) {
+        editor.addEventListener('input', () => this.applyHighlight());
+        editor.addEventListener('scroll', () => {
+            highlight.scrollTop = editor.scrollTop;
+            highlight.scrollLeft = editor.scrollLeft;
+        });
+        // Handle Tab key
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
+                editor.selectionStart = editor.selectionEnd = start + 4;
+                this.applyHighlight();
+            }
+        });
+    }
 
     // Create Panel
     $('create-cancel-btn')?.addEventListener('click', () => this.hideCreatePanel());
@@ -251,13 +272,53 @@ export class FileManager {
 
     $('file-editor-modal').classList.remove('hidden');
     $('file-editor-text').value = 'LOADING...';
+    $('editor-highlight').innerHTML = '';
+
     try {
         const res = await fetch(`/ksapi/files/read?path=${encodeURIComponent(file.path)}`);
         const data = await res.json();
         $('file-editor-text').value = data.content || '';
+        this.applyHighlight();
     } catch (err) {
         showToast('FAILED TO READ FILE', 'error');
     }
+  }
+
+  applyHighlight() {
+      const text = $('file-editor-text').value;
+      const highlight = $('editor-highlight');
+      const ext = this.activeFile.name.split('.').pop().toLowerCase();
+
+      let html = esc(text);
+
+      // Basic regex highlighting
+      if (['js', 'ts', 'json'].includes(ext)) {
+          html = html
+            .replace(/\b(const|let|var|function|return|if|else|for|while|import|export|from|class|extends|new|async|await|try|catch|finally|throw)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, '<span class="token-string">$1</span>')
+            .replace(/(\/\/.*|\/\*[\s\S]*?\*\/)/g, '<span class="token-comment">$1</span>')
+            .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>')
+            .replace(/(\.[\w$]+)(?=\s*\()/g, '<span class="token-function">$1</span>')
+            .replace(/([+\-*\/=<>!&|?:]+)/g, '<span class="token-operator">$1</span>');
+      } else if (['html', 'ejs'].includes(ext)) {
+          html = html
+            .replace(/(&lt;[\/!]?[\w-]+)(&gt;)?/g, '<span class="token-tag">$1</span>$2')
+            .replace(/([\w-]+)=(&quot;.*?&quot;|&#39;.*?&#39;)/g, '<span class="token-attr">$1</span>=$2')
+            .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token-comment">$1</span>');
+      } else if (['py'].includes(ext)) {
+          html = html
+            .replace(/\b(def|class|return|if|else|elif|for|while|import|from|as|try|except|finally|with|lambda|in|is|not|and|or)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="token-string">$1</span>')
+            .replace(/(#.*)/g, '<span class="token-comment">$1</span>')
+            .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
+      } else if (['sh', 'bash'].includes(ext)) {
+          html = html
+            .replace(/\b(if|then|else|elif|fi|for|do|done|while|case|esac|in|function|local|export|return)\b/g, '<span class="token-keyword">$1</span>')
+            .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="token-string">$1</span>')
+            .replace(/(#.*)/g, '<span class="token-comment">$1</span>');
+      }
+
+      highlight.innerHTML = html + (text.endsWith('\n') ? ' ' : '');
   }
 
   async saveFile() {
