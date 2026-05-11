@@ -330,10 +330,29 @@ async function fetchTunnelInfo() {
 
 function checkSecurity() {
     const official = 'ssh.ksw.workers.dev';
-    const isOfficial = window.location.hostname === official;
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    let isAuthorized = false;
 
-    if (!isOfficial && !isLocal) {
+    if (window.location.hostname === official ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1') {
+        isAuthorized = true;
+    }
+
+    // Check if embedded in the official domain or referred by it
+    try {
+        if (window.top && window.top.location.hostname === official) {
+            isAuthorized = true;
+        }
+    } catch (e) {
+        // Cross-origin access blocked, check referrer
+        try {
+            if (document.referrer && new URL(document.referrer).hostname === official) {
+                isAuthorized = true;
+            }
+        } catch (e2) {}
+    }
+
+    if (!isAuthorized) {
         const overlay = document.createElement('div');
         overlay.className = 'security-lock';
         overlay.innerHTML = `
