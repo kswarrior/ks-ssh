@@ -250,6 +250,13 @@ export class TerminalManager {
     container.appendChild(skeleton);
     area.appendChild(container);
 
+    if (typeof Terminal === 'undefined' || typeof FitAddon === 'undefined') {
+        console.error("Xterm.js or FitAddon not loaded!");
+        showToast("TERMINAL ENGINE FAILURE", "error");
+        if (skeleton) skeleton.remove();
+        return;
+    }
+
     const term = new Terminal({
       cursorBlink: true,
       fontSize: this.fontSize,

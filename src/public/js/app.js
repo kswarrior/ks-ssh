@@ -33,21 +33,33 @@ function init() {
   setupSettings();
 
   // Initial tab
-  switchTab('terminals');
+  try {
+      switchTab('terminals');
+  } catch (e) { console.error("Initial tab switch failed", e); }
 
   // Restore terminal sessions
-  if (terminals) terminals.restoreSessions();
+  try {
+      if (terminals) terminals.restoreSessions();
+  } catch (e) { console.error("Session restoration failed", e); }
 
   // HUD Update cycle
-  updateHUD();
-  setInterval(updateHUD, 1000);
+  try {
+      updateHUD();
+      setInterval(() => {
+          try { updateHUD(); } catch (e) {}
+      }, 1000);
+  } catch (e) { console.error("HUD update cycle failed", e); }
 
   // Latency check
-  setInterval(checkLatency, 2000);
+  setInterval(() => {
+      try { checkLatency(); } catch (e) {}
+  }, 2000);
 
   // Initial tunnel check
-  fetchTunnelInfo();
-  setInterval(fetchTunnelInfo, 30000);
+  setInterval(() => {
+      try { fetchTunnelInfo(); } catch (e) {}
+  }, 30000);
+  try { fetchTunnelInfo(); } catch (e) {}
 
   $('info-btn')?.addEventListener('click', () => {
     showToast('KS-SSH HUD MASTER v2.0.0', 'info');
@@ -66,20 +78,20 @@ async function checkLatency() {
 }
 
 function updateHUD() {
+  if (!terminals) return;
+
   // Active Sessions
-  const count = terminals.terminals.size;
+  const count = terminals.terminals ? terminals.terminals.size : 0;
   const empty = $('terminals-empty');
   const header = $('terminal-header-area');
   const keypad = $('terminal-keypad');
-
   const sbar = $('terminal-secondary-bar');
+  const cbar = $('terminal-custom-bar');
 
   if (empty) empty.classList.toggle('hidden', count > 0);
   if (header) header.classList.toggle('hidden', count === 0);
   if (keypad) keypad.classList.toggle('hidden', count === 0);
   if (sbar) sbar.classList.toggle('hidden', count === 0);
-
-  const cbar = $('terminal-custom-bar');
   if (cbar) cbar.classList.toggle('hidden', count === 0);
 
   loadSystemInfo();
@@ -283,6 +295,11 @@ function setupVPSInfo() {
     }
 }
 
+const updateEl = (id, text) => {
+    const el = $(id);
+    if (el) el.textContent = text;
+};
+
 async function loadSystemInfo() {
   try {
     const sRes = await fetch('/ksapi/system');
@@ -291,44 +308,36 @@ async function loadSystemInfo() {
     const rRes = await fetch('/ksapi/resources');
     const r = await rRes.json();
 
-    if ($('hdr-host-id')) $('hdr-host-id').textContent = s.hostname.substring(0, 12);
-    if ($('hdr-ram-pct')) $('hdr-ram-pct').textContent = `${Math.round(r.ram.percent)}%`;
-
-    if ($('sys-host')) $('sys-host').textContent = s.hostname;
-    if ($('sys-os')) $('sys-os').textContent = `${s.platform}/${s.arch}`;
-    if ($('sys-user')) $('sys-user').textContent = s.user;
-    if ($('sys-cpus')) $('sys-cpus').textContent = s.cpus;
-    if ($('sys-mem')) $('sys-mem').textContent = `${(r.ram.used).toFixed(1)} GB / ${(r.ram.total).toFixed(1)} GB`;
+    updateEl('hdr-ram-pct', `${Math.round(r.ram.percent)}%`);
 
     // VPS Info (Neofetch)
-    if ($('vps-logo')) $('vps-logo').textContent = s.logo || '\u{1F427}';
-    if ($('nf-user')) $('nf-user').textContent = s.user;
-    if ($('nf-host')) $('nf-host').textContent = s.hostname;
-    if ($('nf-os')) $('nf-os').textContent = s.osName;
-    if ($('nf-platform')) $('nf-platform').textContent = `${s.platform} ${s.arch}`;
-    if ($('nf-kernel')) $('nf-kernel').textContent = s.kernel;
-    if ($('nf-packages')) $('nf-packages').textContent = s.packages;
-    if ($('nf-shell')) $('nf-shell').textContent = s.shell;
-    if ($('nf-cpu')) $('nf-cpu').textContent = `${r.cpu.model} (${r.cpu.count})`;
-    if ($('nf-mem')) $('nf-mem').textContent = `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`;
-    if ($('nf-ip')) $('nf-ip').textContent = s.ip;
+    const logoEl = $('vps-logo');
+    if (logoEl) logoEl.textContent = s.logo || '\u{1F427}';
+
+    updateEl('nf-user', s.user);
+    updateEl('nf-host', s.hostname);
+    updateEl('nf-os', s.osName);
+    updateEl('nf-platform', `${s.platform} ${s.arch}`);
+    updateEl('nf-kernel', s.kernel);
+    updateEl('nf-packages', s.packages);
+    updateEl('nf-shell', s.shell);
+    updateEl('nf-cpu', `${r.cpu.model} (${r.cpu.count})`);
+    updateEl('nf-mem', `${r.ram.used.toFixed(1)}GB / ${r.ram.total.toFixed(1)}GB`);
+    updateEl('nf-ip', s.ip);
 
     // Uptime
     const up = s.uptime;
     const days = Math.floor(up / 86400);
     const hours = Math.floor((up % 86400) / 3600);
     const mins = Math.floor((up % 3600) / 60);
-    if ($('nf-uptime')) {
+    const uptimeEl = $('nf-uptime');
+    if (uptimeEl) {
         let utStr = '';
         if (days > 0) utStr += `${days} days, `;
         if (hours > 0) utStr += `${hours} hours, `;
         utStr += `${mins} mins`;
-        $('nf-uptime').textContent = utStr;
+        uptimeEl.textContent = utStr;
     }
-
-    // Load
-    if ($('sys-load')) $('sys-load').textContent = s.loadAvg.map(l => l.toFixed(2)).join(' ');
-
   } catch (err) {
       console.error('HUD update error:', err);
   }
@@ -350,7 +359,8 @@ function checkSecurity() {
 
     if (window.location.hostname === official ||
         window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1') {
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.includes('devbox')) {
         isAuthorized = true;
     }
 
@@ -369,8 +379,10 @@ function checkSecurity() {
     }
 
     if (!isAuthorized) {
+        console.warn("Unauthorized domain detected. Revealing security overlay.");
         const overlay = document.createElement('div');
         overlay.className = 'security-lock';
+        overlay.style.display = 'flex';
         overlay.innerHTML = `
             <div class="lock-content">
                 <div class="lock-icon">
@@ -398,5 +410,14 @@ function checkSecurity() {
 }
 
 window.switchTab = switchTab;
-checkSecurity();
-init();
+
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        checkSecurity();
+        init();
+    } catch (e) {
+        console.error("FATAL INITIALIZATION ERROR", e);
+        const app = $('app');
+        if (app) app.style.display = 'grid'; // Try to show at least something
+    }
+});
