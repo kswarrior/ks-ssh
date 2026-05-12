@@ -289,33 +289,62 @@ export class FileManager {
       const highlight = $('editor-highlight');
       const ext = this.activeFile.name.split('.').pop().toLowerCase();
 
-      let html = esc(text);
+      const doHighlight = (txt, rules) => {
+          let matches = [];
+          rules.forEach(rule => {
+              let m;
+              const r = new RegExp(rule.r.source, rule.r.flags);
+              while ((m = r.exec(txt)) !== null) {
+                  matches.push({ index: m.index, length: m[0].length, text: m[0], type: rule.t });
+                  if (!r.global) break;
+              }
+          });
+          matches.sort((a, b) => a.index - b.index);
+          let res = '';
+          let last = 0;
+          for (let m of matches) {
+              if (m.index < last) continue;
+              res += esc(txt.substring(last, m.index));
+              res += `<span class="token-${m.type}">${esc(m.text)}</span>`;
+              last = m.index + m.length;
+          }
+          res += esc(txt.substring(last));
+          return res;
+      };
 
-      // Basic regex highlighting
+      let html = '';
       if (['js', 'ts', 'json'].includes(ext)) {
-          html = html
-            .replace(/\b(const|let|var|function|return|if|else|for|while|import|export|from|class|extends|new|async|await|try|catch|finally|throw)\b/g, '<span class="token-keyword">$1</span>')
-            .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, '<span class="token-string">$1</span>')
-            .replace(/(\/\/.*|\/\*[\s\S]*?\*\/)/g, '<span class="token-comment">$1</span>')
-            .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>')
-            .replace(/(\.[\w$]+)(?=\s*\()/g, '<span class="token-function">$1</span>')
-            .replace(/([+\-*\/=<>!&|?:]+)/g, '<span class="token-operator">$1</span>');
+          html = doHighlight(text, [
+              { r: /(\/\/.*|\/\*[\s\S]*?\*\/)/g, t: 'comment' },
+              { r: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, t: 'string' },
+              { r: /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|extends|new|async|await|try|catch|finally|throw)\b/g, t: 'keyword' },
+              { r: /\b(\d+)\b/g, t: 'number' },
+              { r: /(\.[\w$]+)(?=\s*\()/g, t: 'function' },
+              { r: /([+\-*\/=<>!&|?:]+)/g, t: 'operator' }
+          ]);
       } else if (['html', 'ejs'].includes(ext)) {
-          html = html
-            .replace(/(&lt;[\/!]?[\w-]+)(&gt;)?/g, '<span class="token-tag">$1</span>$2')
-            .replace(/([\w-]+)=(&quot;.*?&quot;|&#39;.*?&#39;)/g, '<span class="token-attr">$1</span>=$2')
-            .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="token-comment">$1</span>');
+          html = doHighlight(text, [
+              { r: /(<!--[\s\S]*?-->)/g, t: 'comment' },
+              { r: /(<[\/!]?[\w-]+)/g, t: 'tag' },
+              { r: /(>)/g, t: 'tag' },
+              { r: /([\w-]+)=/g, t: 'attr' },
+              { r: /(".*?"|'.*?')/g, t: 'string' }
+          ]);
       } else if (['py'].includes(ext)) {
-          html = html
-            .replace(/\b(def|class|return|if|else|elif|for|while|import|from|as|try|except|finally|with|lambda|in|is|not|and|or)\b/g, '<span class="token-keyword">$1</span>')
-            .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="token-string">$1</span>')
-            .replace(/(#.*)/g, '<span class="token-comment">$1</span>')
-            .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
+          html = doHighlight(text, [
+              { r: /(#.*)/g, t: 'comment' },
+              { r: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, t: 'string' },
+              { r: /\b(def|class|return|if|else|elif|for|while|import|from|as|try|except|finally|with|lambda|in|is|not|and|or)\b/g, t: 'keyword' },
+              { r: /\b(\d+)\b/g, t: 'number' }
+          ]);
       } else if (['sh', 'bash'].includes(ext)) {
-          html = html
-            .replace(/\b(if|then|else|elif|fi|for|do|done|while|case|esac|in|function|local|export|return)\b/g, '<span class="token-keyword">$1</span>')
-            .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="token-string">$1</span>')
-            .replace(/(#.*)/g, '<span class="token-comment">$1</span>');
+          html = doHighlight(text, [
+              { r: /(#.*)/g, t: 'comment' },
+              { r: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, t: 'string' },
+              { r: /\b(if|then|else|elif|fi|for|do|done|while|case|esac|in|function|local|export|return)\b/g, t: 'keyword' }
+          ]);
+      } else {
+          html = esc(text);
       }
 
       highlight.innerHTML = html + (text.endsWith('\n') ? ' ' : '');

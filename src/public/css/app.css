@@ -197,12 +197,14 @@ body {
   border: none;
   color: var(--text-dim);
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   border-radius: 6px;
   transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
 }
 .icon-btn:hover { color: var(--text-pure); background: #111; }
 .icon-btn svg { transition: transform 0.1s ease; }
@@ -222,8 +224,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: auto; /* Allow both vertical and horizontal scroll */
   position: relative;
+  background: var(--obsidian);
 }
 
 /* ===== FOOTER ===== */
@@ -277,17 +280,19 @@ body {
   background: var(--electric-blue);
   color: #000;
   border: none;
-  padding: 8px 20px;
+  padding: 12px 24px; /* Increased height/padding */
   border-radius: 6px;
   font-weight: 800;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   transition: var(--transition-fast);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  min-height: 44px; /* Better touch target */
 }
 .btn-primary:hover {
   filter: brightness(1.1);
@@ -362,7 +367,7 @@ body {
 
 .terminal-keypad {
   border-top: 1px solid var(--glass-border);
-  padding: 4px 8px;
+  padding: 8px;
   background: #000;
   overflow-x: auto;
   scrollbar-width: none;
@@ -370,8 +375,8 @@ body {
 
 .terminal-secondary-bar {
   display: flex;
-  gap: 4px;
-  padding: 4px 8px;
+  gap: 8px;
+  padding: 8px;
   background: #050505;
   border-bottom: 1px solid var(--glass-border);
   overflow-x: auto;
@@ -383,7 +388,7 @@ body {
 
 .keypad-row {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   align-items: center;
   min-width: max-content;
 }
@@ -392,14 +397,14 @@ body {
   background: #0a0a0a;
   border: 1px solid var(--glass-border);
   color: var(--text-main);
-  padding: 2px 8px;
+  padding: 8px 12px; /* Increased padding */
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  height: 24px;
-  min-width: 32px;
+  height: 36px; /* Increased height */
+  min-width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -511,7 +516,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  overflow-y: auto;
+  overflow: auto; /* Both directions */
   margin-top: 8px;
 }
 
@@ -697,6 +702,13 @@ body {
 .full-iframe { width: 100%; height: 100%; border: none; }
 .space-t-8 { margin-top: 8px; }
 .label-box { margin-bottom: 8px; }
+
+.hud-list-container {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
 /* ===== SKELETON ===== */
 .skeleton {
