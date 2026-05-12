@@ -728,7 +728,8 @@ body {
   .header-left { gap: 12px; }
   .header-brand span { display: none; }
   .header-stats { display: none; }
-  .top-nav { display: none; }
+  .top-nav { display: flex; }
+  .top-nav .nav-link { padding: 5px 8px; font-size: 10px; }
 
   .hud-main {
     grid-row: 2 / 3;
