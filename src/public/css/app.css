@@ -442,6 +442,7 @@ body {
   padding: 0 4px;
   gap: 12px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 .hud-view-header h1 {
   font-size: 20px;
@@ -458,7 +459,7 @@ body {
   overflow: hidden;
 }
 
-.hud-action-group { display: flex; align-items: center; gap: 8px; }
+.hud-action-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .breadcrumb {
   font-family: var(--font-mono);
@@ -582,6 +583,54 @@ body {
   border-color: var(--electric-blue);
   outline: none;
 }
+
+.icon-btn-search {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+
+.icon-btn-search:hover { color: var(--electric-blue); }
+.icon-btn-search.active { color: #fff; background: var(--electric-blue); }
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.02);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.filter-label { font-size: 10px; font-weight: 800; color: var(--text-dim); }
+
+.filter-chips { display: flex; gap: 8px; }
+
+.filter-chip {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.filter-chip:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.filter-chip.active { background: var(--electric-blue); color: #fff; }
 
 .mini-cli-container {
   background: rgba(0,0,0,0.6);

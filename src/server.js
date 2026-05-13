@@ -119,6 +119,40 @@ app.get('/ksapi/files/read', (req, res) => {
   catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+app.get('/ksapi/files/search', (req, res) => {
+    const { path: baseDir, query } = req.query;
+    if (!baseDir || !query) return res.status(400).json({ error: 'Missing path or query' });
+
+    const results = [];
+    const search = (dir) => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.name.toLowerCase().includes(query.toLowerCase())) {
+                const s = fs.statSync(full);
+                results.push({
+                    name: entry.name,
+                    path: full,
+                    isDirectory: entry.isDirectory(),
+                    size: s.size,
+                    modified: s.mtime.toISOString()
+                });
+            }
+            if (entry.isDirectory() && !entry.name.startsWith('.')) {
+                try { search(full); } catch (e) {}
+            }
+            if (results.length > 200) break; // Limit results
+        }
+    };
+
+    try {
+        search(baseDir);
+        res.json({ files: results });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/ksapi/files/write', (req, res) => {
   try { fs.writeFileSync(req.body.filePath, req.body.content || ''); res.json({ success: true }); }
   catch (err) { res.status(400).json({ error: err.message }); }
@@ -135,7 +169,11 @@ app.post('/ksapi/files/cmd', (req, res) => {
     let output = '';
 
     if (action === 'cd') {
-        const target = path.resolve(newCwd, arg || os.homedir());
+        let targetArg = arg.trim();
+        if (targetArg === '$HOME' || !targetArg) {
+            targetArg = os.homedir();
+        }
+        const target = path.resolve(newCwd, targetArg);
         if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
             newCwd = target;
             output = `Changed to: ${newCwd}`;

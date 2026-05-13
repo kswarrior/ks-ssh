@@ -9,14 +9,55 @@ export class FileManager {
   }
 
   _setupUI() {
-    $('upload-btn')?.addEventListener('click', () => $('file-input').click());
+    $('upload-storage-btn')?.addEventListener('click', () => $('file-input').click());
     $('file-input')?.addEventListener('change', (e) => this.handleUpload(e));
-    $('new-file-btn')?.addEventListener('click', () => this.showCreatePanel('file'));
-    $('new-folder-btn')?.addEventListener('click', () => this.showCreatePanel('folder'));
+
+    $('new-file-btn-v2')?.addEventListener('click', () => { this.showCreatePanel('file'); $('add-dropdown').classList.add('hidden'); });
+    $('new-folder-btn-v2')?.addEventListener('click', () => { this.showCreatePanel('folder'); $('add-dropdown').classList.add('hidden'); });
+
+    $('upload-url-btn-v2')?.addEventListener('click', () => { $('url-upload-modal').classList.remove('hidden'); $('upload-dropdown').classList.add('hidden'); });
+
     $('files-refresh-btn')?.addEventListener('click', () => this.load());
 
+    // Dropdown toggles
+    $('add-multi-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        $('add-dropdown').classList.toggle('hidden');
+        $('upload-dropdown').classList.add('hidden');
+    });
+
+    $('upload-multi-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        $('upload-dropdown').classList.toggle('hidden');
+        $('add-dropdown').classList.add('hidden');
+    });
+
+    document.addEventListener('click', () => {
+        $('add-dropdown')?.classList.add('hidden');
+        $('upload-dropdown')?.classList.add('hidden');
+    });
+
     // Search
-    $('files-search')?.addEventListener('input', (e) => this.filterFiles(e.target.value));
+    this.deepSearch = false;
+    this.activeFilter = 'all';
+
+    $('files-search')?.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
+
+    $('deep-search-btn')?.addEventListener('click', () => {
+        this.deepSearch = !this.deepSearch;
+        $('deep-search-btn').classList.toggle('active', this.deepSearch);
+        this.handleSearchInput($('files-search').value);
+    });
+
+    // Filters
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.onclick = () => {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            this.activeFilter = chip.dataset.ext;
+            this.applyCurrentFilters();
+        };
+    });
 
     // Quick Links
     document.querySelectorAll('.sidebar-link').forEach(link => {
@@ -135,6 +176,8 @@ export class FileManager {
     this.hideCreatePanel();
     localStorage.setItem('ks-ssh-files-path', dirPath);
     if ($('files-search')) $('files-search').value = '';
+    this.deepSearch = false;
+    $('deep-search-btn')?.classList.remove('active');
     list.innerHTML = `
         <div class="skeleton-row" style="grid-template-columns: 32px 1fr auto 40px; gap:12px;">
             <div class="skeleton skeleton-icon"></div>
@@ -192,23 +235,67 @@ export class FileManager {
   render(data) {
     this.allFiles = data.files;
     this.parentPath = data.parent;
-    this._renderList(this.allFiles);
+    this.applyCurrentFilters();
+  }
+
+  applyCurrentFilters() {
+      let files = this.allFiles || [];
+      const query = $('files-search')?.value.toLowerCase();
+
+      // Filter by query if not doing deep search
+      if (!this.deepSearch && query) {
+          files = files.filter(f => f.name.toLowerCase().includes(query));
+      }
+
+      // Filter by extension
+      if (this.activeFilter !== 'all') {
+          const imgExts = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
+          const zipExts = ['zip', 'rar', 'tar', 'gz', '7z'];
+
+          files = files.filter(f => {
+              if (f.isDirectory) return false;
+              const ext = f.name.split('.').pop().toLowerCase();
+              if (this.activeFilter === 'img') return imgExts.includes(ext);
+              if (this.activeFilter === 'zip') return zipExts.includes(ext);
+              return ext === this.activeFilter;
+          });
+      }
+
+      this._renderList(files);
   }
 
   _renderList(files) {
     const list = $('files-list');
     if (!list) return;
     list.innerHTML = '';
-    if (this.parentPath && this.currentPath !== '/') {
+
+    // Only show ".." if we are NOT in search mode
+    if (!this.deepSearch && !$('files-search')?.value && this.parentPath && this.currentPath !== '/') {
         list.appendChild(this.createRow({ name: '..', isDirectory: true, path: this.parentPath }));
     }
-    files.forEach(f => list.appendChild(this.createRow(f)));
+
+    if (files.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:40px;">NO FILES FOUND</div>';
+    } else {
+        files.forEach(f => list.appendChild(this.createRow(f)));
+    }
   }
 
-  filterFiles(query) {
-      if (!this.allFiles) return;
-      const filtered = this.allFiles.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
-      this._renderList(filtered);
+  async handleSearchInput(query) {
+      if (this.deepSearch && query.length >= 2) {
+          try {
+              const res = await fetch(`/ksapi/files/search?path=${encodeURIComponent(this.currentPath)}&query=${encodeURIComponent(query)}`);
+              const data = await res.json();
+              this.allFiles = data.files;
+              this._renderList(this.allFiles);
+          } catch (err) { console.error("Deep search failed", err); }
+      } else {
+          if (this.deepSearch && !query) {
+              this.load(); // Reset from deep search
+          } else {
+              this.applyCurrentFilters();
+          }
+      }
   }
 
   createRow(f) {
