@@ -81,6 +81,30 @@
     </div>
 </div>
 
+<div class="modal-overlay hidden" id="default-path-modal">
+    <div class="modal">
+        <div class="modal-header"><h3>Set Default Location</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body">
+            <div class="label-box"><label class="breadcrumb-flat">MANUAL PATH ENTRY</label></div>
+            <input type="text" id="def-path-manual" class="input-hud" placeholder="/root/run/work" />
+
+            <div class="label-box" style="margin-top:20px;"><label class="breadcrumb-flat">MINI-CLI EXPLORER</label></div>
+            <div class="mini-cli-container">
+                <div id="mini-cli-output" class="mini-cli-output">Current: /root</div>
+                <div class="mini-cli-input-wrap">
+                    <span class="mini-cli-prompt">></span>
+                    <input type="text" id="mini-cli-input" class="mini-cli-input" placeholder="cd .., ls, mkdir..." />
+                </div>
+            </div>
+            <p class="mono-dim-11" style="margin-top:8px;">Commands: cd [path], ls, mkdir [name]</p>
+        </div>
+        <div class="modal-footer">
+            <button class="icon-btn modal-close btn-text-hud">CANCEL</button>
+            <button id="def-path-confirm" class="btn-primary">SAVE AS DEFAULT</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay hidden" id="term-close-modal">
     <div class="modal modal-sm">
         <div class="modal-header"><h3>Close Terminal</h3><button class="icon-btn modal-close">&times;</button></div>

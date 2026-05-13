@@ -2,7 +2,7 @@ import { $, showToast, fmtBytes, esc } from './utils.js';
 
 export class FileManager {
   constructor() {
-    this.currentPath = '/';
+    this.currentPath = localStorage.getItem('ks-ssh-files-path') || localStorage.getItem('ks-ssh-default-cwd') || '/';
     this.selectedPaths = new Set();
     this.activeFile = null;
     this._setupUI();
@@ -22,6 +22,11 @@ export class FileManager {
     document.querySelectorAll('.sidebar-link').forEach(link => {
         link.onclick = () => this.load(link.dataset.path);
     });
+
+    // Bookmarks
+    $('add-bookmark-btn')?.addEventListener('click', () => this.addBookmark());
+    this.bookmarks = JSON.parse(localStorage.getItem('ks-ssh-bookmarks') || '[]');
+    this.renderBookmarks();
 
     // URL Upload
     $('url-upload-btn')?.addEventListener('click', () => $('url-upload-modal').classList.remove('hidden'));
@@ -573,6 +578,49 @@ export class FileManager {
         const data = await res.json();
         if (data.success) { showToast('FILE CREATED'); this.load(); }
     } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  addBookmark(path = this.currentPath) {
+      if (this.bookmarks.includes(path)) return;
+      this.bookmarks.push(path);
+      localStorage.setItem('ks-ssh-bookmarks', JSON.stringify(this.bookmarks));
+      showToast('BOOKMARK ADDED');
+      this.renderBookmarks();
+  }
+
+  removeBookmark(path) {
+      this.bookmarks = this.bookmarks.filter(b => b !== path);
+      localStorage.setItem('ks-ssh-bookmarks', JSON.stringify(this.bookmarks));
+      this.renderBookmarks();
+  }
+
+  renderBookmarks() {
+      const list = $('bookmarks-list');
+      if (!list) return;
+      list.innerHTML = '';
+      this.bookmarks.forEach(path => {
+          const div = document.createElement('div');
+          div.className = 'sidebar-link bookmark-item';
+          div.style.display = 'flex';
+          div.style.justifyContent = 'space-between';
+          div.style.alignItems = 'center';
+
+          const name = path.split('/').filter(Boolean).pop() || 'ROOT';
+          div.innerHTML = `
+              <span class="bookmark-name" style="flex:1; overflow:hidden; text-overflow:ellipsis;">${name.toUpperCase()}</span>
+              <button class="remove-bookmark-btn icon-btn" style="padding:2px; opacity:0.5;">&times;</button>
+          `;
+
+          div.onclick = (e) => {
+              if (e.target.closest('.remove-bookmark-btn')) {
+                  e.stopPropagation();
+                  this.removeBookmark(path);
+              } else {
+                  this.load(path);
+              }
+          };
+          list.appendChild(div);
+      });
   }
 
   async _createFolder(name) {

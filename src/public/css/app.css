@@ -583,6 +583,53 @@ body {
   outline: none;
 }
 
+.mini-cli-container {
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 10px;
+}
+
+.mini-cli-output {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  min-height: 20px;
+  white-space: pre-wrap;
+}
+
+.mini-cli-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-cli-prompt {
+  color: var(--electric-blue);
+  font-weight: 700;
+}
+
+.mini-cli-input {
+  background: transparent;
+  border: none;
+  color: var(--text-pure);
+  font-family: inherit;
+  font-size: 12px;
+  flex: 1;
+  outline: none;
+}
+
+.bookmark-item {
+  position: relative;
+}
+
+.remove-bookmark-btn:hover {
+  opacity: 1 !important;
+  color: #ef4444 !important;
+}
+
 .files-list-vertical {
   display: flex;
   flex-direction: column;

@@ -31,6 +31,7 @@ function init() {
   setupPortPreview();
   setupVPSInfo();
   setupSettings();
+  setupDefaultPath();
 
   // Initial tab
   try {
@@ -175,6 +176,52 @@ function setupPortPreview() {
     const iframe = $('port-preview-iframe');
     if (iframe) iframe.src = iframe.src;
   });
+}
+
+function setupDefaultPath() {
+    const modal = $('default-path-modal');
+    const input = $('mini-cli-input');
+    const output = $('mini-cli-output');
+    let currentCwd = '/root';
+
+    // Trigger (e.g. from a new button we should add)
+    window.openDefaultPathModal = () => {
+        modal.classList.remove('hidden');
+        $('def-path-manual').value = localStorage.getItem('ks-ssh-default-cwd') || '/root';
+        currentCwd = $('def-path-manual').value;
+        output.textContent = `Current: ${currentCwd}`;
+    };
+
+    input?.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            const cmd = input.value;
+            input.value = '';
+            try {
+                const res = await fetch('/ksapi/files/cmd', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd, cwd: currentCwd })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    currentCwd = d.cwd;
+                    output.textContent = d.output || `Current: ${currentCwd}`;
+                    $('def-path-manual').value = currentCwd;
+                } else {
+                    output.textContent = `Error: ${d.error}`;
+                }
+            } catch (err) {
+                output.textContent = `Failed: ${err.message}`;
+            }
+        }
+    });
+
+    $('def-path-confirm')?.addEventListener('click', () => {
+        const path = $('def-path-manual').value;
+        localStorage.setItem('ks-ssh-default-cwd', path);
+        showToast(`DEFAULT PATH SET: ${path}`);
+        modal.classList.add('hidden');
+    });
 }
 
 function setupSettings() {

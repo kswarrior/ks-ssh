@@ -124,6 +124,39 @@ app.post('/ksapi/files/write', (req, res) => {
   catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+app.post('/ksapi/files/cmd', (req, res) => {
+  const { cmd, cwd } = req.body;
+  const parts = cmd.trim().split(/\s+/);
+  const action = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(' ');
+
+  try {
+    let newCwd = cwd || os.homedir();
+    let output = '';
+
+    if (action === 'cd') {
+        const target = path.resolve(newCwd, arg || os.homedir());
+        if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
+            newCwd = target;
+            output = `Changed to: ${newCwd}`;
+        } else throw new Error('Directory not found');
+    } else if (action === 'ls') {
+        const files = fs.readdirSync(newCwd);
+        output = files.join('  ');
+    } else if (action === 'mkdir') {
+        const target = path.resolve(newCwd, arg);
+        fs.mkdirSync(target, { recursive: true });
+        output = `Created: ${arg}`;
+    } else {
+        throw new Error('Unknown command');
+    }
+
+    res.json({ success: true, cwd: newCwd, output });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/ksapi/files/copy', (req, res) => {
   try { files.copy(req.body.src, req.body.dest); res.json({ success: true }); }
   catch (err) { res.status(400).json({ error: err.message }); }

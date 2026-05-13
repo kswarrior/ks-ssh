@@ -211,6 +211,9 @@ export class TerminalManager {
 
   create(data = {}) {
     const id = data.id || `term-${Date.now()}`;
+    if (!data.cwd) {
+        data.cwd = localStorage.getItem('ks-ssh-default-cwd');
+    }
     this.counter++;
     this._spawn({ id, num: this.counter, restore: false });
     return id;
