@@ -124,6 +124,16 @@ app.post('/ksapi/files/write', (req, res) => {
   catch (err) { res.status(400).json({ error: err.message }); }
 });
 
+app.post('/ksapi/files/copy', (req, res) => {
+  try { files.copy(req.body.src, req.body.dest); res.json({ success: true }); }
+  catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+app.post('/ksapi/files/move', (req, res) => {
+  try { files.move(req.body.src, req.body.dest); res.json({ success: true }); }
+  catch (err) { res.status(400).json({ error: err.message }); }
+});
+
 // Proxy logic (kept in server.js for simplicity of middleware integration)
 app.all('/ksapi/proxy/:port*', (req, res) => {
   const port = parseInt(req.params.port);

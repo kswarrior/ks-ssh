@@ -15,6 +15,14 @@ export class FileManager {
     $('new-folder-btn')?.addEventListener('click', () => this.showCreatePanel('folder'));
     $('files-refresh-btn')?.addEventListener('click', () => this.load());
 
+    // Search
+    $('files-search')?.addEventListener('input', (e) => this.filterFiles(e.target.value));
+
+    // Quick Links
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.onclick = () => this.load(link.dataset.path);
+    });
+
     // URL Upload
     $('url-upload-btn')?.addEventListener('click', () => $('url-upload-modal').classList.remove('hidden'));
     $('url-upload-confirm')?.addEventListener('click', () => this.handleUrlUpload());
@@ -39,6 +47,8 @@ export class FileManager {
     $('ctx-download')?.addEventListener('click', () => { this.download(this.activeFile.path); this.closeContextMenu(); });
     $('ctx-edit')?.addEventListener('click', () => { this.openEditor(this.activeFile); this.closeContextMenu(); });
     $('ctx-rename')?.addEventListener('click', () => { this.promptRename(this.activeFile); this.closeContextMenu(); });
+    $('ctx-copy')?.addEventListener('click', () => { this.promptCopy(this.activeFile); this.closeContextMenu(); });
+    $('ctx-move')?.addEventListener('click', () => { this.promptMove(this.activeFile); this.closeContextMenu(); });
     $('ctx-delete')?.addEventListener('click', () => { this.optimisticDelete(this.activeFile); this.closeContextMenu(); });
 
     // Global click to close menu/modals
@@ -118,6 +128,8 @@ export class FileManager {
   async load(dirPath = this.currentPath) {
     const list = $('files-list');
     this.hideCreatePanel();
+    localStorage.setItem('ks-ssh-files-path', dirPath);
+    if ($('files-search')) $('files-search').value = '';
     list.innerHTML = `
         <div class="skeleton-row" style="grid-template-columns: 32px 1fr auto 40px; gap:12px;">
             <div class="skeleton skeleton-icon"></div>
@@ -173,13 +185,25 @@ export class FileManager {
   }
 
   render(data) {
+    this.allFiles = data.files;
+    this.parentPath = data.parent;
+    this._renderList(this.allFiles);
+  }
+
+  _renderList(files) {
     const list = $('files-list');
     if (!list) return;
     list.innerHTML = '';
-    if (data.parent && data.path !== '/') {
-        list.appendChild(this.createRow({ name: '..', isDirectory: true, path: data.parent }));
+    if (this.parentPath && this.currentPath !== '/') {
+        list.appendChild(this.createRow({ name: '..', isDirectory: true, path: this.parentPath }));
     }
-    data.files.forEach(f => list.appendChild(this.createRow(f)));
+    files.forEach(f => list.appendChild(this.createRow(f)));
+  }
+
+  filterFiles(query) {
+      if (!this.allFiles) return;
+      const filtered = this.allFiles.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+      this._renderList(filtered);
   }
 
   createRow(f) {
@@ -215,7 +239,15 @@ export class FileManager {
             this.toggleSelect(f.path, row);
         } else {
             if (f.isDirectory) this.load(f.path);
-            else if (!isParent) this.download(f.path);
+            else if (!isParent) {
+                const ext = f.name.split('.').pop().toLowerCase();
+                const imgIcons = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'];
+                if (imgIcons.includes(ext)) {
+                    this.openPreview(f);
+                } else {
+                    this.download(f.path);
+                }
+            }
         }
     };
 
@@ -256,6 +288,13 @@ export class FileManager {
 
   closeContextMenu() {
     $('file-context-menu').classList.add('hidden');
+  }
+
+  openPreview(file) {
+      this.activeFile = file;
+      $('preview-filename').textContent = file.name;
+      $('preview-img').src = `/ksapi/files/download?path=${encodeURIComponent(file.path)}`;
+      $('image-preview-modal').classList.remove('hidden');
   }
 
   async openEditor(file) {
@@ -363,6 +402,37 @@ export class FileManager {
     } catch (err) {
         showToast(err.message, 'error');
     }
+  }
+
+  async promptCopy(file) {
+    const newName = prompt('COPY TO (IDENTIFIER):', file.name + '_copy');
+    if (!newName) return;
+    const dest = `${this.currentPath}/${newName}`;
+    try {
+        const res = await fetch('/ksapi/files/copy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ src: file.path, dest })
+        });
+        const data = await res.json();
+        if (data.success) { showToast('COPIED'); this.load(); }
+        else throw new Error(data.error);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async promptMove(file) {
+    const newPath = prompt('MOVE TO (ABSOLUTE PATH):', file.path);
+    if (!newPath || newPath === file.path) return;
+    try {
+        const res = await fetch('/ksapi/files/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ src: file.path, dest: newPath })
+        });
+        const data = await res.json();
+        if (data.success) { showToast('MOVED'); this.load(); }
+        else throw new Error(data.error);
+    } catch (err) { showToast(err.message, 'error'); }
   }
 
   async promptRename(file) {

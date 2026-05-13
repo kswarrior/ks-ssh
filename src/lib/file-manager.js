@@ -104,6 +104,23 @@ class FileManager {
       archive.finalize();
     });
   }
+
+  copy(src, dest) {
+    const stat = fs.statSync(src);
+    if (stat.isDirectory()) {
+      fs.mkdirSync(dest, { recursive: true });
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        this.copy(path.join(src, entry.name), path.join(dest, entry.name));
+      }
+    } else {
+      fs.copyFileSync(src, dest);
+    }
+  }
+
+  move(src, dest) {
+    fs.renameSync(src, dest);
+  }
 }
 
 module.exports = FileManager;
