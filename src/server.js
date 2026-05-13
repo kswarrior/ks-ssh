@@ -71,7 +71,7 @@ app.get('/ksapi/tunnel', (req, res) => res.json(tunnel.getInfo()));
 app.get('/ksapi/ports', (req, res) => res.json({ ports: scanner.scan() }));
 
 app.get('/ksapi/files', (req, res) => {
-  try { res.json(files.list(req.query.path)); }
+  try { res.json(files.list(req.query.path, req.query.showHidden === 'true')); }
   catch (err) { res.status(400).json({ error: err.message }); }
 });
 
@@ -120,33 +120,11 @@ app.get('/ksapi/files/read', (req, res) => {
 });
 
 app.get('/ksapi/files/search', (req, res) => {
-    const { path: baseDir, query } = req.query;
+    const { path: baseDir, query, showHidden } = req.query;
     if (!baseDir || !query) return res.status(400).json({ error: 'Missing path or query' });
 
-    const results = [];
-    const search = (dir) => {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        for (const entry of entries) {
-            const full = path.join(dir, entry.name);
-            if (entry.name.toLowerCase().includes(query.toLowerCase())) {
-                const s = fs.statSync(full);
-                results.push({
-                    name: entry.name,
-                    path: full,
-                    isDirectory: entry.isDirectory(),
-                    size: s.size,
-                    modified: s.mtime.toISOString()
-                });
-            }
-            if (entry.isDirectory() && !entry.name.startsWith('.')) {
-                try { search(full); } catch (e) {}
-            }
-            if (results.length > 200) break; // Limit results
-        }
-    };
-
     try {
-        search(baseDir);
+        const results = files.search(baseDir, query, showHidden === 'true');
         res.json({ files: results });
     } catch (err) {
         res.status(500).json({ error: err.message });

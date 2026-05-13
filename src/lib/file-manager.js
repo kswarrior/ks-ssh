@@ -11,10 +11,10 @@ const https = require('https');
 class FileManager {
   constructor() {}
 
-  list(dirPath) {
+  list(dirPath, showHidden = false) {
     const target = dirPath || os.homedir();
     const entries = fs.readdirSync(target, { withFileTypes: true });
-    const files = entries.map(entry => {
+    const files = entries.filter(e => showHidden || !e.name.startsWith('.')).map(entry => {
       const full = path.join(target, entry.name);
       let size = 0, modified = null;
       try { const s = fs.statSync(full); size = s.size; modified = s.mtime.toISOString(); } catch {}
@@ -81,6 +81,35 @@ class FileManager {
       };
       doGet(url);
     });
+  }
+
+  search(baseDir, query, showHidden = false) {
+    const results = [];
+    const searchRecursive = (dir) => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const isHidden = entry.name.startsWith('.');
+            if (!showHidden && isHidden) continue;
+
+            const full = path.join(dir, entry.name);
+            if (entry.name.toLowerCase().includes(query.toLowerCase())) {
+                const s = fs.statSync(full);
+                results.push({
+                    name: entry.name,
+                    path: full,
+                    isDirectory: entry.isDirectory(),
+                    size: s.size,
+                    modified: s.mtime.toISOString()
+                });
+            }
+            if (entry.isDirectory()) {
+                try { searchRecursive(full); } catch (e) {}
+            }
+            if (results.length > 200) break;
+        }
+    };
+    searchRecursive(baseDir);
+    return results;
   }
 
   zip(paths, outDir, outName) {

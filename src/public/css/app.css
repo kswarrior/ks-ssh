@@ -142,16 +142,20 @@ body {
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 8px);
   right: 0;
   background: #080808;
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  width: 340px;
+  width: 220px;
   max-width: calc(100vw - 32px);
   z-index: 10000;
   box-shadow: 0 10px 40px rgba(0,0,0,0.9);
   animation: dropdownIn 0.15s ease-out;
+}
+
+.dropdown-menu-sm {
+  width: 180px;
 }
 
 @keyframes dropdownIn {
@@ -280,26 +284,33 @@ body {
   background: var(--electric-blue);
   color: #000;
   border: none;
-  padding: 12px 24px; /* Increased height/padding */
+  padding: 10px 18px;
   border-radius: 6px;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   transition: var(--transition-fast);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  min-height: 44px; /* Better touch target */
+  letter-spacing: 0.5px;
+  min-height: 38px;
 }
 .btn-primary:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 20px var(--electric-blue-glow);
 }
 .btn-primary:active { transform: scale(0.98); }
-.btn-secondary { background: #111; color: #fff; }
+.btn-secondary {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  border: 1px solid var(--glass-border);
+}
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
+}
 .btn-danger { background: #ef4444 !important; color: #fff !important; }
 .btn-text-hud { font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
@@ -355,15 +366,17 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 4px;
-  background: #0a0a0a;
-  border: 1px solid var(--glass-border);
-  color: var(--text-dim);
+  background: var(--electric-blue);
+  color: #000;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 0 10px var(--electric-blue-glow);
 }
-.terminal-add-btn:hover { color: var(--electric-blue); border-color: var(--electric-blue); }
+.terminal-add-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
 
 .terminal-keypad {
   border-top: 1px solid var(--glass-border);

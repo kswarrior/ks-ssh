@@ -39,6 +39,7 @@ export class FileManager {
 
     // Search
     this.deepSearch = false;
+    this.showHidden = false;
     this.activeFilter = 'all';
 
     $('files-search')?.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
@@ -50,7 +51,13 @@ export class FileManager {
     });
 
     // Filters
-    document.querySelectorAll('.filter-chip').forEach(chip => {
+    $('hidden-toggle-btn')?.addEventListener('click', () => {
+        this.showHidden = !this.showHidden;
+        $('hidden-toggle-btn').classList.toggle('active', this.showHidden);
+        this.load();
+    });
+
+    document.querySelectorAll('.filter-chip[data-ext]').forEach(chip => {
         chip.onclick = () => {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
@@ -200,7 +207,7 @@ export class FileManager {
     `.repeat(4);
     this.exitSelectMode();
     try {
-      const res = await fetch(`/ksapi/files?path=${encodeURIComponent(dirPath)}`);
+      const res = await fetch(`/ksapi/files?path=${encodeURIComponent(dirPath)}&showHidden=${this.showHidden}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       this.currentPath = data.path;
@@ -284,7 +291,7 @@ export class FileManager {
   async handleSearchInput(query) {
       if (this.deepSearch && query.length >= 2) {
           try {
-              const res = await fetch(`/ksapi/files/search?path=${encodeURIComponent(this.currentPath)}&query=${encodeURIComponent(query)}`);
+              const res = await fetch(`/ksapi/files/search?path=${encodeURIComponent(this.currentPath)}&query=${encodeURIComponent(query)}&showHidden=${this.showHidden}`);
               const data = await res.json();
               this.allFiles = data.files;
               this._renderList(this.allFiles);
@@ -556,10 +563,16 @@ export class FileManager {
   async handleUpload(e) {
     const files = e.target.files;
     if (!files.length) return;
+
+    // Close dropdown
+    $('upload-dropdown')?.classList.add('hidden');
+
     const formData = new FormData();
     formData.append('path', this.currentPath);
     for (let f of files) formData.append('files', f);
-    showToast(`UPLOADING DATA...`);
+
+    showToast(`UPLOADING ${files.length} ITEMS...`, 'info');
+
     try {
       const res = await fetch('/ksapi/files/upload', { method: 'POST', body: formData });
       const data = await res.json();
