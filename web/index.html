@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KS SSH | HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💠</text></svg>" />
+</head>
+<body>
+<div id="app">
+
+  <header class="hud-header">
+    <div class="header-left">
+        <div class="header-brand">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            <span>KS SSH</span>
+        </div>
+
+        <nav class="top-nav">
+          <div class="nav-link active" data-tab="terminals">Terminal</div>
+          <div class="nav-link" data-tab="files">File</div>
+          <div class="nav-link" data-tab="ports">Port</div>
+        </nav>
+
+        <div class="header-stats">
+            <div class="header-stat-item">
+                <span id="hdr-ram-pct" class="header-stat-value">0%</span> RAM
+            </div>
+            <div class="header-stat-item">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="var(--electric-blue)" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+                <span id="hdr-latency" class="header-stat-value">--ms</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-right">
+        <button class="icon-btn" id="settings-btn" title="HUD Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        <div class="dropdown-wrapper">
+            <button class="icon-btn" id="vps-info-btn" title="VPS Information"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+            <div class="dropdown-menu hidden" id="vps-info-dropdown">
+                <div class="dropdown-header">System Information</div>
+                <div class="dropdown-content neofetch-layout">
+                    <pre id="vps-logo" class="neofetch-logo">🐧</pre>
+                    <div class="neofetch-details">
+                        <div class="nf-user-host"><span id="nf-user">user</span>@<span id="nf-host">host</span></div>
+                        <div class="nf-separator">-----------------</div>
+                        <div class="nf-row"><span class="nf-key">OS:</span> <span id="nf-os">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Host:</span> <span id="nf-platform">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Kernel:</span> <span id="nf-kernel">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Uptime:</span> <span id="nf-uptime">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Packages:</span> <span id="nf-packages">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Shell:</span> <span id="nf-shell">--</span></div>
+                        <div class="nf-row"><span class="nf-key">CPU:</span> <span id="nf-cpu">--</span></div>
+                        <div class="nf-row"><span class="nf-key">Memory:</span> <span id="nf-mem">--</span></div>
+                        <div class="nf-row"><span class="nf-key">IP:</span> <span id="nf-ip" class="text-blue">--</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </header>
+
+
+  <main class="hud-main">
+    <!-- Terminal Tab -->
+    <div class="tab-panel" id="tab-terminals">
+      <div class="terminal-hud-wrapper">
+        <div id="terminal-header-area" class="hidden">
+            <div id="terminal-tabs-container">
+              <div class="flex-1 flex-center-gap-4-hidden">
+                <div id="terminal-tabs-list"></div>
+                <button id="add-term-btn" class="terminal-add-btn">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+              <div class="hud-action-group">
+                  <button id="t-clear-btn" class="icon-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              </div>
+            </div>
+            <div id="terminal-secondary-bar" class="terminal-secondary-bar hidden">
+                <button id="t-scrollback-btn" class="t-key" style="min-width:auto; padding:0 10px;">CLEAR SCROLLBACK</button>
+                <button id="t-download-log" class="t-key" style="min-width:auto; padding:0 10px;">DOWNLOAD LOG</button>
+            </div>
+            <div id="terminal-custom-bar" class="terminal-secondary-bar hidden" style="border-top: none;">
+                <div id="custom-actions-list" class="flex-1 keypad-row" style="min-height:24px;"></div>
+                <button id="add-custom-action-btn" class="terminal-add-btn" style="flex-shrink:0;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+            <div id="terminal-keypad" class="terminal-keypad hidden">
+                <div class="keypad-row">
+                    <button class="t-key" data-key="esc">ESC</button>
+                    <button class="t-key" data-key="tab">TAB</button>
+                    <button class="t-key" data-key="backspace">BKSP</button>
+                    <div class="key-separator"></div>
+                    <button class="t-key key-toggle" data-key="ctrl">CTRL</button>
+                    <button class="t-key key-toggle" data-key="alt">ALT</button>
+                    <button class="t-key" data-key="c">C</button>
+                    <div class="key-separator"></div>
+                    <button class="t-key" data-key="arrowup">↑</button>
+                    <button class="t-key" data-key="arrowdown">↓</button>
+                    <button class="t-key" data-key="arrowleft">←</button>
+                    <button class="t-key" data-key="arrowright">→</button>
+                </div>
+            </div>
+        </div>
+        <div class="terminal-hud-content" id="terminals-area">
+            <div id="terminal-action-panel" class="hidden" style="position:absolute; inset:0; background:var(--obsidian); z-index:10; padding:20px;">
+                <div class="label-box"><label class="breadcrumb-flat">CUSTOM TERMINAL ACTION</label></div>
+                <div style="margin-bottom:20px;">
+                    <div class="label-box"><label class="breadcrumb-flat">TYPE</label></div>
+                    <select id="action-type" class="input-hud">
+                        <option value="code">RUN CODE / COMMAND</option>
+                        <option value="timer">TIMER (SECONDS)</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <div class="label-box"><label class="breadcrumb-flat">LABEL</label></div>
+                    <input type="text" id="action-label" class="input-hud" placeholder="e.g. Update System" />
+                </div>
+                <div style="margin-bottom:24px;">
+                    <div class="label-box"><label class="breadcrumb-flat">CODE / VALUE</label></div>
+                    <textarea id="action-code" class="textarea-hud" style="height:100px;" placeholder="apt update && apt upgrade -y"></textarea>
+                </div>
+                <div class="flex-center-gap-12">
+                    <button id="action-cancel-btn" class="btn-primary btn-secondary">CANCEL</button>
+                    <button id="action-save-btn" class="btn-primary">SAVE ACTION</button>
+                </div>
+            </div>
+        </div>
+        <div id="terminals-empty" class="empty-state">
+          <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <h2 class="empty-title">No Terminals Open</h2>
+          <p class="empty-subtitle">Start a session to interact with your system.</p>
+          <button id="empty-new-term" class="btn-primary">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Terminal
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Port Tab -->
+    <div class="tab-panel hidden" id="tab-ports">
+      <div class="hud-container">
+        <div class="hud-view-header">
+            <div class="hud-title-wrap">
+                <h1>Network HUD</h1>
+                <div class="breadcrumb">ACTIVE PORTS</div>
+            </div>
+            <button id="ports-refresh-btn" class="btn-primary">SCAN PORTS</button>
+        </div>
+        <div id="ports-list" class="flex-1 hud-list-container space-t-8"></div>
+      </div>
+    </div>
+
+    <!-- File Tab -->
+    <div class="tab-panel hidden" id="tab-files">
+      <div class="hud-container">
+        <div class="hud-view-header">
+            <div class="hud-title-wrap">
+                <h1>Storage HUD</h1>
+                <div id="breadcrumb" class="breadcrumb">/root</div>
+            </div>
+            <div class="hud-action-group">
+                <div class="search-wrap">
+                    <input type="text" id="files-search" placeholder="SEARCH..." class="input-hud-compact" />
+                    <button id="deep-search-btn" class="icon-btn-search" title="Deep Search (Recursive)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg></button>
+                </div>
+                <div class="dropdown-wrapper">
+                    <button class="btn-primary" id="add-multi-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> ADD</button>
+                    <div class="dropdown-menu dropdown-menu-sm hidden" id="add-dropdown">
+                        <div class="menu-item" id="new-file-btn-v2"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg> NEW FILE</div>
+                        <div class="menu-item" id="new-folder-btn-v2"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg> NEW FOLDER</div>
+                    </div>
+                </div>
+                <div class="dropdown-wrapper">
+                    <button class="btn-primary btn-secondary" id="upload-multi-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> UPLOAD</button>
+                    <div class="dropdown-menu dropdown-menu-sm hidden" id="upload-dropdown">
+                        <div class="menu-item" id="upload-storage-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> LOCAL STORAGE</div>
+                        <div class="menu-item" id="upload-url-btn-v2"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> REMOTE URL</div>
+                    </div>
+                </div>
+                <button id="select-btn" class="icon-btn" title="Toggle Multi-Select"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg></button>
+                <button id="files-refresh-btn" class="icon-btn" title="Refresh"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+                <button onclick="window.openDefaultPathModal()" class="icon-btn" title="Set Default Path"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
+            </div>
+        </div>
+        <div id="filter-bar" class="filter-bar">
+            <span class="filter-label">FILTERS:</span>
+            <div class="filter-chips">
+                <div class="filter-chip active" data-ext="all">ALL</div>
+                <div class="filter-chip" data-ext="js">JS</div>
+                <div class="filter-chip" data-ext="json">JSON</div>
+                <div class="filter-chip" data-ext="py">PY</div>
+                <div class="filter-chip" data-ext="html">HTML</div>
+                <div class="filter-chip" data-ext="css">CSS</div>
+                <div class="filter-chip" data-ext="sh">SH</div>
+                <div class="filter-chip" data-ext="img">IMG</div>
+                <div class="filter-chip" data-ext="zip">ZIP</div>
+                <div class="filter-chip" id="hidden-toggle-btn">HIDDEN</div>
+            </div>
+        </div>
+        <div class="hud-content-split flex-1">
+            <aside class="files-sidebar">
+                <div class="sidebar-label">QUICK LINKS</div>
+                <div class="sidebar-links">
+                    <div class="sidebar-link" data-path="/root">ROOT</div>
+                    <div class="sidebar-link" data-path="/home">HOME</div>
+                    <div class="sidebar-link" data-path="/etc">ETC</div>
+                    <div class="sidebar-link" data-path="/tmp">TMP</div>
+                    <div class="sidebar-link" data-path="/var/www">WEB</div>
+                </div>
+                <div class="sidebar-label" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>BOOKMARKS</span>
+                    <button id="add-bookmark-btn" class="icon-btn" style="padding:2px;" title="Bookmark Current Folder"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg></button>
+                </div>
+                <div class="sidebar-links" id="bookmarks-list"></div>
+            </aside>
+            <div id="files-list" class="files-list-vertical flex-1"></div>
+        </div>
+        <div id="files-create-panel" class="hidden flex-1" style="padding:20px;">
+            <div class="label-box"><label class="breadcrumb-flat">CREATE NEW RESOURCE</label></div>
+            <div class="flex-center-gap-12" style="margin-bottom:20px;">
+                <button class="btn-primary create-type-btn active" data-type="file">FILE</button>
+                <button class="btn-primary btn-secondary create-type-btn" data-type="folder">FOLDER</button>
+            </div>
+            <div class="label-box"><label class="breadcrumb-flat">NAME / IDENTIFIER</label></div>
+            <input type="text" id="create-name-input" class="input-hud" placeholder="e.g. config.json" style="margin-bottom:24px;" />
+            <div class="flex-center-gap-12">
+                <button id="create-cancel-btn" class="btn-primary btn-secondary">CANCEL</button>
+                <button id="create-confirm-btn" class="btn-primary">CONFIRM CREATE</button>
+            </div>
+        </div>
+        <div id="bulk-bar" class="hidden bulk-bar">
+            <div id="bulk-count" class="bulk-count">0 ITEMS</div>
+            <div class="hud-action-group">
+                <button id="bulk-zip" class="btn-primary btn-secondary">ZIP</button>
+                <button id="bulk-delete" class="btn-primary btn-danger">DELETE</button>
+                <button id="bulk-cancel" class="icon-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="hud-footer">
+    <div id="footer-status">READY FOR OPERATION</div>
+    <div class="footer-right">
+        <span class="copyright-notice">©️ KS Warrior</span>
+        <span class="text-blue">KS-SSH HUD v2.0</span>
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+  </footer>
+
+  <!-- Mobile HUD Dock -->
+  <div class="mobile-dock">
+      <div class="dock-item active" data-tab="terminals">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>TERMINAL</span>
+      </div>
+      <div class="dock-item" data-tab="files">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v12z"/></svg>
+          <span>FILE</span>
+      </div>
+      <div class="dock-item" data-tab="ports">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>PORT</span>
+      </div>
+  </div>
+
+</div>
+
+<!-- Modals & Overlays -->
+<div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal">
+        <div class="modal-header"><h3>HUD Customization</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body">
+            <div class="label-box"><label class="breadcrumb-flat">THEME ACCENT COLOR</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="margin-bottom:20px;">
+                <div class="color-swatch active" data-color="#00a2ff" style="background:#00a2ff; width:30px; height:30px; border-radius:50%; cursor:pointer; border:2px solid #fff;"></div>
+                <div class="color-swatch" data-color="#ff0055" style="background:#ff0055; width:30px; height:30px; border-radius:50%; cursor:pointer;"></div>
+                <div class="color-swatch" data-color="#00ff99" style="background:#00ff99; width:30px; height:30px; border-radius:50%; cursor:pointer;"></div>
+                <div class="color-swatch" data-color="#ff9900" style="background:#ff9900; width:30px; height:30px; border-radius:50%; cursor:pointer;"></div>
+                <div class="color-swatch" data-color="#9900ff" style="background:#9900ff; width:30px; height:30px; border-radius:50%; cursor:pointer;"></div>
+            </div>
+            <div class="label-box"><label class="breadcrumb-flat">TERMINAL FONT SIZE</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="margin-bottom:20px;">
+                <input type="range" id="settings-font-size" min="10" max="24" step="1" value="13" style="flex:1;" />
+                <span id="font-size-val" class="mono-dim-14">13px</span>
+            </div>
+            <div class="label-box"><label class="breadcrumb-flat">BACKGROUND GLASS OPACITY</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="margin-bottom:20px;">
+                <input type="range" id="settings-opacity" min="0.5" max="1" step="0.05" value="0.85" style="flex:1;" />
+                <span id="opacity-val" class="mono-dim-14">0.85</span>
+            </div>
+            <div class="label-box"><label class="breadcrumb-flat">TERMINAL COLORS</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="flex-wrap: wrap; gap: 16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="color" id="settings-term-text" value="#00a2ff" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                    <span class="mono-dim-14">TEXT</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="color" id="settings-term-bg" value="#000000" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                    <span class="mono-dim-14">BG</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="color" id="settings-term-cursor" value="#00a2ff" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                    <span class="mono-dim-14">CURSOR</span>
+                </div>
+            </div>
+            <div class="label-box" style="margin-top:20px;"><label class="breadcrumb-flat">CURSOR STYLE</label></div>
+            <div class="flex-center-gap-12 space-t-8">
+                <select id="settings-cursor-style" class="input-hud" style="flex:1;">
+                    <option value="block">BLOCK</option>
+                    <option value="underline">UNDERLINE</option>
+                    <option value="bar">BAR</option>
+                </select>
+            </div>
+            <div class="flex-center-gap-12 space-t-8" style="margin-top:20px;">
+                <label class="breadcrumb-flat" style="flex:1; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="settings-cursor-blink" checked style="width:16px; height:16px;" />
+                    CURSOR BLINKING
+                </label>
+            </div>
+            <div class="label-box" style="margin-top:20px; border-top: 1px solid var(--glass-border); padding-top:20px;"><label class="breadcrumb-flat">FILES HUD</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="margin-bottom:12px;">
+                <input type="range" id="settings-files-size" min="10" max="20" step="1" value="13" style="flex:1;" />
+                <span id="files-size-val" class="mono-dim-14">13px</span>
+            </div>
+            <div class="flex-center-gap-12">
+                <input type="color" id="settings-files-color" value="#ffffff" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                <span class="mono-dim-14">TEXT COLOR</span>
+            </div>
+            <div class="label-box" style="margin-top:20px; border-top: 1px solid var(--glass-border); padding-top:20px;"><label class="breadcrumb-flat">PORTS HUD</label></div>
+            <div class="flex-center-gap-12 space-t-8" style="margin-bottom:12px;">
+                <input type="range" id="settings-ports-size" min="10" max="20" step="1" value="13" style="flex:1;" />
+                <span id="ports-size-val" class="mono-dim-14">13px</span>
+            </div>
+            <div class="flex-center-gap-12">
+                <input type="color" id="settings-ports-color" value="#ffffff" class="input-hud" style="width:40px; height:30px; padding:2px; border:none;" />
+                <span class="mono-dim-14">TEXT COLOR</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary modal-close">DONE</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="default-path-modal">
+    <div class="modal">
+        <div class="modal-header"><h3>Set Default Location</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body">
+            <div class="label-box"><label class="breadcrumb-flat">MANUAL PATH ENTRY</label></div>
+            <input type="text" id="def-path-manual" class="input-hud" placeholder="/root/run/work" />
+            <div class="label-box" style="margin-top:20px;"><label class="breadcrumb-flat">MINI-CLI EXPLORER</label></div>
+            <div class="mini-cli-container">
+                <div id="mini-cli-output" class="mini-cli-output">Current: /root</div>
+                <div class="mini-cli-input-wrap">
+                    <span class="mini-cli-prompt">></span>
+                    <input type="text" id="mini-cli-input" class="mini-cli-input" placeholder="cd .., ls, mkdir..." />
+                </div>
+            </div>
+            <p class="mono-dim-11" style="margin-top:8px;">Commands: cd [path], ls, mkdir [name]</p>
+        </div>
+        <div class="modal-footer">
+            <button class="icon-btn modal-close btn-text-hud">CANCEL</button>
+            <button id="def-path-confirm" class="btn-primary">SAVE AS DEFAULT</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="term-close-modal">
+    <div class="modal modal-sm">
+        <div class="modal-header"><h3>Close Terminal</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body">
+            <p class="modal-p-main">Are you sure you want to kill this terminal session?</p>
+            <p class="modal-p-sub">Type <span class="text-blue">KS SSH</span> to confirm:</p>
+            <input type="text" id="term-close-input" class="input-hud" placeholder="KS SSH" />
+        </div>
+        <div class="modal-footer">
+            <button class="icon-btn modal-close btn-text-hud" id="term-close-cancel">CANCEL</button>
+            <button id="term-close-confirm" class="btn-primary btn-danger" disabled>CLOSE SESSION</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="port-preview-panel">
+    <div class="modal modal-port-preview">
+        <div class="modal-header">
+            <div class="flex-center-gap-12">
+                <h3 id="port-preview-url" class="mono-dim-14">localhost:0000</h3>
+                <span id="port-preview-badge" class="breadcrumb-no-margin">:0000</span>
+            </div>
+            <button class="icon-btn" id="port-preview-close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body flex-1 modal-body-flush bg-white">
+            <iframe id="port-preview-iframe" class="full-iframe" src="about:blank"></iframe>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" id="port-preview-refresh">REFRESH PAGE</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="url-upload-modal">
+    <div class="modal">
+        <div class="modal-header"><h3>Upload from URL</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body">
+            <div class="label-box"><label class="breadcrumb-flat">RESOURCE URL</label></div>
+            <input type="text" id="upload-url-input" class="input-hud" placeholder="https://example.com/file.zip" />
+        </div>
+        <div class="modal-footer">
+            <button class="icon-btn modal-close btn-text-hud">CANCEL</button>
+            <button id="url-upload-confirm" class="btn-primary">UPLOAD</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="image-preview-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3 id="preview-filename">image.png</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body flex-center" style="background:#111; min-height:300px;">
+            <img id="preview-img" style="max-width:100%; max-height:70vh; object-fit:contain;" />
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary modal-close">CLOSE PREVIEW</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="file-editor-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header"><h3 id="editor-filename">editor.txt</h3><button class="icon-btn modal-close">&times;</button></div>
+        <div class="modal-body modal-body-flush">
+            <div class="editor-container">
+                <pre id="editor-highlight" class="editor-highlight"></pre>
+                <textarea id="file-editor-text" class="textarea-hud" spellcheck="false"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="icon-btn modal-close btn-text-hud">DISCARD</button>
+            <button id="editor-save-btn" class="btn-primary">SAVE CHANGES</button>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="file-input" multiple class="hidden" />
+
+<div id="file-context-menu" class="context-menu hidden">
+    <div class="menu-item" id="ctx-download"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</div>
+    <div class="menu-item" id="ctx-edit"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</div>
+    <div class="menu-item" id="ctx-rename"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Rename</div>
+    <div class="menu-item" id="ctx-copy"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy</div>
+    <div class="menu-item" id="ctx-move"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> Move</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item danger" id="ctx-delete"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
