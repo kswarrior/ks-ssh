@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -84,11 +83,8 @@ func (m *Manager) establishTunnel() error {
 		return err
 	}
 
-	// Token format: ks-lt-${complete url only without https:// or http://}
-	cleanURL := lt.URL
-	cleanURL = strings.TrimPrefix(cleanURL, "https://")
-	cleanURL = strings.TrimPrefix(cleanURL, "http://")
-	token := "ks-lt-" + cleanURL
+	// Token format: ks-lt-${subdomain}
+	token := "ks-lt-" + lt.ID
 
 	m.mu.Lock()
 	m.info = Info{
