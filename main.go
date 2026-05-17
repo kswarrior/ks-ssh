@@ -17,6 +17,7 @@ var webAssets embed.FS
 
 func main() {
 	port := flag.Int("port", 3000, "Port to listen on")
+	subdomain := flag.String("url", "", "Custom subdomain for the tunnel")
 	flag.Parse()
 
 	// Check if port is already in use
@@ -34,7 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	srv := server.NewServer(http.FS(sub), *port)
+	srv := server.NewServer(http.FS(sub), *port, *subdomain)
 
 	fmt.Printf("Server starting on http://localhost:%d\n", *port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), srv.Router()); err != nil {

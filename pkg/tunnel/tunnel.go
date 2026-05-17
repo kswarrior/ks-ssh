@@ -19,17 +19,19 @@ type Info struct {
 }
 
 type Manager struct {
-	port  int
-	info  Info
-	mu    sync.Mutex
-	onUrl func(Info)
-	quit  chan struct{}
+	port      int
+	subdomain string
+	info      Info
+	mu        sync.Mutex
+	onUrl     func(Info)
+	quit      chan struct{}
 }
 
-func NewManager(port int) *Manager {
+func NewManager(port int, subdomain string) *Manager {
 	return &Manager{
-		port: port,
-		quit: make(chan struct{}),
+		port:      port,
+		subdomain: subdomain,
+		quit:      make(chan struct{}),
 	}
 }
 
@@ -72,7 +74,11 @@ func (m *Manager) run() {
 
 func (m *Manager) establishTunnel() error {
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get("https://localtunnel.me/?new")
+	url := "https://localtunnel.me/?new"
+	if m.subdomain != "" {
+		url = "https://localtunnel.me/" + m.subdomain
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}

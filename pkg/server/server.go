@@ -24,9 +24,9 @@ type Server struct {
 	assets    http.FileSystem
 }
 
-func NewServer(assets http.FileSystem, port int) *Server {
+func NewServer(assets http.FileSystem, port int, subdomain string) *Server {
 	tm := terminal.NewManager()
-	tn := tunnel.NewManager(port)
+	tn := tunnel.NewManager(port, subdomain)
 
 	s := &Server{
 		termMgr:   tm,
