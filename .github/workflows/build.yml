@@ -27,8 +27,7 @@ jobs:
 
     - name: Install and Build
       run: |
-        npm install
-        npm run build
+        bash build.sh
         # Ensure your build command produces the 'ks-ssh' file
         # If the file is inside a 'dist' folder, adjust the path below
 
