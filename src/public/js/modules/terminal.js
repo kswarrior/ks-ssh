@@ -1,12 +1,13 @@
 import { $, showToast } from './utils.js';
 
 export class TerminalManager {
-  constructor(socket) {
+  constructor(socket, customActions = []) {
     this.socket = socket;
     this.terminals = new Map();
     this.activeId = null;
     this.counter = 0;
     this.fontSize = 13;
+    this.customActions = customActions;
 
     this._setupUI();
   }
@@ -24,11 +25,6 @@ export class TerminalManager {
     $('action-cancel-btn')?.addEventListener('click', () => this.hideActionPanel());
     $('action-save-btn')?.addEventListener('click', () => this.saveCustomAction());
 
-    try {
-        this.customActions = JSON.parse(localStorage.getItem('ks-ssh-custom-actions') || '[]');
-    } catch (e) {
-        this.customActions = [];
-    }
     this.renderCustomActions();
 
     this._setupKeypad();
@@ -63,9 +59,7 @@ export class TerminalManager {
           showToast('ACTION SAVED');
       }
 
-      try {
-          localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-      } catch (e) {}
+      if (window.syncVPSSettings) window.syncVPSSettings();
       this.renderCustomActions();
       this.hideActionPanel();
   }
@@ -132,9 +126,7 @@ export class TerminalManager {
       menu.querySelector('#act-delete').onclick = () => {
           if (confirm(`PURGE "${action.label}"?`)) {
               this.customActions = this.customActions.filter(a => a.id !== action.id);
-              try {
-                  localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-              } catch (e) {}
+              if (window.syncVPSSettings) window.syncVPSSettings();
               this.renderCustomActions();
           }
           menu.remove();

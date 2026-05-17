@@ -14,28 +14,36 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/user/ks-ssh-go/pkg/filemanager"
+	"github.com/user/ks-ssh-go/pkg/logger"
 	"github.com/user/ks-ssh-go/pkg/portscan"
+	"github.com/user/ks-ssh-go/pkg/settings"
 	"github.com/user/ks-ssh-go/pkg/sysmon"
 	"github.com/user/ks-ssh-go/pkg/terminal"
 	"github.com/user/ks-ssh-go/pkg/tunnel"
 )
 
 type Server struct {
-	termMgr   *terminal.Manager
-	tunnelMgr *tunnel.Manager
-	upgrader  websocket.Upgrader
-	assets    http.FileSystem
-	tcpConns  map[string]net.Conn
-	tcpMu     sync.Mutex
+	termMgr     *terminal.Manager
+	tunnelMgr   *tunnel.Manager
+	settingsMgr *settings.Manager
+	loggerMgr   *logger.Manager
+	upgrader    websocket.Upgrader
+	assets      http.FileSystem
+	tcpConns    map[string]net.Conn
+	tcpMu       sync.Mutex
 }
 
 func NewServer(assets http.FileSystem, port int, subdomain string) *Server {
 	tm := terminal.NewManager()
 	tn := tunnel.NewManager(port, subdomain)
+	sm := settings.NewManager()
+	lm := logger.NewManager()
 
 	s := &Server{
-		termMgr:   tm,
-		tunnelMgr: tn,
+		termMgr:     tm,
+		tunnelMgr:   tn,
+		settingsMgr: sm,
+		loggerMgr:   lm,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
@@ -65,6 +73,7 @@ func (s *Server) Router() http.Handler {
 	mux.HandleFunc("/ksapi/files/move", s.handleFilesMove)
 	mux.HandleFunc("/ksapi/files/search", s.handleFilesSearch)
 	mux.HandleFunc("/ksapi/files/download", s.handleFilesDownload)
+	mux.HandleFunc("/ksapi/settings", s.handleSettings)
 	mux.HandleFunc("/ksapi/proxy/", s.handleProxy)
 	mux.HandleFunc("/ws", s.handleWS)
 
@@ -210,6 +219,30 @@ func (s *Server) handleFilesSearch(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"files": files})
 }
 
+func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		var body settings.Settings
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		if err := s.settingsMgr.Save(body); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"success": true})
+		return
+	}
+
+	res, err := s.settingsMgr.Load()
+	if err != nil {
+		// Return empty settings on error (e.g. file not found)
+		json.NewEncoder(w).Encode(settings.Settings{})
+		return
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
 func (s *Server) handleFilesDownload(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Query().Get("path")
 	info, err := os.Stat(path)
@@ -305,6 +338,7 @@ func (s *Server) pipeTerminal(conn *websocket.Conn, session *terminal.Session) {
 	for {
 		n, err := session.Read(buf)
 		if n > 0 {
+			s.loggerMgr.LogTerminal(session.ID, buf[:n])
 			resp, _ := json.Marshal(map[string]interface{}{
 				"type": "terminal:data",
 				"id":   session.ID,

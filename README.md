@@ -9,7 +9,7 @@
 Unlike traditional web-based SSH clients that require complex setups or external dependencies, KS-SSH is designed to be **self-contained, ultra-fast, and visually stunning.**
 
 *   **Zero Installation**: Native Go implementation. No need for `npx localtunnel`, `cloudflared`, or external proxy binaries. Everything is inside the library.
-*   **True Persistence**: Your terminal sessions, file explorer paths, and HUD customizations are saved across browser refreshes.
+*   **VPS-Side Persistence**: Your custom buttons, bookmarks, terminal logs, and HUD customizations are saved securely on the VPS, not just in your browser.
 *   **Mobile-First Design**: A dedicated mobile dock, virtual keypad (CTRL, ALT, ESC, etc.), and responsive layouts make system management from your phone a breeze.
 *   **Aesthetic HUD**: A "True Black" and "Electric Blue" theme with glassmorphism effects provides a professional, IDE-like feel.
 

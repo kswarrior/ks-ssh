@@ -7,16 +7,23 @@ import { $, showToast, fmtBytes } from './modules/utils.js';
 let socket, terminals, files, ports, resMon;
 let startTime = Date.now();
 
-function init() {
+async function init() {
   socket = io();
 
+  // Sync settings from VPS
+  let vpsSettings = { customActions: [], bookmarks: [], defaultCwd: '/root', hudSettings: null };
   try {
-      terminals = new TerminalManager(socket);
+      const res = await fetch('/ksapi/settings');
+      vpsSettings = await res.json();
+  } catch (e) { console.error("Settings sync failed", e); }
+
+  try {
+      terminals = new TerminalManager(socket, vpsSettings.customActions);
       window.terminalManager = terminals;
   } catch (e) { console.error("Terminal init failed", e); }
 
   try {
-      files = new FileManager();
+      files = new FileManager(vpsSettings.bookmarks, vpsSettings.defaultCwd);
       window.fileManager = files;
   } catch (e) { console.error("File manager init failed", e); }
 
@@ -30,8 +37,8 @@ function init() {
   setupModals();
   setupPortPreview();
   setupVPSInfo();
-  setupSettings();
-  setupDefaultPath();
+  setupSettings(vpsSettings.hudSettings);
+  setupDefaultPath(vpsSettings.defaultCwd);
 
   // Initial tab
   try {
@@ -240,17 +247,16 @@ function setupPortPreview() {
   });
 }
 
-function setupDefaultPath() {
+function setupDefaultPath(initialCwd) {
     const modal = $('default-path-modal');
     const input = $('mini-cli-input');
     const output = $('mini-cli-output');
-    let currentCwd = '/root';
+    let currentCwd = initialCwd || '/root';
 
     // Trigger (e.g. from a new button we should add)
     window.openDefaultPathModal = () => {
         modal.classList.remove('hidden');
-        $('def-path-manual').value = localStorage.getItem('ks-ssh-default-cwd') || '/root';
-        currentCwd = $('def-path-manual').value;
+        $('def-path-manual').value = currentCwd;
         output.textContent = `Current: ${currentCwd}`;
     };
 
@@ -280,25 +286,21 @@ function setupDefaultPath() {
 
     $('def-path-confirm')?.addEventListener('click', () => {
         const path = $('def-path-manual').value;
-        localStorage.setItem('ks-ssh-default-cwd', path);
+        currentCwd = path;
+        syncVPSSettings();
         showToast(`DEFAULT PATH SET: ${path}`);
         modal.classList.add('hidden');
     });
 }
 
-function setupSettings() {
+function setupSettings(vpsHUDSettings) {
     const btn = $('settings-btn');
     const modal = $('settings-modal');
     if (!btn || !modal) return;
 
     btn.onclick = () => modal.classList.remove('hidden');
 
-    let saved = null;
-    try {
-        saved = localStorage.getItem('ks-ssh-settings');
-    } catch (e) {}
-
-    let settings = saved ? JSON.parse(saved) : {
+    let settings = vpsHUDSettings || {
         color: '#00a2ff',
         fontSize: 13,
         opacity: 0.85,
@@ -359,9 +361,9 @@ function setupSettings() {
             sw.style.border = sw.dataset.color === s.color ? '2px solid #fff' : 'none';
         });
 
-        try {
-            localStorage.setItem('ks-ssh-settings', JSON.stringify(s));
-        } catch (e) {}
+        settings = s;
+        window.currentHUDSettings = s;
+        syncVPSSettings();
     };
 
     $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
@@ -461,6 +463,27 @@ async function fetchTunnelInfo() {
     }
   } catch {}
 }
+
+async function syncVPSSettings() {
+    const settings = {
+        customActions: window.terminalManager ? window.terminalManager.customActions : [],
+        bookmarks: window.fileManager ? window.fileManager.bookmarks : [],
+        defaultCwd: $('def-path-manual') ? $('def-path-manual').value : '/root',
+        hudSettings: window.currentHUDSettings || null
+    };
+
+    // Extract current settings from global state if needed
+    // This is a helper to push everything to VPS
+    try {
+        await fetch('/ksapi/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+    } catch (e) { console.error("VPS Sync failed", e); }
+}
+
+window.syncVPSSettings = syncVPSSettings;
 
 function checkSecurity() {
     const official = 'ssh.ksw.workers.dev';
