@@ -22,6 +22,27 @@ import (
 	"github.com/user/ks-ssh-go/pkg/tunnel"
 )
 
+type SafeWS struct {
+	conn *websocket.Conn
+	mu   sync.Mutex
+}
+
+func (s *SafeWS) WriteJSON(v interface{}) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.conn.WriteJSON(v)
+}
+
+func (s *SafeWS) WriteMessage(messageType int, data []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.conn.WriteMessage(messageType, data)
+}
+
+func (s *SafeWS) Close() error {
+	return s.conn.Close()
+}
+
 type Server struct {
 	termMgr     *terminal.Manager
 	tunnelMgr   *tunnel.Manager
@@ -333,7 +354,7 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) pipeTerminal(conn *websocket.Conn, session *terminal.Session) {
+func (s *Server) pipeTerminal(sws *SafeWS, session *terminal.Session) {
 	buf := make([]byte, 1024)
 	for {
 		n, err := session.Read(buf)
@@ -344,7 +365,7 @@ func (s *Server) pipeTerminal(conn *websocket.Conn, session *terminal.Session) {
 				"id":   session.ID,
 				"data": string(buf[:n]),
 			})
-			if err := conn.WriteMessage(websocket.TextMessage, resp); err != nil {
+			if err := sws.WriteMessage(websocket.TextMessage, resp); err != nil {
 				break
 			}
 		}
@@ -359,7 +380,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	sws := &SafeWS{conn: conn}
+	defer sws.Close()
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -387,7 +409,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				continue
 			}
-			go s.pipeTerminal(conn, session)
+			go s.pipeTerminal(sws, session)
 		case "terminal:reconnect":
 			session := s.termMgr.Get(msg.ID)
 			if session == nil {
@@ -407,10 +429,10 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 						"id":   msg.ID,
 						"data": string(buf),
 					})
-					conn.WriteMessage(websocket.TextMessage, resp)
+					sws.WriteMessage(websocket.TextMessage, resp)
 				}
 			}
-			go s.pipeTerminal(conn, session)
+			go s.pipeTerminal(sws, session)
 		case "terminal:input":
 			var input string
 			json.Unmarshal(msg.Data, &input)
@@ -424,7 +446,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 				session.Resize(msg.Cols, msg.Rows)
 			}
 		case "tcp:connect":
-			go s.handleTCPProxy(conn, msg.ID, msg.Port)
+			go s.handleTCPProxy(sws, msg.ID, msg.Port)
 		case "tcp:input":
 			var input string
 			json.Unmarshal(msg.Data, &input)
@@ -437,7 +459,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleTCPProxy(ws *websocket.Conn, id string, port int) {
+func (s *Server) handleTCPProxy(sws *SafeWS, id string, port int) {
 	target, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		resp, _ := json.Marshal(map[string]interface{}{
@@ -445,7 +467,7 @@ func (s *Server) handleTCPProxy(ws *websocket.Conn, id string, port int) {
 			"id":   id,
 			"data": err.Error(),
 		})
-		ws.WriteMessage(websocket.TextMessage, resp)
+		sws.WriteMessage(websocket.TextMessage, resp)
 		return
 	}
 	defer target.Close()
@@ -464,7 +486,7 @@ func (s *Server) handleTCPProxy(ws *websocket.Conn, id string, port int) {
 		"type": "tcp:connected",
 		"id":   id,
 	})
-	ws.WriteMessage(websocket.TextMessage, resp)
+	sws.WriteMessage(websocket.TextMessage, resp)
 
 	buf := make([]byte, 4096)
 	for {
@@ -475,7 +497,9 @@ func (s *Server) handleTCPProxy(ws *websocket.Conn, id string, port int) {
 				"id":   id,
 				"data": string(buf[:n]),
 			})
-			ws.WriteMessage(websocket.TextMessage, resp)
+			if err := sws.WriteMessage(websocket.TextMessage, resp); err != nil {
+				break
+			}
 		}
 		if err != nil {
 			break
