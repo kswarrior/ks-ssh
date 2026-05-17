@@ -34,7 +34,7 @@ jobs:
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh" 
+        artifacts: "ks-ssh-go" 
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}
