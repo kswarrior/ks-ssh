@@ -65,7 +65,6 @@ func (m *Manager) run() {
 				case <-time.After(5 * time.Second):
 				}
 			} else {
-				// If establishTunnel returns nil, it means it finished normally (e.g. quit)
 				return
 			}
 		}
@@ -107,7 +106,8 @@ func (m *Manager) establishTunnel() error {
 		m.onUrl(info)
 	}
 
-	fmt.Printf("[Tunnel] Ready: %s (Token: %s)\n", lt.URL, token)
+	banner := fmt.Sprintf("\n\x1b[32m  ✓ Tunnel ready!\x1b[0m\n\x1b[36m  ┌──────────────────────────────────────────────┐\x1b[0m\n\x1b[36m  │\x1b[0m  \x1b[1mToken:\x1b[0m  \x1b[93m%s\x1b[0m\n\x1b[36m  └──────────────────────────────────────────────┘\x1b[0m\n", token)
+	fmt.Print(banner)
 
 	var wg sync.WaitGroup
 	conns := lt.MaxConnCount
@@ -144,18 +144,23 @@ func (m *Manager) establishTunnel() error {
 }
 
 func (m *Manager) proxy(remotePort int) error {
-	// Use localtunnel.me as the proxy host
 	remote, err := net.DialTimeout("tcp", fmt.Sprintf("localtunnel.me:%d", remotePort), 10*time.Second)
 	if err != nil {
 		return err
 	}
 
-	// Close connection if we quit
+	done := make(chan struct{})
 	go func() {
-		<-m.quit
+		select {
+		case <-m.quit:
+			remote.Close()
+		case <-done:
+		}
+	}()
+	defer func() {
+		close(done)
 		remote.Close()
 	}()
-	defer remote.Close()
 
 	local, err := net.DialTimeout("tcp", fmt.Sprintf("localhost:%d", m.port), 5*time.Second)
 	if err != nil {
@@ -163,18 +168,18 @@ func (m *Manager) proxy(remotePort int) error {
 	}
 	defer local.Close()
 
-	done := make(chan struct{}, 2)
+	doneProxy := make(chan struct{}, 2)
 	go func() {
 		io.Copy(remote, local)
-		done <- struct{}{}
+		doneProxy <- struct{}{}
 	}()
 	go func() {
 		io.Copy(local, remote)
-		done <- struct{}{}
+		doneProxy <- struct{}{}
 	}()
 
 	select {
-	case <-done:
+	case <-doneProxy:
 	case <-m.quit:
 	}
 	return nil
