@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '23'
         cache: 'npm'
 
     - name: Get Version from package.json
@@ -27,15 +27,14 @@ jobs:
 
     - name: Install and Build
       run: |
-        npm install
-        npm run build
+        bash build.sh
         # Ensure your build command produces the 'ks-ssh' file
         # If the file is inside a 'dist' folder, adjust the path below
 
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh"
+        artifacts: "ks-ssh-go"
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}
