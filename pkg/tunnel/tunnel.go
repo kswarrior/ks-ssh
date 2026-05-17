@@ -1,16 +1,14 @@
 package tunnel
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Info struct {
@@ -22,15 +20,18 @@ type Info struct {
 }
 
 type Manager struct {
-	port      int
-	child     *exec.Cmd
-	info      Info
-	mu        sync.Mutex
-	onUrl     func(Info)
+	port  int
+	info  Info
+	mu    sync.Mutex
+	onUrl func(Info)
+	quit  chan struct{}
 }
 
 func NewManager(port int) *Manager {
-	return &Manager{port: port}
+	return &Manager{
+		port: port,
+		quit: make(chan struct{}),
+	}
 }
 
 func (m *Manager) SetOnUrl(f func(Info)) {
@@ -41,124 +42,140 @@ func (m *Manager) Start() {
 	go m.run()
 }
 
+type ltResponse struct {
+	ID           string `json:"id"`
+	Port         int    `json:"port"`
+	MaxConnCount int    `json:"max_conn_count"`
+	URL          string `json:"url"`
+}
+
 func (m *Manager) run() {
-	bin, err := m.findOrDownloadLinker()
-	if err != nil {
-		fmt.Printf("[Tunnel] Error: %v\n", err)
-		return
-	}
-
-	cmd := exec.Command(bin, "tunnel", "--url", fmt.Sprintf("http://localhost:%d", m.port), "--no-autoupdate", "--protocol", "http2")
-	m.child = cmd
-
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("[Tunnel] Failed to start: %v\n", err)
-		return
-	}
-
-	reader := io.MultiReader(stdout, stderr)
-	scanner := bufio.NewScanner(reader)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "https://") && strings.Contains(line, ".trycloudflare.com") {
-			m.mu.Lock()
-			url := extractUrl(line)
-			if url != "" {
-				sub := strings.TrimSuffix(strings.TrimPrefix(url, "https://"), ".trycloudflare.com")
-				m.info = Info{
-					Active:    true,
-					URL:       url,
-					ShareURL:  fmt.Sprintf("https://ssh.ksw.workers.dev/?token=%s", sub),
-					Token:     sub,
-					Subdomain: sub,
+	for {
+		select {
+		case <-m.quit:
+			return
+		default:
+			err := m.establishTunnel()
+			if err != nil {
+				fmt.Printf("[Tunnel] Error: %v. Retrying in 5s...\n", err)
+				select {
+				case <-m.quit:
+					return
+				case <-time.After(5 * time.Second):
 				}
-				if m.onUrl != nil {
-					m.onUrl(m.info)
-				}
-				fmt.Printf("[Tunnel] Ready: %s\n", url)
+			} else {
+				// If establishTunnel returns nil, it means it finished normally (e.g. quit)
+				return
 			}
-			m.mu.Unlock()
 		}
 	}
-
-	cmd.Wait()
-	m.mu.Lock()
-	m.info = Info{}
-	m.mu.Unlock()
 }
 
-func extractUrl(line string) string {
-	parts := strings.Fields(line)
-	for _, p := range parts {
-		if strings.HasPrefix(p, "https://") && strings.HasSuffix(p, ".trycloudflare.com") {
-			return p
-		}
-	}
-	// Fallback to searching the whole line
-	start := strings.Index(line, "https://")
-	if start == -1 {
-		return ""
-	}
-	end := strings.Index(line[start:], ".trycloudflare.com")
-	if end == -1 {
-		return ""
-	}
-	return line[start : start+end+18]
-}
-
-func (m *Manager) findOrDownloadLinker() (string, error) {
-	binName := "ks-ssh-linker"
-	home, _ := os.UserHomeDir()
-	path := filepath.Join(home, ".local", "bin", binName)
-
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
-	}
-
-	if _, err := exec.LookPath(binName); err == nil {
-		return binName, nil
-	}
-
-	// Download
-	fmt.Println("[Tunnel] Downloading ks-ssh-linker...")
-	err := downloadLinker(path)
-	if err != nil {
-		return "", err
-	}
-	os.Chmod(path, 0755)
-	return path, nil
-}
-
-func downloadLinker(dest string) error {
-	arch := "amd64"
-	if runtime.GOARCH == "arm64" {
-		arch = "arm64"
-	}
-	url := fmt.Sprintf("https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-%s", arch)
-
-	os.MkdirAll(filepath.Dir(dest), 0755)
-	out, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	resp, err := http.Get(url)
+func (m *Manager) establishTunnel() error {
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get("https://localtunnel.me/?new")
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
+	var lt ltResponse
+	if err := json.NewDecoder(resp.Body).Decode(&lt); err != nil {
+		return err
 	}
 
-	_, err = io.Copy(out, resp.Body)
-	return err
+	// Token format: ks-lt-${complete url only without https:// or http://}
+	cleanURL := lt.URL
+	cleanURL = strings.TrimPrefix(cleanURL, "https://")
+	cleanURL = strings.TrimPrefix(cleanURL, "http://")
+	token := "ks-lt-" + cleanURL
+
+	m.mu.Lock()
+	m.info = Info{
+		Active:    true,
+		URL:       lt.URL,
+		ShareURL:  fmt.Sprintf("https://ssh.ksw.workers.dev/?token=%s", token),
+		Token:     token,
+		Subdomain: lt.ID,
+	}
+	info := m.info
+	m.mu.Unlock()
+
+	if m.onUrl != nil {
+		m.onUrl(info)
+	}
+
+	fmt.Printf("[Tunnel] Ready: %s (Token: %s)\n", lt.URL, token)
+
+	var wg sync.WaitGroup
+	conns := lt.MaxConnCount
+	if conns <= 0 {
+		conns = 10
+	}
+	if conns > 10 {
+		conns = 10
+	}
+
+	for i := 0; i < conns; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-m.quit:
+					return
+				default:
+					if err := m.proxy(lt.Port); err != nil {
+						select {
+						case <-m.quit:
+							return
+						case <-time.After(1 * time.Second):
+						}
+					}
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+	return nil
+}
+
+func (m *Manager) proxy(remotePort int) error {
+	// Use localtunnel.me as the proxy host
+	remote, err := net.DialTimeout("tcp", fmt.Sprintf("localtunnel.me:%d", remotePort), 10*time.Second)
+	if err != nil {
+		return err
+	}
+
+	// Close connection if we quit
+	go func() {
+		<-m.quit
+		remote.Close()
+	}()
+	defer remote.Close()
+
+	local, err := net.DialTimeout("tcp", fmt.Sprintf("localhost:%d", m.port), 5*time.Second)
+	if err != nil {
+		return err
+	}
+	defer local.Close()
+
+	done := make(chan struct{}, 2)
+	go func() {
+		io.Copy(remote, local)
+		done <- struct{}{}
+	}()
+	go func() {
+		io.Copy(local, remote)
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-done:
+	case <-m.quit:
+	}
+	return nil
 }
 
 func (m *Manager) GetInfo() Info {
@@ -168,7 +185,13 @@ func (m *Manager) GetInfo() Info {
 }
 
 func (m *Manager) Stop() {
-	if m.child != nil && m.child.Process != nil {
-		m.child.Process.Signal(os.Interrupt)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	select {
+	case <-m.quit:
+		// already closed
+	default:
+		close(m.quit)
+		m.info = Info{}
 	}
 }
