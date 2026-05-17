@@ -1,13 +1,16 @@
 package server
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	"github.com/user/ks-ssh-go/pkg/filemanager"
@@ -22,6 +25,8 @@ type Server struct {
 	tunnelMgr *tunnel.Manager
 	upgrader  websocket.Upgrader
 	assets    http.FileSystem
+	tcpConns  map[string]net.Conn
+	tcpMu     sync.Mutex
 }
 
 func NewServer(assets http.FileSystem, port int, subdomain string) *Server {
@@ -34,7 +39,8 @@ func NewServer(assets http.FileSystem, port int, subdomain string) *Server {
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
-		assets: assets,
+		assets:   assets,
+		tcpConns: make(map[string]net.Conn),
 	}
 
 	tn.Start()
@@ -59,6 +65,7 @@ func (s *Server) Router() http.Handler {
 	mux.HandleFunc("/ksapi/files/move", s.handleFilesMove)
 	mux.HandleFunc("/ksapi/files/search", s.handleFilesSearch)
 	mux.HandleFunc("/ksapi/files/download", s.handleFilesDownload)
+	mux.HandleFunc("/ksapi/proxy/", s.handleProxy)
 	mux.HandleFunc("/ws", s.handleWS)
 
 	// Fallback to static assets
@@ -223,6 +230,76 @@ func (s *Server) handleFilesDownload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
+	// URL format: /ksapi/proxy/{port}/...
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/ksapi/proxy/"), "/")
+	if len(parts) < 1 {
+		http.Error(w, "Missing port", 400)
+		return
+	}
+	portStr := parts[0]
+	targetPath := "/" + strings.Join(parts[1:], "/")
+
+	isSSL := r.URL.Query().Get("ssl") == "true"
+	scheme := "http"
+	if isSSL {
+		scheme = "https"
+	}
+
+	targetURL := fmt.Sprintf("%s://127.0.0.1:%s%s", scheme, portStr, targetPath)
+	if r.URL.RawQuery != "" {
+		targetURL += "?" + r.URL.RawQuery
+	}
+
+	req, err := http.NewRequest(r.Method, targetURL, r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	for k, v := range r.Header {
+		req.Header[k] = v
+	}
+	req.Header.Set("Host", "127.0.0.1:"+portStr)
+	// Disable compression to make body replacement easier
+	req.Header.Del("Accept-Encoding")
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error connecting to port %s: %v", portStr, err), 502)
+		return
+	}
+	defer resp.Body.Close()
+
+	for k, v := range resp.Header {
+		w.Header()[k] = v
+	}
+	w.Header().Del("Content-Security-Policy")
+	w.Header().Del("X-Frame-Options")
+
+	w.WriteHeader(resp.StatusCode)
+
+	contentType := resp.Header.Get("Content-Type")
+	if strings.Contains(contentType, "text/html") {
+		body, _ := io.ReadAll(resp.Body)
+		bodyStr := string(body)
+		baseTag := fmt.Sprintf(`<base href="/ksapi/proxy/%s/">`, portStr)
+		if strings.Contains(strings.ToLower(bodyStr), "<head>") {
+			bodyStr = strings.Replace(bodyStr, "<head>", "<head>"+baseTag, 1)
+		} else {
+			bodyStr = baseTag + bodyStr
+		}
+		w.Write([]byte(bodyStr))
+	} else {
+		io.Copy(w, resp.Body)
+	}
+}
+
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -242,6 +319,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			Cols uint16          `json:"cols"`
 			Rows uint16          `json:"rows"`
 			Cwd  string          `json:"cwd"`
+			Port int             `json:"port"`
 			Data json.RawMessage `json:"data"`
 		}
 
@@ -284,6 +362,62 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			if session != nil {
 				session.Resize(msg.Cols, msg.Rows)
 			}
+		case "tcp:connect":
+			go s.handleTCPProxy(conn, msg.ID, msg.Port)
+		case "tcp:input":
+			var input string
+			json.Unmarshal(msg.Data, &input)
+			s.tcpMu.Lock()
+			if tcpConn, ok := s.tcpConns[msg.ID]; ok {
+				tcpConn.Write([]byte(input))
+			}
+			s.tcpMu.Unlock()
+		}
+	}
+}
+
+func (s *Server) handleTCPProxy(ws *websocket.Conn, id string, port int) {
+	target, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		resp, _ := json.Marshal(map[string]interface{}{
+			"type": "tcp:error",
+			"id":   id,
+			"data": err.Error(),
+		})
+		ws.WriteMessage(websocket.TextMessage, resp)
+		return
+	}
+	defer target.Close()
+
+	s.tcpMu.Lock()
+	s.tcpConns[id] = target
+	s.tcpMu.Unlock()
+
+	defer func() {
+		s.tcpMu.Lock()
+		delete(s.tcpConns, id)
+		s.tcpMu.Unlock()
+	}()
+
+	resp, _ := json.Marshal(map[string]interface{}{
+		"type": "tcp:connected",
+		"id":   id,
+	})
+	ws.WriteMessage(websocket.TextMessage, resp)
+
+	buf := make([]byte, 4096)
+	for {
+		n, err := target.Read(buf)
+		if n > 0 {
+			resp, _ := json.Marshal(map[string]interface{}{
+				"type": "tcp:data",
+				"id":   id,
+				"data": string(buf[:n]),
+			})
+			ws.WriteMessage(websocket.TextMessage, resp)
+		}
+		if err != nil {
+			break
 		}
 	}
 }

@@ -162,19 +162,81 @@ function setupModals() {
 }
 
 function setupPortPreview() {
+  let currentPort = null;
+  const updateIframe = () => {
+    if (!currentPort) return;
+    const isSSL = $('port-ssl-toggle').checked;
+    $('port-preview-iframe').src = `/ksapi/proxy/${currentPort}/?ssl=${isSSL}`;
+  };
+
   window.openPortPreview = (port) => {
+    currentPort = port;
     $('port-preview-badge').textContent = ':' + port;
     $('port-preview-url').textContent = `localhost:${port}`;
-    $('port-preview-iframe').src = `/ksapi/proxy/${port}/`;
+    $('port-ssl-toggle').checked = false;
+    updateIframe();
     $('port-preview-panel').classList.remove('hidden');
   };
+
+  $('port-ssl-toggle')?.addEventListener('change', updateIframe);
+
   $('port-preview-close')?.addEventListener('click', () => {
     $('port-preview-panel').classList.add('hidden');
     $('port-preview-iframe').src = 'about:blank';
+    currentPort = null;
   });
   $('port-preview-refresh')?.addEventListener('click', () => {
-    const iframe = $('port-preview-iframe');
-    if (iframe) iframe.src = iframe.src;
+    updateIframe();
+  });
+
+  // TCP Terminal Logic
+  let activeTcpId = null;
+  window.openTcpTerminal = (port) => {
+    activeTcpId = `tcp-${Date.now()}`;
+    $('tcp-port-badge').textContent = ':' + port;
+    $('tcp-output').innerHTML = `<div style="color:var(--text-dim)">[SYSTEM] CONNECTING TO 127.0.0.1:${port}...</div>`;
+    $('tcp-terminal-panel').classList.remove('hidden');
+    socket.emit('tcp:connect', { id: activeTcpId, port: port });
+  };
+
+  socket.on('tcp:connected', ({ id }) => {
+    if (id !== activeTcpId) return;
+    $('tcp-output').innerHTML += `<div style="color:#50fa7b">[SYSTEM] CONNECTED</div>`;
+  });
+
+  socket.on('tcp:data', ({ id, data }) => {
+    if (id !== activeTcpId) return;
+    const div = document.createElement('div');
+    div.textContent = data;
+    $('tcp-output').appendChild(div);
+    $('tcp-output').scrollTop = $('tcp-output').scrollHeight;
+  });
+
+  socket.on('tcp:error', ({ id, data }) => {
+    if (id !== activeTcpId) return;
+    $('tcp-output').innerHTML += `<div style="color:#ff5555">[ERROR] ${data}</div>`;
+  });
+
+  const sendTcp = () => {
+    const val = $('tcp-input').value;
+    if (!val || !activeTcpId) return;
+    socket.emit('tcp:input', { id: activeTcpId, data: val + '\n' });
+    $('tcp-output').innerHTML += `<div style="color:var(--electric-blue)">> ${val}</div>`;
+    $('tcp-input').value = '';
+    $('tcp-output').scrollTop = $('tcp-output').scrollHeight;
+  };
+
+  $('tcp-send-btn')?.addEventListener('click', sendTcp);
+  $('tcp-input')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTcp(); });
+
+  $('tcp-clear-btn')?.addEventListener('click', () => { $('tcp-output').innerHTML = ''; });
+  $('tcp-terminal-close')?.addEventListener('click', () => {
+    $('tcp-terminal-panel').classList.add('hidden');
+    activeTcpId = null;
+  });
+  $('tcp-disconnect-btn')?.addEventListener('click', () => {
+     $('tcp-terminal-panel').classList.add('hidden');
+     activeTcpId = null;
   });
 }
 
