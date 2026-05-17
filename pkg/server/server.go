@@ -355,22 +355,18 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) pipeTerminal(sws *SafeWS, session *terminal.Session) {
-	buf := make([]byte, 1024)
-	for {
-		n, err := session.Read(buf)
-		if n > 0 {
-			s.loggerMgr.LogTerminal(session.ID, buf[:n])
-			resp, _ := json.Marshal(map[string]interface{}{
-				"type": "terminal:data",
-				"id":   session.ID,
-				"data": string(buf[:n]),
-			})
-			if err := sws.WriteMessage(websocket.TextMessage, resp); err != nil {
-				break
-			}
-		}
-		if err != nil {
-			break
+	ch := session.Attach()
+	defer session.Detach(ch)
+
+	for data := range ch {
+		s.loggerMgr.LogTerminal(session.ID, data)
+		resp, _ := json.Marshal(map[string]interface{}{
+			"type": "terminal:data",
+			"id":   session.ID,
+			"data": string(data),
+		})
+		if err := sws.WriteMessage(websocket.TextMessage, resp); err != nil {
+			return
 		}
 	}
 }

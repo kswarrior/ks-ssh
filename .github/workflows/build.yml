@@ -27,14 +27,15 @@ jobs:
 
     - name: Install and Build
       run: |
-        bash build.sh
+        npm install
+        npm run build
         # Ensure your build command produces the 'ks-ssh' file
         # If the file is inside a 'dist' folder, adjust the path below
 
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh-go"
+        artifacts: "ks-ssh"
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}

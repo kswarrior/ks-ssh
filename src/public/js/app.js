@@ -7,23 +7,16 @@ import { $, showToast, fmtBytes } from './modules/utils.js';
 let socket, terminals, files, ports, resMon;
 let startTime = Date.now();
 
-async function init() {
+function init() {
   socket = io();
 
-  // Sync settings from VPS
-  let vpsSettings = { customActions: [], bookmarks: [], defaultCwd: '/root', hudSettings: null };
   try {
-      const res = await fetch('/ksapi/settings');
-      vpsSettings = await res.json();
-  } catch (e) { console.error("Settings sync failed", e); }
-
-  try {
-      terminals = new TerminalManager(socket, vpsSettings.customActions);
+      terminals = new TerminalManager(socket);
       window.terminalManager = terminals;
   } catch (e) { console.error("Terminal init failed", e); }
 
   try {
-      files = new FileManager(vpsSettings.bookmarks, vpsSettings.defaultCwd);
+      files = new FileManager();
       window.fileManager = files;
   } catch (e) { console.error("File manager init failed", e); }
 
@@ -37,8 +30,8 @@ async function init() {
   setupModals();
   setupPortPreview();
   setupVPSInfo();
-  setupSettings(vpsSettings.hudSettings);
-  setupDefaultPath(vpsSettings.defaultCwd);
+  setupSettings();
+  setupDefaultPath();
 
   // Initial tab
   try {
@@ -169,94 +162,33 @@ function setupModals() {
 }
 
 function setupPortPreview() {
-  let currentPort = null;
-  const updateIframe = () => {
-    if (!currentPort) return;
-    const isSSL = $('port-ssl-toggle').checked;
-    $('port-preview-iframe').src = `/ksapi/proxy/${currentPort}/?ssl=${isSSL}`;
-  };
-
   window.openPortPreview = (port) => {
-    currentPort = port;
     $('port-preview-badge').textContent = ':' + port;
     $('port-preview-url').textContent = `localhost:${port}`;
-    $('port-ssl-toggle').checked = false;
-    updateIframe();
+    $('port-preview-iframe').src = `/ksapi/proxy/${port}/`;
     $('port-preview-panel').classList.remove('hidden');
   };
-
-  $('port-ssl-toggle')?.addEventListener('change', updateIframe);
-
   $('port-preview-close')?.addEventListener('click', () => {
     $('port-preview-panel').classList.add('hidden');
     $('port-preview-iframe').src = 'about:blank';
-    currentPort = null;
   });
   $('port-preview-refresh')?.addEventListener('click', () => {
-    updateIframe();
-  });
-
-  // TCP Terminal Logic
-  let activeTcpId = null;
-  window.openTcpTerminal = (port) => {
-    activeTcpId = `tcp-${Date.now()}`;
-    $('tcp-port-badge').textContent = ':' + port;
-    $('tcp-output').innerHTML = `<div style="color:var(--text-dim)">[SYSTEM] CONNECTING TO 127.0.0.1:${port}...</div>`;
-    $('tcp-terminal-panel').classList.remove('hidden');
-    socket.emit('tcp:connect', { id: activeTcpId, port: port });
-  };
-
-  socket.on('tcp:connected', ({ id }) => {
-    if (id !== activeTcpId) return;
-    $('tcp-output').innerHTML += `<div style="color:#50fa7b">[SYSTEM] CONNECTED</div>`;
-  });
-
-  socket.on('tcp:data', ({ id, data }) => {
-    if (id !== activeTcpId) return;
-    const div = document.createElement('div');
-    div.textContent = data;
-    $('tcp-output').appendChild(div);
-    $('tcp-output').scrollTop = $('tcp-output').scrollHeight;
-  });
-
-  socket.on('tcp:error', ({ id, data }) => {
-    if (id !== activeTcpId) return;
-    $('tcp-output').innerHTML += `<div style="color:#ff5555">[ERROR] ${data}</div>`;
-  });
-
-  const sendTcp = () => {
-    const val = $('tcp-input').value;
-    if (!val || !activeTcpId) return;
-    socket.emit('tcp:input', { id: activeTcpId, data: val + '\n' });
-    $('tcp-output').innerHTML += `<div style="color:var(--electric-blue)">> ${val}</div>`;
-    $('tcp-input').value = '';
-    $('tcp-output').scrollTop = $('tcp-output').scrollHeight;
-  };
-
-  $('tcp-send-btn')?.addEventListener('click', sendTcp);
-  $('tcp-input')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendTcp(); });
-
-  $('tcp-clear-btn')?.addEventListener('click', () => { $('tcp-output').innerHTML = ''; });
-  $('tcp-terminal-close')?.addEventListener('click', () => {
-    $('tcp-terminal-panel').classList.add('hidden');
-    activeTcpId = null;
-  });
-  $('tcp-disconnect-btn')?.addEventListener('click', () => {
-     $('tcp-terminal-panel').classList.add('hidden');
-     activeTcpId = null;
+    const iframe = $('port-preview-iframe');
+    if (iframe) iframe.src = iframe.src;
   });
 }
 
-function setupDefaultPath(initialCwd) {
+function setupDefaultPath() {
     const modal = $('default-path-modal');
     const input = $('mini-cli-input');
     const output = $('mini-cli-output');
-    let currentCwd = initialCwd || '/root';
+    let currentCwd = '/root';
 
     // Trigger (e.g. from a new button we should add)
     window.openDefaultPathModal = () => {
         modal.classList.remove('hidden');
-        $('def-path-manual').value = currentCwd;
+        $('def-path-manual').value = localStorage.getItem('ks-ssh-default-cwd') || '/root';
+        currentCwd = $('def-path-manual').value;
         output.textContent = `Current: ${currentCwd}`;
     };
 
@@ -286,21 +218,25 @@ function setupDefaultPath(initialCwd) {
 
     $('def-path-confirm')?.addEventListener('click', () => {
         const path = $('def-path-manual').value;
-        currentCwd = path;
-        syncVPSSettings();
+        localStorage.setItem('ks-ssh-default-cwd', path);
         showToast(`DEFAULT PATH SET: ${path}`);
         modal.classList.add('hidden');
     });
 }
 
-function setupSettings(vpsHUDSettings) {
+function setupSettings() {
     const btn = $('settings-btn');
     const modal = $('settings-modal');
     if (!btn || !modal) return;
 
     btn.onclick = () => modal.classList.remove('hidden');
 
-    let settings = vpsHUDSettings || {
+    let saved = null;
+    try {
+        saved = localStorage.getItem('ks-ssh-settings');
+    } catch (e) {}
+
+    let settings = saved ? JSON.parse(saved) : {
         color: '#00a2ff',
         fontSize: 13,
         opacity: 0.85,
@@ -361,9 +297,9 @@ function setupSettings(vpsHUDSettings) {
             sw.style.border = sw.dataset.color === s.color ? '2px solid #fff' : 'none';
         });
 
-        settings = s;
-        window.currentHUDSettings = s;
-        syncVPSSettings();
+        try {
+            localStorage.setItem('ks-ssh-settings', JSON.stringify(s));
+        } catch (e) {}
     };
 
     $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
@@ -464,27 +400,6 @@ async function fetchTunnelInfo() {
   } catch {}
 }
 
-async function syncVPSSettings() {
-    const settings = {
-        customActions: window.terminalManager ? window.terminalManager.customActions : [],
-        bookmarks: window.fileManager ? window.fileManager.bookmarks : [],
-        defaultCwd: $('def-path-manual') ? $('def-path-manual').value : '/root',
-        hudSettings: window.currentHUDSettings || null
-    };
-
-    // Extract current settings from global state if needed
-    // This is a helper to push everything to VPS
-    try {
-        await fetch('/ksapi/settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(settings)
-        });
-    } catch (e) { console.error("VPS Sync failed", e); }
-}
-
-window.syncVPSSettings = syncVPSSettings;
-
 function checkSecurity() {
     const official = 'ssh.ksw.workers.dev';
     let isAuthorized = false;
@@ -510,7 +425,20 @@ function checkSecurity() {
         } catch (e2) {}
     }
 
-    if (!isAuthorized) {
+    if (isAuthorized) {
+        sessionStorage.removeItem('ks-ssh-security-refresh');
+        const app = $('app');
+        if (app) app.style.display = 'grid';
+    } else {
+        // One-time refresh logic
+        const refreshKey = 'ks-ssh-security-refresh';
+        if (!sessionStorage.getItem(refreshKey)) {
+            sessionStorage.setItem(refreshKey, 'true');
+            console.log("Unauthorized domain detected. Refreshing once...");
+            window.location.reload();
+            return;
+        }
+
         console.warn("Unauthorized domain detected. Revealing security overlay.");
         const overlay = document.createElement('div');
         overlay.className = 'security-lock';
@@ -535,9 +463,6 @@ function checkSecurity() {
             </div>
         `;
         document.body.appendChild(overlay);
-    } else {
-        const app = $('app');
-        if (app) app.style.display = 'grid';
     }
 }
 
