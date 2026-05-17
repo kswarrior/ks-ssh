@@ -9,11 +9,12 @@ import (
 )
 
 type Session struct {
-	ID     string
-	Pty    *os.File
-	Cmd    *exec.Cmd
-	Buffer []byte
-	mu     sync.Mutex
+	ID       string
+	Pty      *os.File
+	Cmd      *exec.Cmd
+	Buffer   []byte
+	BufferMu sync.Mutex
+	mu       sync.Mutex
 }
 
 type Manager struct {
@@ -35,7 +36,8 @@ func (m *Manager) Create(id, cwd string, cols, rows uint16) (*Session, error) {
 		shell = "/bin/bash"
 	}
 
-	cmd := exec.Command(shell)
+	// -i for interactive mode to enable job control
+	cmd := exec.Command(shell, "-i")
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
@@ -85,12 +87,12 @@ func (s *Session) Resize(cols, rows uint16) error {
 func (s *Session) Read(p []byte) (int, error) {
 	n, err := s.Pty.Read(p)
 	if n > 0 {
-		s.mu.Lock()
+		s.BufferMu.Lock()
 		s.Buffer = append(s.Buffer, p[:n]...)
 		if len(s.Buffer) > 128*1024 {
 			s.Buffer = s.Buffer[len(s.Buffer)-64*1024:]
 		}
-		s.mu.Unlock()
+		s.BufferMu.Unlock()
 	}
 	return n, err
 }

@@ -300,6 +300,26 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) pipeTerminal(conn *websocket.Conn, session *terminal.Session) {
+	buf := make([]byte, 1024)
+	for {
+		n, err := session.Read(buf)
+		if n > 0 {
+			resp, _ := json.Marshal(map[string]interface{}{
+				"type": "terminal:data",
+				"id":   session.ID,
+				"data": string(buf[:n]),
+			})
+			if err := conn.WriteMessage(websocket.TextMessage, resp); err != nil {
+				break
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
+}
+
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -333,23 +353,30 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				continue
 			}
-			go func() {
-				buf := make([]byte, 1024)
-				for {
-					n, err := session.Read(buf)
-					if n > 0 {
-						resp, _ := json.Marshal(map[string]interface{}{
-							"type": "terminal:data",
-							"id":   msg.ID,
-							"data": string(buf[:n]),
-						})
-						conn.WriteMessage(websocket.TextMessage, resp)
-					}
-					if err != nil {
-						break
-					}
+			go s.pipeTerminal(conn, session)
+		case "terminal:reconnect":
+			session := s.termMgr.Get(msg.ID)
+			if session == nil {
+				// Recreate if lost
+				session, err = s.termMgr.Create(msg.ID, msg.Cwd, msg.Cols, msg.Rows)
+				if err != nil {
+					continue
 				}
-			}()
+			} else {
+				// Replay buffer
+				session.BufferMu.Lock()
+				buf := session.Buffer
+				session.BufferMu.Unlock()
+				if len(buf) > 0 {
+					resp, _ := json.Marshal(map[string]interface{}{
+						"type": "terminal:data",
+						"id":   msg.ID,
+						"data": string(buf),
+					})
+					conn.WriteMessage(websocket.TextMessage, resp)
+				}
+			}
+			go s.pipeTerminal(conn, session)
 		case "terminal:input":
 			var input string
 			json.Unmarshal(msg.Data, &input)
