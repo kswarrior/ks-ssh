@@ -22,7 +22,6 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o ks-ssh-go-linux-arm main.go
 
 # --- Android / Mobile Environments (Termux) ---
 CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build -o ks-ssh-go-android-arm64 main.go
-CGO_ENABLED=0 GOOS=android GOARCH=arm go build -o ks-ssh-go-android-arm main.go
 
 # --- macOS Devices ---
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o ks-ssh-go-darwin-amd64 main.go
