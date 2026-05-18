@@ -104,6 +104,12 @@ func (s *Session) readLoop() {
 			break
 		}
 	}
+	s.mu.Lock()
+	for l := range s.listeners {
+		close(l)
+	}
+	s.listeners = make(map[chan []byte]bool)
+	s.mu.Unlock()
 }
 
 func (s *Session) Attach() chan []byte {

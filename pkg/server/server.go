@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"time"
 	"os"
 	"path/filepath"
 	"strings"
@@ -106,7 +107,7 @@ func (s *Server) Router() http.Handler {
 }
 
 func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "ts": strings.Split(fmt.Sprintf("%v", os.Environ()), " ")})
+	json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "ts": time.Now().UnixMilli()})
 }
 
 func (s *Server) handleSystem(w http.ResponseWriter, r *http.Request) {
@@ -343,8 +344,12 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(resp.Body)
 		bodyStr := string(body)
 		baseTag := fmt.Sprintf(`<base href="/ksapi/proxy/%s/">`, portStr)
-		if strings.Contains(strings.ToLower(bodyStr), "<head>") {
-			bodyStr = strings.Replace(bodyStr, "<head>", "<head>"+baseTag, 1)
+
+		headIndex := strings.Index(strings.ToLower(bodyStr), "<head>")
+		if headIndex != -1 {
+			// Insert after the <head> tag (6 chars)
+			insertPos := headIndex + 6
+			bodyStr = bodyStr[:insertPos] + baseTag + bodyStr[insertPos:]
 		} else {
 			bodyStr = baseTag + bodyStr
 		}

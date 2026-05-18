@@ -3,11 +3,15 @@ package sysmon
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type CPUStats struct {
@@ -87,10 +91,44 @@ func GetSystemInfo() SystemInfo {
 		OSName:   getOSName(),
 		Kernel:   getKernelVersion(),
 		Shell:    os.Getenv("SHELL"),
-		Logo:     "🐧",
-		IP:       "127.0.0.1", // Simplified
-		Packages: "N/A",
+		Logo:     "\U0001F427",
+		IP:       getPublicIP(),
+		Packages: getPackageCount(),
 	}
+}
+
+func getPublicIP() string {
+	client := http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("https://api.ipify.org")
+	if err != nil {
+		return "127.0.0.1"
+	}
+	defer resp.Body.Close()
+	ip, _ := io.ReadAll(resp.Body)
+	return string(ip)
+}
+
+func getPackageCount() string {
+	if runtime.GOOS != "linux" {
+		return "N/A"
+	}
+	// Try dpkg
+	if out, err := exec.Command("dpkg", "--get-selections").Output(); err == nil {
+		lines := strings.Split(string(out), "\n")
+		count := 0
+		for _, l := range lines {
+			if strings.TrimSpace(l) != "" {
+				count++
+			}
+		}
+		return fmt.Sprintf("%d (dpkg)", count)
+	}
+	// Try rpm
+	if out, err := exec.Command("rpm", "-qa").Output(); err == nil {
+		lines := strings.Split(string(out), "\n")
+		return fmt.Sprintf("%d (rpm)", len(lines))
+	}
+	return "N/A"
 }
 
 func getMemInfo() (total, free uint64) {
