@@ -264,7 +264,9 @@ export class TerminalManager {
         black: '#000000',
         brightBlack: '#666666'
       },
-      allowProposedApi: true
+      allowProposedApi: true,
+      smoothScrollDuration: 200,
+      scrollback: 5000
     });
     const fit = new FitAddon.FitAddon();
     term.loadAddon(fit);
@@ -299,7 +301,7 @@ export class TerminalManager {
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
-    }, 500);
+    }, 50);
 
     this.activate(id);
     this._save();
