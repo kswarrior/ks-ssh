@@ -36,7 +36,7 @@ jobs:
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh-go-amd64,ks-ssh-go-arm64"
+        artifacts: "ks-ssh-go-linux-amd64,ks-ssh-go-linux-arm64,ks-ssh-go-linux-386,ks-ssh-go-linux-arm,ks-ssh-go-android-arm64,ks-ssh-go-android-arm,ks-ssh-go-darwin-amd64,ks-ssh-go-darwin-arm64,ks-ssh-go-windows-amd64.exe,ks-ssh-go-windows-arm64.exe"
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}
