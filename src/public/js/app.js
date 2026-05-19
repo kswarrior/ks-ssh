@@ -142,7 +142,15 @@ function switchTab(tab) {
 function setupSocket() {
   socket.on('terminal:data', ({ id, data }) => {
     const t = terminals.terminals.get(id);
-    if (t) t.term.write(data);
+    if (t) {
+        t.term.write(data);
+        // If user is already at the bottom (or very close), force scroll to bottom
+        // This ensures that long-running commands like 'apt update' keep the view current.
+        const buffer = t.term.buffer.active;
+        if (buffer.baseY + t.term.rows - buffer.viewportY >= -1) {
+            t.term.scrollToBottom();
+        }
+    }
   });
   socket.on('terminal:replay', ({ id, buffer }) => {
     const t = terminals.terminals.get(id);

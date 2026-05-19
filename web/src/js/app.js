@@ -159,7 +159,13 @@ function switchTab(tab) {
 function setupSocket() {
   socket.on('terminal:data', ({ id, data }) => {
     const t = terminals.terminals.get(id);
-    if (t) t.term.write(data);
+    if (t) {
+        t.term.write(data);
+        const buffer = t.term.buffer.active;
+        if (buffer.baseY + t.term.rows - buffer.viewportY >= -1) {
+            t.term.scrollToBottom();
+        }
+    }
   });
   socket.on('terminal:replay', ({ id, buffer }) => {
     const t = terminals.terminals.get(id);
