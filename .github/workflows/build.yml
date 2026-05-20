@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '22'
         cache: 'npm'
 
     - name: Get Version from package.json
@@ -35,7 +35,7 @@ jobs:
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh" 
+        artifacts: "ks-ssh"
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}

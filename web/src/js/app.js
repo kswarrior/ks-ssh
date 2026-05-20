@@ -159,7 +159,18 @@ function switchTab(tab) {
 function setupSocket() {
   socket.on('terminal:data', ({ id, data }) => {
     const t = terminals.terminals.get(id);
-    if (t) t.term.write(data);
+    if (t) {
+        const buffer = t.term.buffer.active;
+        // Near bottom check: if viewport is close to base (within 2 lines)
+        // This ensures auto-scroll pins even if data arrives faster than UI updates
+        const isAtBottom = (buffer.baseY - buffer.viewportY) <= 2;
+
+        t.term.write(data, () => {
+            if (isAtBottom) {
+                t.term.scrollToBottom();
+            }
+        });
+    }
   });
   socket.on('terminal:replay', ({ id, buffer }) => {
     const t = terminals.terminals.get(id);

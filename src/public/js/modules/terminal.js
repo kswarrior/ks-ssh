@@ -1,12 +1,13 @@
 import { $, showToast } from './utils.js';
 
 export class TerminalManager {
-  constructor(socket) {
+  constructor(socket, customActions = []) {
     this.socket = socket;
     this.terminals = new Map();
     this.activeId = null;
     this.counter = 0;
     this.fontSize = 13;
+    this.customActions = customActions;
 
     this._setupUI();
   }
@@ -24,11 +25,6 @@ export class TerminalManager {
     $('action-cancel-btn')?.addEventListener('click', () => this.hideActionPanel());
     $('action-save-btn')?.addEventListener('click', () => this.saveCustomAction());
 
-    try {
-        this.customActions = JSON.parse(localStorage.getItem('ks-ssh-custom-actions') || '[]');
-    } catch (e) {
-        this.customActions = [];
-    }
     this.renderCustomActions();
 
     this._setupKeypad();
@@ -63,9 +59,7 @@ export class TerminalManager {
           showToast('ACTION SAVED');
       }
 
-      try {
-          localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-      } catch (e) {}
+      if (window.syncVPSSettings) window.syncVPSSettings();
       this.renderCustomActions();
       this.hideActionPanel();
   }
@@ -132,9 +126,7 @@ export class TerminalManager {
       menu.querySelector('#act-delete').onclick = () => {
           if (confirm(`PURGE "${action.label}"?`)) {
               this.customActions = this.customActions.filter(a => a.id !== action.id);
-              try {
-                  localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-              } catch (e) {}
+              if (window.syncVPSSettings) window.syncVPSSettings();
               this.renderCustomActions();
           }
           menu.remove();
@@ -230,7 +222,7 @@ export class TerminalManager {
     tab.className = 'hud-t-tab';
     tab.dataset.id = id;
     tab.innerHTML = `
-      <span>${num}</span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:0.8"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px; font-size:14px; line-height:1;">&times;</button>
     `;
     tab.onclick = (e) => { if (!e.target.closest('.hud-t-tab-close')) this.activate(id); };
@@ -272,11 +264,28 @@ export class TerminalManager {
         black: '#000000',
         brightBlack: '#666666'
       },
-      allowProposedApi: true
+      allowProposedApi: true,
+      smoothScrollDuration: 0,
+      scrollback: 10000,
+      scrollOnUserInput: true,
+      fastScrollModifier: 'alt',
+      fastScrollSensitivity: 5
     });
     const fit = new FitAddon.FitAddon();
     term.loadAddon(fit);
     term.open(container);
+
+    // Boost scroll sensitivity
+    const viewport = container.querySelector('.xterm-viewport');
+    if (viewport) {
+        viewport.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0 && !e.altKey) {
+                e.preventDefault();
+                const scrollAmount = Math.sign(e.deltaY) * 40; // Extreme speed scroll boost
+                term.scrollLines(scrollAmount);
+            }
+        }, { passive: false });
+    }
 
     term.onData(data => {
         if (this.modifiers.ctrl) {
@@ -307,7 +316,7 @@ export class TerminalManager {
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
-    }, 500);
+    }, 50);
 
     this.activate(id);
     this._save();

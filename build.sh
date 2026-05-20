@@ -13,6 +13,6 @@ cd ..
 # 2. Build Go backend
 echo "Building Go backend..."
 go mod tidy
-go build -o ks-ssh-go main.go
+CGO_ENABLED=0 go build -ldflags="-s -w" -o ks-ssh-go main.go
 
 echo "Build complete! Binary: ./ks-ssh-go"
