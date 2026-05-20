@@ -265,7 +265,7 @@ export class TerminalManager {
         brightBlack: '#666666'
       },
       allowProposedApi: true,
-      smoothScrollDuration: 150,
+      smoothScrollDuration: 0,
       scrollback: 10000,
       scrollOnUserInput: true,
       fastScrollModifier: 'alt',
@@ -274,6 +274,18 @@ export class TerminalManager {
     const fit = new FitAddon.FitAddon();
     term.loadAddon(fit);
     term.open(container);
+
+    // Boost scroll sensitivity
+    const viewport = container.querySelector('.xterm-viewport');
+    if (viewport) {
+        viewport.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0 && !e.altKey) {
+                e.preventDefault();
+                const scrollAmount = Math.sign(e.deltaY) * 40; // Extreme speed scroll boost
+                term.scrollLines(scrollAmount);
+            }
+        }, { passive: false });
+    }
 
     term.onData(data => {
         if (this.modifiers.ctrl) {
