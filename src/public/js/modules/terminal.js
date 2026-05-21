@@ -266,26 +266,23 @@ export class TerminalManager {
       },
       allowProposedApi: true,
       smoothScrollDuration: 0,
-      scrollback: 10000,
+      scrollback: 100000,
       scrollOnUserInput: true,
       fastScrollModifier: 'alt',
-      fastScrollSensitivity: 5
+      fastScrollSensitivity: 10,
+      scrollSensitivity: 100
     });
     const fit = new FitAddon.FitAddon();
     term.loadAddon(fit);
     term.open(container);
 
-    // Boost scroll sensitivity
-    const viewport = container.querySelector('.xterm-viewport');
-    if (viewport) {
-        viewport.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0 && !e.altKey) {
-                e.preventDefault();
-                const scrollAmount = Math.sign(e.deltaY) * 40; // Extreme speed scroll boost
-                term.scrollLines(scrollAmount);
-            }
-        }, { passive: false });
-    }
+    // Track auto-scroll state
+    let isAutoScrollEnabled = true;
+    term.onScroll(() => {
+        const buffer = term.buffer.active;
+        const atBottom = buffer.baseY - buffer.viewportY <= 2;
+        isAutoScrollEnabled = atBottom;
+    });
 
     term.onData(data => {
         if (this.modifiers.ctrl) {
@@ -305,7 +302,7 @@ export class TerminalManager {
         this.socket.emit('terminal:input', { id, data });
     });
 
-    this.terminals.set(id, { term, fit, num, tab, container });
+    this.terminals.set(id, { term, fit, num, tab, container, getAutoScroll: () => isAutoScrollEnabled });
 
     $('terminals-empty').classList.add('hidden');
     $('terminal-header-area')?.classList.remove('hidden');
@@ -316,6 +313,7 @@ export class TerminalManager {
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
+      term.focus();
     }, 50);
 
     this.activate(id);
@@ -342,7 +340,7 @@ export class TerminalManager {
     setTimeout(() => {
       t.fit.fit();
       t.term.focus();
-    }, 50);
+    }, 100);
   }
 
   changeFontSize(delta) {

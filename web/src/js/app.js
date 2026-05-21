@@ -37,7 +37,7 @@ function init() {
   socket = new WSSocket();
 
   try {
-      terminals = new TerminalManager(socket);
+      terminals = new TerminalManager(socket, vpsSettings.customActions);
       window.terminalManager = terminals;
   } catch (e) { console.error("Terminal init failed", e); }
 
@@ -160,13 +160,9 @@ function setupSocket() {
   socket.on('terminal:data', ({ id, data }) => {
     const t = terminals.terminals.get(id);
     if (t) {
-        const buffer = t.term.buffer.active;
-        // Near bottom check: if viewport is close to base (within 2 lines)
-        // This ensures auto-scroll pins even if data arrives faster than UI updates
-        const isAtBottom = (buffer.baseY - buffer.viewportY) <= 2;
-
+        const autoScroll = t.getAutoScroll ? t.getAutoScroll() : true;
         t.term.write(data, () => {
-            if (isAtBottom) {
+            if (autoScroll) {
                 t.term.scrollToBottom();
             }
         });
@@ -485,6 +481,10 @@ function checkSecurity() {
 }
 
 window.switchTab = switchTab;
+
+window.addEventListener('resize', () => {
+    if (window.terminalManager) window.terminalManager.refit();
+});
 
 window.addEventListener('DOMContentLoaded', () => {
     try {
