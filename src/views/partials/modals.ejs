@@ -81,6 +81,29 @@
     </div>
 </div>
 
+<div class="modal-overlay hidden" id="tcp-terminal-panel">
+    <div class="modal modal-lg" style="height: 80vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <div class="flex-center-gap-12">
+                <h3 class="mono-dim-14">TCP INTERACTION</h3>
+                <span id="tcp-port-badge" class="breadcrumb-no-margin">:0000</span>
+            </div>
+            <button class="icon-btn" id="tcp-terminal-close">&times;</button>
+        </div>
+        <div class="modal-body flex-1" style="background:#000; padding:10px; display:flex; flex-direction:column; gap:10px;">
+            <div id="tcp-output" style="flex:1; border:1px solid var(--glass-border); border-radius:4px; padding:10px; font-family:var(--font-mono); font-size:12px; color:var(--text-main); overflow-y:auto; white-space:pre-wrap;"></div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="tcp-input" class="input-hud" style="flex:1;" placeholder="Send data..." />
+                <button id="tcp-send-btn" class="btn-primary" style="min-width: 80px;">SEND</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="tcp-clear-btn" class="icon-btn btn-text-hud">CLEAR</button>
+            <button id="tcp-disconnect-btn" class="btn-primary btn-danger">DISCONNECT</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay hidden" id="default-path-modal">
     <div class="modal">
         <div class="modal-header"><h3>Set Default Location</h3><button class="icon-btn modal-close">&times;</button></div>
@@ -126,6 +149,9 @@
             <div class="flex-center-gap-12">
                 <h3 id="port-preview-url" class="mono-dim-14">localhost:0000</h3>
                 <span id="port-preview-badge" class="breadcrumb-no-margin">:0000</span>
+                <label style="display:flex; align-items:center; gap:4px; font-size:10px; color:var(--text-dim); cursor:pointer;">
+                    <input type="checkbox" id="port-ssl-toggle" style="width:12px; height:12px;" /> SSL
+                </label>
             </div>
             <button class="icon-btn" id="port-preview-close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>

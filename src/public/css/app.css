@@ -175,7 +175,12 @@ body {
 
 .dropdown-content { padding: 16px; }
 
-.neofetch-layout { display: flex; gap: 16px; align-items: flex-start; }
+.neofetch-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap; /* Added for mobile */
+}
 .neofetch-logo {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -189,11 +194,15 @@ body {
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.4;
-  min-width: 0;
+  min-width: 200px; /* Ensure detail table has enough room */
 }
 .nf-user-host { font-weight: 800; color: var(--electric-blue); }
 .nf-separator { color: var(--text-dim); margin: 2px 0 4px; }
-.nf-row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-row {
+  white-space: normal;
+  word-break: break-all;
+  margin-bottom: 2px;
+}
 .nf-key { font-weight: 700; color: var(--electric-blue); margin-right: 4px; }
 
 .icon-btn {
@@ -926,6 +935,13 @@ body {
   .hud-main {
     grid-row: 2 / 3;
     padding-bottom: 70px; /* Space for dock */
+  }
+
+  .dropdown-menu {
+    right: 0;
+    left: auto;
+    width: 280px;
+    max-width: calc(100vw - 24px);
   }
 
   .mobile-dock {

@@ -4,12 +4,13 @@ import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 
 export class TerminalManager {
-  constructor(socket) {
+  constructor(socket, customActions = []) {
     this.socket = socket;
     this.terminals = new Map();
     this.activeId = null;
     this.counter = 0;
     this.fontSize = 13;
+    this.customActions = customActions;
 
     this._setupUI();
   }
@@ -27,11 +28,6 @@ export class TerminalManager {
     $('action-cancel-btn')?.addEventListener('click', () => this.hideActionPanel());
     $('action-save-btn')?.addEventListener('click', () => this.saveCustomAction());
 
-    try {
-        this.customActions = JSON.parse(localStorage.getItem('ks-ssh-custom-actions') || '[]');
-    } catch (e) {
-        this.customActions = [];
-    }
     this.renderCustomActions();
 
     this._setupKeypad();
@@ -230,7 +226,7 @@ export class TerminalManager {
     tab.className = 'hud-t-tab';
     tab.dataset.id = id;
     tab.innerHTML = `
-      <span>${num}</span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:0.8"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       <button class="hud-t-tab-close" style="background:none; border:none; color:inherit; cursor:pointer; margin-left:8px; font-size:14px; line-height:1;">&times;</button>
     `;
     tab.onclick = (e) => { if (!e.target.closest('.hud-t-tab-close')) this.activate(id); };
@@ -266,11 +262,25 @@ export class TerminalManager {
         black: '#000000',
         brightBlack: '#666666'
       },
-      allowProposedApi: true
+      allowProposedApi: true,
+      smoothScrollDuration: 0,
+      scrollback: 100000,
+      scrollOnUserInput: true,
+      fastScrollModifier: 'alt',
+      fastScrollSensitivity: 10,
+      scrollSensitivity: 100
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(container);
+
+    // Track auto-scroll state
+    let isAutoScrollEnabled = true;
+    term.onScroll(() => {
+        const buffer = term.buffer.active;
+        const atBottom = buffer.baseY - buffer.viewportY <= 2;
+        isAutoScrollEnabled = atBottom;
+    });
 
     term.onData(data => {
         if (this.modifiers.ctrl) {
@@ -290,7 +300,7 @@ export class TerminalManager {
         this.socket.emit('terminal:input', { id, data });
     });
 
-    this.terminals.set(id, { term, fit, num, tab, container });
+    this.terminals.set(id, { term, fit, num, tab, container, getAutoScroll: () => isAutoScrollEnabled });
 
     $('terminals-empty')?.classList.add('hidden');
     $('terminal-header-area')?.classList.remove('hidden');
@@ -301,7 +311,8 @@ export class TerminalManager {
       fit.fit();
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
-    }, 500);
+      term.focus();
+    }, 50);
 
     this.activate(id);
     this._save();
@@ -327,7 +338,7 @@ export class TerminalManager {
     setTimeout(() => {
       t.fit.fit();
       t.term.focus();
-    }, 50);
+    }, 100);
   }
 
   changeFontSize(delta) {

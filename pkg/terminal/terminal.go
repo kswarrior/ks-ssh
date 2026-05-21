@@ -9,23 +9,23 @@ import (
 )
 
 type Session struct {
-	ID     string
-	Pty    *os.File
-	Cmd    *exec.Cmd
-	Buffer []byte
-	mu     sync.Mutex
+	ID        string
+	Pty       *os.File
+	Cmd       *exec.Cmd
+	Buffer    []byte
+	BufferMu  sync.Mutex
+	listeners map[chan []byte]bool
+	mu        sync.Mutex
 }
 
 type Manager struct {
 	sessions map[string]*Session
 	mu       sync.Mutex
-	maxBuf   int
 }
 
 func NewManager() *Manager {
 	return &Manager{
 		sessions: make(map[string]*Session),
-		maxBuf:   128 * 1024,
 	}
 }
 
@@ -35,7 +35,8 @@ func (m *Manager) Create(id, cwd string, cols, rows uint16) (*Session, error) {
 		shell = "/bin/bash"
 	}
 
-	cmd := exec.Command(shell)
+	// -i for interactive mode to enable job control
+	cmd := exec.Command(shell, "-i")
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
@@ -47,9 +48,10 @@ func (m *Manager) Create(id, cwd string, cols, rows uint16) (*Session, error) {
 	}
 
 	session := &Session{
-		ID:  id,
-		Pty: f,
-		Cmd: cmd,
+		ID:        id,
+		Pty:       f,
+		Cmd:       cmd,
+		listeners: make(map[chan []byte]bool),
 	}
 
 	m.mu.Lock()
@@ -65,7 +67,63 @@ func (m *Manager) Create(id, cwd string, cols, rows uint16) (*Session, error) {
 		f.Close()
 	}()
 
+	// Start central reader
+	go session.readLoop()
+
 	return session, nil
+}
+
+func (s *Session) readLoop() {
+	buf := make([]byte, 4096)
+	for {
+		n, err := s.Pty.Read(buf)
+		if n > 0 {
+			data := make([]byte, n)
+			copy(data, buf[:n])
+
+			// Update buffer
+			s.BufferMu.Lock()
+			s.Buffer = append(s.Buffer, data...)
+			if len(s.Buffer) > 128*1024 {
+				s.Buffer = s.Buffer[len(s.Buffer)-64*1024:]
+			}
+			s.BufferMu.Unlock()
+
+			// Broadcast
+			s.mu.Lock()
+			for l := range s.listeners {
+				select {
+				case l <- data:
+				default:
+					// Drop if listener is too slow
+				}
+			}
+			s.mu.Unlock()
+		}
+		if err != nil {
+			break
+		}
+	}
+	s.mu.Lock()
+	for l := range s.listeners {
+		close(l)
+	}
+	s.listeners = make(map[chan []byte]bool)
+	s.mu.Unlock()
+}
+
+func (s *Session) Attach() chan []byte {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c := make(chan []byte, 100)
+	s.listeners[c] = true
+	return c
+}
+
+func (s *Session) Detach(c chan []byte) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.listeners, c)
 }
 
 func (m *Manager) Get(id string) *Session {
@@ -80,19 +138,6 @@ func (s *Session) Write(data []byte) (int, error) {
 
 func (s *Session) Resize(cols, rows uint16) error {
 	return pty.Setsize(s.Pty, &pty.Winsize{Cols: cols, Rows: rows})
-}
-
-func (s *Session) Read(p []byte) (int, error) {
-	n, err := s.Pty.Read(p)
-	if n > 0 {
-		s.mu.Lock()
-		s.Buffer = append(s.Buffer, p[:n]...)
-		if len(s.Buffer) > 128*1024 {
-			s.Buffer = s.Buffer[len(s.Buffer)-64*1024:]
-		}
-		s.mu.Unlock()
-	}
-	return n, err
 }
 
 func (s *Session) Kill() error {

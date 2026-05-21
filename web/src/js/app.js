@@ -37,7 +37,7 @@ function init() {
   socket = new WSSocket();
 
   try {
-      terminals = new TerminalManager(socket);
+      terminals = new TerminalManager(socket, vpsSettings.customActions);
       window.terminalManager = terminals;
   } catch (e) { console.error("Terminal init failed", e); }
 
@@ -159,7 +159,14 @@ function switchTab(tab) {
 function setupSocket() {
   socket.on('terminal:data', ({ id, data }) => {
     const t = terminals.terminals.get(id);
-    if (t) t.term.write(data);
+    if (t) {
+        const autoScroll = t.getAutoScroll ? t.getAutoScroll() : true;
+        t.term.write(data, () => {
+            if (autoScroll) {
+                t.term.scrollToBottom();
+            }
+        });
+    }
   });
   socket.on('terminal:replay', ({ id, buffer }) => {
     const t = terminals.terminals.get(id);
@@ -474,6 +481,10 @@ function checkSecurity() {
 }
 
 window.switchTab = switchTab;
+
+window.addEventListener('resize', () => {
+    if (window.terminalManager) window.terminalManager.refit();
+});
 
 window.addEventListener('DOMContentLoaded', () => {
     try {

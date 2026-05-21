@@ -43,7 +43,10 @@ export class PortScanner {
               <div style="font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">${esc(p.process)} • ${p.address === '0.0.0.0' ? 'PUBLIC' : 'LOCAL'}</div>
             </div>
         </div>
-        <button onclick="window.openPortPreview(${p.port})" class="btn-primary" style="padding:6px 16px; font-size:11px; background:transparent; border:1px solid var(--text-blue); color:var(--text-blue); box-shadow:none;">PREVIEW</button>
+        <div style="display:flex; gap:8px;">
+          <button onclick="window.openTcpTerminal(${p.port})" class="btn-primary" style="padding:6px 12px; font-size:10px; background:transparent; border:1px solid var(--text-dim); color:var(--text-dim); box-shadow:none;">TCP</button>
+          <button onclick="window.openPortPreview(${p.port})" class="btn-primary" style="padding:6px 16px; font-size:11px; background:transparent; border:1px solid var(--text-blue); color:var(--text-blue); box-shadow:none;">PREVIEW</button>
+        </div>
       </div>
     `).join('');
   }
