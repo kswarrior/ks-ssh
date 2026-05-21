@@ -88,16 +88,8 @@ func (m *Manager) establishTunnel() error {
 		return err
 	}
 
-	// Extract domain from URL (strip https:// or http://)
-	domain := lt.URL
-	if len(domain) > 8 && domain[:8] == "https://" {
-		domain = domain[8:]
-	} else if len(domain) > 7 && domain[:7] == "http://" {
-		domain = domain[7:]
-	}
-
-	// Token format: ks-lt-${complete url only without https:// or http://}
-	token := "ks-lt-" + domain
+	// Token format: ks-lt-${subdomain}
+	token := "ks-lt-" + lt.ID
 
 	m.mu.Lock()
 	m.info = Info{

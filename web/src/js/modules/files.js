@@ -1,10 +1,11 @@
 import { $, showToast, fmtBytes, esc } from './utils.js';
 
 export class FileManager {
-  constructor() {
-    this.currentPath = localStorage.getItem('ks-ssh-files-path') || localStorage.getItem('ks-ssh-default-cwd') || '/';
+  constructor(bookmarks = [], defaultCwd = '/') {
+    this.currentPath = localStorage.getItem('ks-ssh-files-path') || defaultCwd;
     this.selectedPaths = new Set();
     this.activeFile = null;
+    this.bookmarks = bookmarks;
     this._setupUI();
   }
 
@@ -73,11 +74,6 @@ export class FileManager {
 
     // Bookmarks
     $('add-bookmark-btn')?.addEventListener('click', () => this.addBookmark());
-    try {
-        this.bookmarks = JSON.parse(localStorage.getItem('ks-ssh-bookmarks') || '[]');
-    } catch (e) {
-        this.bookmarks = [];
-    }
     this.renderBookmarks();
 
     // URL Upload
@@ -690,14 +686,14 @@ export class FileManager {
   addBookmark(path = this.currentPath) {
       if (this.bookmarks.includes(path)) return;
       this.bookmarks.push(path);
-      localStorage.setItem('ks-ssh-bookmarks', JSON.stringify(this.bookmarks));
+      if (window.syncVPSSettings) window.syncVPSSettings();
       showToast('BOOKMARK ADDED');
       this.renderBookmarks();
   }
 
   removeBookmark(path) {
       this.bookmarks = this.bookmarks.filter(b => b !== path);
-      localStorage.setItem('ks-ssh-bookmarks', JSON.stringify(this.bookmarks));
+      if (window.syncVPSSettings) window.syncVPSSettings();
       this.renderBookmarks();
   }
 

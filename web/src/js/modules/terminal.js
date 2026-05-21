@@ -62,9 +62,7 @@ export class TerminalManager {
           showToast('ACTION SAVED');
       }
 
-      try {
-          localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-      } catch (e) {}
+      if (window.syncVPSSettings) window.syncVPSSettings();
       this.renderCustomActions();
       this.hideActionPanel();
   }
@@ -132,9 +130,7 @@ export class TerminalManager {
       menu.querySelector('#act-delete').onclick = () => {
           if (confirm(`PURGE "${action.label}"?`)) {
               this.customActions = this.customActions.filter(a => a.id !== action.id);
-              try {
-                  localStorage.setItem('ks-ssh-custom-actions', JSON.stringify(this.customActions));
-              } catch (e) {}
+              if (window.syncVPSSettings) window.syncVPSSettings();
               this.renderCustomActions();
           }
           menu.remove();
