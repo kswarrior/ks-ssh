@@ -33,8 +33,21 @@ class WSSocket {
     }
 }
 
-function init() {
+async function init() {
   socket = new WSSocket();
+
+  // Sync settings from VPS
+  let vpsSettings = { customActions: [], bookmarks: [], defaultCwd: '/root', hudSettings: null };
+  try {
+      const res = await fetch('/ksapi/settings');
+      const data = await res.json();
+      vpsSettings = {
+          customActions: data.customActions || [],
+          bookmarks: data.bookmarks || [],
+          defaultCwd: data.defaultCwd || '/root',
+          hudSettings: data.hudSettings || null
+      };
+  } catch (e) { console.error("Settings sync failed", e); }
 
   try {
       terminals = new TerminalManager(socket, vpsSettings.customActions);
@@ -42,7 +55,7 @@ function init() {
   } catch (e) { console.error("Terminal init failed", e); }
 
   try {
-      files = new FileManager();
+      files = new FileManager(vpsSettings.bookmarks, vpsSettings.defaultCwd);
       window.fileManager = files;
   } catch (e) { console.error("File manager init failed", e); }
 
@@ -56,8 +69,8 @@ function init() {
   setupModals();
   setupPortPreview();
   setupVPSInfo();
-  setupSettings();
-  setupDefaultPath();
+  setupSettings(vpsSettings.hudSettings);
+  setupDefaultPath(vpsSettings.defaultCwd);
 
   try {
       switchTab('terminals');
@@ -209,17 +222,20 @@ function setupPortPreview() {
   });
 }
 
-function setupDefaultPath() {
+function setupDefaultPath(initialCwd) {
     const modal = $('default-path-modal');
     const input = $('mini-cli-input');
     const output = $('mini-cli-output');
-    let currentCwd = '/root';
+    let currentCwd = initialCwd || '/root';
+
+    if ($('def-path-manual')) {
+        $('def-path-manual').value = currentCwd;
+    }
 
     window.openDefaultPathModal = () => {
         modal.classList.remove('hidden');
         if ($('def-path-manual')) {
-            $('def-path-manual').value = localStorage.getItem('ks-ssh-default-cwd') || '/root';
-            currentCwd = $('def-path-manual').value;
+            $('def-path-manual').value = currentCwd;
         }
         if (output) output.textContent = `Current: ${currentCwd}`;
     };
@@ -250,25 +266,21 @@ function setupDefaultPath() {
 
     $('def-path-confirm')?.addEventListener('click', () => {
         const path = $('def-path-manual').value;
-        localStorage.setItem('ks-ssh-default-cwd', path);
+        currentCwd = path;
+        syncVPSSettings();
         showToast(`DEFAULT PATH SET: ${path}`);
         modal.classList.add('hidden');
     });
 }
 
-function setupSettings() {
+function setupSettings(vpsHUDSettings) {
     const btn = $('settings-btn');
     const modal = $('settings-modal');
     if (!btn || !modal) return;
 
     btn.onclick = () => modal.classList.remove('hidden');
 
-    let saved = null;
-    try {
-        saved = localStorage.getItem('ks-ssh-settings');
-    } catch (e) {}
-
-    let settings = saved ? JSON.parse(saved) : {
+    let settings = vpsHUDSettings || {
         color: '#00a2ff',
         fontSize: 13,
         opacity: 0.85,
@@ -329,9 +341,9 @@ function setupSettings() {
             sw.style.border = sw.dataset.color === s.color ? '2px solid #fff' : 'none';
         });
 
-        try {
-            localStorage.setItem('ks-ssh-settings', JSON.stringify(s));
-        } catch (e) {}
+        settings = s;
+        window.currentHUDSettings = s;
+        syncVPSSettings();
     };
 
     if ($('settings-font-size')) $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
@@ -480,6 +492,24 @@ function checkSecurity() {
     }
 }
 
+async function syncVPSSettings() {
+    const settings = {
+        customActions: window.terminalManager ? window.terminalManager.customActions : [],
+        bookmarks: window.fileManager ? window.fileManager.bookmarks : [],
+        defaultCwd: $('def-path-manual') ? $('def-path-manual').value : '/root',
+        hudSettings: window.currentHUDSettings || null
+    };
+
+    try {
+        await fetch('/ksapi/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+    } catch (e) { console.error("VPS Sync failed", e); }
+}
+
+window.syncVPSSettings = syncVPSSettings;
 window.switchTab = switchTab;
 
 window.addEventListener('resize', () => {

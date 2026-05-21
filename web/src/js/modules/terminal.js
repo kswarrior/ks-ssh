@@ -74,6 +74,7 @@ export class TerminalManager {
       if (!list) return;
       list.innerHTML = '';
 
+      if (!this.customActions) return;
       this.customActions.forEach(action => {
           const btn = document.createElement('button');
           btn.className = 't-key';
