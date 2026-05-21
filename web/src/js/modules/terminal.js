@@ -27,6 +27,8 @@ export class TerminalManager {
     $('add-custom-action-btn')?.addEventListener('click', () => this.showActionPanel());
     $('action-cancel-btn')?.addEventListener('click', () => this.hideActionPanel());
     $('action-save-btn')?.addEventListener('click', () => this.saveCustomAction());
+    $('action-type')?.addEventListener('change', (e) => this._toggleActionTypeFields(e.target.value));
+    $('add-menu-item-btn')?.addEventListener('click', () => this.addMenuItemRow());
 
     this.renderCustomActions();
 
@@ -36,10 +38,49 @@ export class TerminalManager {
   showActionPanel(action = null) {
       this.editingActionId = action ? action.id : null;
       $('terminal-action-panel')?.classList.remove('hidden');
+
+      const type = action ? action.type : 'code';
       if ($('action-label')) $('action-label').value = action ? action.label : '';
       if ($('action-code')) $('action-code').value = action ? action.code : '';
-      if ($('action-type')) $('action-type').value = action ? action.type : 'code';
+      if ($('action-type')) $('action-type').value = type;
       if ($('action-save-btn')) $('action-save-btn').textContent = action ? 'UPDATE ACTION' : 'SAVE ACTION';
+
+      this._toggleActionTypeFields(type);
+
+      const list = $('menu-items-list');
+      if (list) {
+          list.innerHTML = '';
+          if (action && action.items) {
+              action.items.forEach(item => this.addMenuItemRow(item.label, item.code));
+          } else if (type === 'menu') {
+              this.addMenuItemRow();
+          }
+      }
+  }
+
+  _toggleActionTypeFields(type) {
+      $('action-code-wrap')?.classList.toggle('hidden', type === 'menu');
+      $('action-menu-wrap')?.classList.toggle('hidden', type !== 'menu');
+  }
+
+  addMenuItemRow(label = '', code = '') {
+      const list = $('menu-items-list');
+      if (!list) return;
+
+      const row = document.createElement('div');
+      row.className = 'menu-item-row';
+      row.style.cssText = "display:flex; flex-direction:column; gap:6px; padding:10px; background:rgba(255,255,255,0.03); border-radius:6px; border:1px solid var(--glass-border); position:relative;";
+
+      row.innerHTML = `
+          <button class="remove-item-btn" style="position:absolute; top:5px; right:5px; background:none; border:none; color:#ef4444; cursor:pointer; font-size:16px;">&times;</button>
+          <div style="display:flex; gap:8px;">
+              <input type="text" class="input-hud item-label" placeholder="Button Label" value="${label}" style="padding:6px 10px; font-size:11px;" />
+              <input type="text" class="input-hud item-code" placeholder="Command" value="${code}" style="padding:6px 10px; font-size:11px; flex:2;" />
+          </div>
+      `;
+
+      row.querySelector('.remove-item-btn').onclick = () => row.remove();
+      list.appendChild(row);
   }
 
   hideActionPanel() {
@@ -48,17 +89,36 @@ export class TerminalManager {
 
   saveCustomAction() {
       const label = $('action-label')?.value;
-      const code = $('action-code')?.value;
       const type = $('action-type')?.value;
+      let code = $('action-code')?.value;
+      let items = null;
 
-      if (!label || !code) return;
+      if (!label) return;
+
+      if (type === 'menu') {
+          items = [];
+          document.querySelectorAll('.menu-item-row').forEach(row => {
+              const l = row.querySelector('.item-label').value;
+              const c = row.querySelector('.item-code').value;
+              if (l && c) items.push({ label: l, code: c });
+          });
+          if (items.length === 0) {
+              showToast('MENU NEEDS AT LEAST ONE BUTTON', 'error');
+              return;
+          }
+          code = ''; // Menu doesn't have its own code
+      } else if (!code) {
+          return;
+      }
+
+      const actionData = { label, type, code, items, id: this.editingActionId || Date.now() };
 
       if (this.editingActionId) {
           const idx = this.customActions.findIndex(a => a.id === this.editingActionId);
-          if (idx !== -1) this.customActions[idx] = { ...this.customActions[idx], label, code, type };
+          if (idx !== -1) this.customActions[idx] = actionData;
           showToast('ACTION UPDATED');
       } else {
-          this.customActions.push({ label, code, type, id: Date.now() });
+          this.customActions.push(actionData);
           showToast('ACTION SAVED');
       }
 
@@ -78,7 +138,12 @@ export class TerminalManager {
           btn.className = 't-key';
           btn.style.minWidth = 'auto';
           btn.style.padding = '0 10px';
-          btn.textContent = action.label.toUpperCase();
+
+          if (action.type === 'menu') {
+              btn.innerHTML = `${action.label.toUpperCase()} <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" style="margin-left:4px; opacity:0.6;"><polyline points="6 9 12 15 18 9"/></svg>`;
+          } else {
+              btn.textContent = action.label.toUpperCase();
+          }
 
           let holdTimer;
           const startHold = () => {
@@ -90,7 +155,11 @@ export class TerminalManager {
 
           btn.onclick = () => {
               if (this.isHolding) return;
-              this.executeCustomAction(action);
+              if (action.type === 'menu') {
+                  this.showActionDropdown(action, btn);
+              } else {
+                  this.executeCustomAction(action);
+              }
           };
           btn.onmousedown = startHold;
           btn.onmouseup = clearHold;
@@ -105,6 +174,28 @@ export class TerminalManager {
 
           list.appendChild(btn);
       });
+  }
+
+  showActionDropdown(action, btn) {
+      const menu = document.createElement('div');
+      menu.className = 'context-menu';
+      menu.style.left = btn.getBoundingClientRect().left + 'px';
+      menu.style.top = (btn.getBoundingClientRect().bottom + 5) + 'px';
+
+      action.items.forEach(item => {
+          const itemEl = document.createElement('div');
+          itemEl.className = 'menu-item';
+          itemEl.textContent = item.label.toUpperCase();
+          itemEl.onclick = () => {
+              this.socket.emit('terminal:input', { id: this.activeId, data: item.code + '\n' });
+              menu.remove();
+          };
+          menu.appendChild(itemEl);
+      });
+
+      document.body.appendChild(menu);
+      const closeMenu = (e) => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', closeMenu); } };
+      setTimeout(() => document.addEventListener('click', closeMenu), 10);
   }
 
   showActionContextMenu(action, btn) {

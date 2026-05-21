@@ -107,24 +107,39 @@
                 </div>
             </div>
         </div>
-        <div class="terminal-hud-content" id="terminals-area">
-            <div id="terminal-action-panel" class="hidden" style="position:absolute; inset:0; background:var(--obsidian); z-index:10; padding:20px;">
+            <div id="terminals-area" style="position: relative;">
+                <div id="terminal-action-panel" class="hidden" style="position:absolute; inset:0; background:var(--obsidian); z-index:100; padding:20px; overflow-y: auto;">
                 <div class="label-box"><label class="breadcrumb-flat">CUSTOM TERMINAL ACTION</label></div>
                 <div style="margin-bottom:20px;">
                     <div class="label-box"><label class="breadcrumb-flat">TYPE</label></div>
                     <select id="action-type" class="input-hud">
                         <option value="code">RUN CODE / COMMAND</option>
                         <option value="timer">TIMER (SECONDS)</option>
+                            <option value="menu">DROPDOWN MENU</option>
                     </select>
                 </div>
                 <div style="margin-bottom:20px;">
                     <div class="label-box"><label class="breadcrumb-flat">LABEL</label></div>
                     <input type="text" id="action-label" class="input-hud" placeholder="e.g. Update System" />
                 </div>
-                <div style="margin-bottom:24px;">
+
+                    <!-- Code/Value Field -->
+                    <div id="action-code-wrap" style="margin-bottom:24px;">
                     <div class="label-box"><label class="breadcrumb-flat">CODE / VALUE</label></div>
-                    <textarea id="action-code" class="textarea-hud" style="height:100px;" placeholder="apt update && apt upgrade -y"></textarea>
+                        <textarea id="action-code" class="textarea-hud-normal" style="height:100px;" placeholder="apt update && apt upgrade -y"></textarea>
                 </div>
+
+                    <!-- Menu Items Section -->
+                    <div id="action-menu-wrap" class="hidden" style="margin-bottom:24px;">
+                        <div class="label-box" style="display:flex; justify-content:space-between; align-items:center;">
+                            <label class="breadcrumb-flat">MENU BUTTONS</label>
+                            <button id="add-menu-item-btn" class="btn-primary" style="min-height:24px; padding:4px 10px; font-size:9px;">+ ADD BUTTON</button>
+                        </div>
+                        <div id="menu-items-list" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                            <!-- Menu items will be added here -->
+                        </div>
+                    </div>
+
                 <div class="flex-center-gap-12">
                     <button id="action-cancel-btn" class="btn-primary btn-secondary">CANCEL</button>
                     <button id="action-save-btn" class="btn-primary">SAVE ACTION</button>
