@@ -17,7 +17,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
 
     - name: Get Version from package.json
       id: get_version
@@ -25,17 +24,19 @@ jobs:
         VERSION=$(node -p "require('./package.json').version")
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+
     - name: Install and Build
       run: |
-        npm install
-        npm run build
-        # Ensure your build command produces the 'ks-ssh' file
-        # If the file is inside a 'dist' folder, adjust the path below
+        bash build.sh
 
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "ks-ssh"
+        artifacts: "ks-ssh-go-linux-amd64,ks-ssh-go-linux-arm64,ks-ssh-go-linux-386,ks-ssh-go-linux-arm,ks-ssh-go-android-arm64,ks-ssh-go-darwin-amd64,ks-ssh-go-darwin-arm64,ks-ssh-go-windows-amd64.exe,ks-ssh-go-windows-arm64.exe"
         tag: "v${{ env.VERSION }}"
         name: "Release v${{ env.VERSION }}"
         token: ${{ secrets.GITHUB_TOKEN }}
