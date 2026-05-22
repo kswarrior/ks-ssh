@@ -173,9 +173,10 @@ function setupSocket() {
   socket.on('terminal:data', ({ id, data }) => {
     const t = terminals.terminals.get(id);
     if (t) {
-        const autoScroll = t.getAutoScroll ? t.getAutoScroll() : true;
+        const buffer = t.term.buffer.active;
+        const wasAtBottom = buffer.baseY <= buffer.viewportY + 1;
         t.term.write(data, () => {
-            if (autoScroll) {
+            if (wasAtBottom) {
                 t.term.scrollToBottom();
             }
         });

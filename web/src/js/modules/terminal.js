@@ -362,14 +362,6 @@ export class TerminalManager {
     term.loadAddon(fit);
     term.open(container);
 
-    // Track auto-scroll state
-    let isAutoScrollEnabled = true;
-    term.onScroll(() => {
-        const buffer = term.buffer.active;
-        const atBottom = buffer.baseY - buffer.viewportY <= 2;
-        isAutoScrollEnabled = atBottom;
-    });
-
     term.onData(data => {
         if (this.modifiers.ctrl) {
             // Handle CTRL modifier for text input
@@ -388,7 +380,7 @@ export class TerminalManager {
         this.socket.emit('terminal:input', { id, data });
     });
 
-    this.terminals.set(id, { term, fit, num, tab, container, getAutoScroll: () => isAutoScrollEnabled });
+    this.terminals.set(id, { term, fit, num, tab, container });
 
     $('terminals-empty')?.classList.add('hidden');
     $('terminal-header-area')?.classList.remove('hidden');
