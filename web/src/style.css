@@ -810,6 +810,20 @@ body {
 }
 .input-hud:focus { border-color: var(--electric-blue); }
 
+.textarea-hud-normal {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid var(--glass-border);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    font-family: var(--font-mono);
+    resize: vertical;
+}
+.textarea-hud-normal:focus { border-color: var(--electric-blue); }
+
 .editor-container {
   position: relative;
   width: 100%;
