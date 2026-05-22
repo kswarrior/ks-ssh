@@ -174,7 +174,7 @@ function setupSocket() {
     const t = terminals.terminals.get(id);
     if (t) {
         const buffer = t.term.buffer.active;
-        const wasAtBottom = buffer.baseY <= buffer.viewportY + 1;
+        const wasAtBottom = buffer.baseY <= buffer.viewportY + 2;
         t.term.write(data, () => {
             if (wasAtBottom) {
                 t.term.scrollToBottom();
@@ -184,7 +184,11 @@ function setupSocket() {
   });
   socket.on('terminal:replay', ({ id, buffer }) => {
     const t = terminals.terminals.get(id);
-    if (t) t.term.write(buffer);
+    if (t) {
+        t.term.write(buffer, () => {
+            t.term.scrollToBottom();
+        });
+    }
   });
 }
 
