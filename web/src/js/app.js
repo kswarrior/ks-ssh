@@ -165,7 +165,7 @@ function switchTab(tab) {
     ports.load();
   }
   if (tab === 'terminals' && terminals) {
-    setTimeout(() => terminals.refit(), 50);
+    setTimeout(() => terminals.refit(), 100);
   }
 }
 
@@ -174,7 +174,7 @@ function setupSocket() {
     const t = terminals.terminals.get(id);
     if (t) {
         const buffer = t.term.buffer.active;
-        const wasAtBottom = buffer.baseY <= buffer.viewportY + 2;
+        const wasAtBottom = buffer.baseY <= buffer.viewportY + 10;
         t.term.write(data, () => {
             if (wasAtBottom) {
                 t.term.scrollToBottom();

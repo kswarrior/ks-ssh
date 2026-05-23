@@ -392,7 +392,12 @@ export class TerminalManager {
       if (restore) this.socket.emit('terminal:reconnect', { id, cols: term.cols, rows: term.rows });
       else this.socket.emit('terminal:create', { id, cols: term.cols, rows: term.rows });
       term.focus();
-    }, 50);
+      // Extra fit and scroll for mobile
+      setTimeout(() => {
+          fit.fit();
+          term.scrollToBottom();
+      }, 100);
+    }, 200);
 
     this.activate(id);
     this._save();
@@ -417,8 +422,14 @@ export class TerminalManager {
 
     setTimeout(() => {
       t.fit.fit();
+      t.term.scrollToBottom();
       t.term.focus();
-    }, 100);
+      // Extra fit and scroll for mobile
+      setTimeout(() => {
+          t.fit.fit();
+          t.term.scrollToBottom();
+      }, 100);
+    }, 200);
   }
 
   changeFontSize(delta) {
@@ -505,7 +516,13 @@ export class TerminalManager {
       const t = this.terminals.get(this.activeId);
       if (t) {
         t.fit.fit();
-        this.socket.emit('terminal:resize', { id: this.activeId, cols: t.term.cols, rows: t.term.rows });
+        t.term.scrollToBottom();
+        // Robust resize for mobile
+        setTimeout(() => {
+          t.fit.fit();
+          t.term.scrollToBottom();
+          this.socket.emit('terminal:resize', { id: this.activeId, cols: t.term.cols, rows: t.term.rows });
+        }, 100);
       }
     }
   }
