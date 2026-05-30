@@ -300,7 +300,7 @@ function setupSettings(vpsHUDSettings) {
         portsColor: '#ffffff'
     };
 
-    const apply = (s) => {
+    const apply = (s, skipSync = false) => {
         document.documentElement.style.setProperty('--electric-blue', s.color);
         document.documentElement.style.setProperty('--glass', `rgba(0, 0, 0, ${s.opacity})`);
 
@@ -313,7 +313,7 @@ function setupSettings(vpsHUDSettings) {
             terminals.changeFontSize(s.fontSize - terminals.fontSize);
             terminals.updateTheme({
                 foreground: s.termText,
-                background: s.termBg === '#000000' ? 'transparent' : s.termBg,
+                background: s.termBg === '#000000' || s.termBg === 'transparent' ? 'transparent' : s.termBg,
                 cursor: s.termCursor
             });
             terminals.updateOptions({
@@ -348,7 +348,7 @@ function setupSettings(vpsHUDSettings) {
 
         settings = s;
         window.currentHUDSettings = s;
-        syncVPSSettings();
+        if (!skipSync) syncVPSSettings();
     };
 
     if ($('settings-font-size')) $('settings-font-size').oninput = (e) => { settings.fontSize = parseInt(e.target.value); apply(settings); };
@@ -370,7 +370,7 @@ function setupSettings(vpsHUDSettings) {
         sw.onclick = () => { settings.color = sw.dataset.color; apply(settings); };
     });
 
-    apply(settings);
+    apply(settings, true);
 }
 
 function setupVPSInfo() {
