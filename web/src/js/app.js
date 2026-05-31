@@ -174,7 +174,8 @@ function setupSocket() {
     const t = terminals.terminals.get(id);
     if (t) {
         const buffer = t.term.buffer.active;
-        const wasAtBottom = buffer.baseY <= buffer.viewportY + 10;
+        // Increased threshold to 50px for more reliable auto-scroll on mobile
+        const wasAtBottom = buffer.baseY <= buffer.viewportY + 50;
         t.term.write(data, () => {
             if (wasAtBottom) {
                 t.term.scrollToBottom();
@@ -520,6 +521,12 @@ window.switchTab = switchTab;
 window.addEventListener('resize', () => {
     if (window.terminalManager) window.terminalManager.refit();
 });
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        if (window.terminalManager) window.terminalManager.refit();
+    });
+}
 
 window.addEventListener('DOMContentLoaded', () => {
     try {

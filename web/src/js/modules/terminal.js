@@ -324,7 +324,6 @@ export class TerminalManager {
     const area = $('terminals-area');
     if (!area) return;
     const container = document.createElement('div');
-    container.style.cssText = "position:absolute; inset:0; display:none;";
     container.className = 'terminal-instance';
     container.id = `ti-${id}`;
 
@@ -395,7 +394,9 @@ export class TerminalManager {
       // Extra fit and scroll for mobile
       setTimeout(() => {
           fit.fit();
+          this.socket.emit('terminal:resize', { id, cols: term.cols, rows: term.rows });
           term.scrollToBottom();
+          term.focus();
       }, 100);
     }, 200);
 
@@ -409,7 +410,6 @@ export class TerminalManager {
 
     this.terminals.forEach(t => {
       t.tab.classList.remove('active');
-      t.container.style.display = 'none';
       t.container.classList.remove('active');
     });
 
@@ -417,26 +417,31 @@ export class TerminalManager {
     if (!t) return;
 
     t.tab.classList.add('active');
-    t.container.style.display = 'block';
     t.container.classList.add('active');
 
     setTimeout(() => {
       t.fit.fit();
+      this.socket.emit('terminal:resize', { id, cols: t.term.cols, rows: t.term.rows });
       t.term.scrollToBottom();
       t.term.focus();
       // Extra fit and scroll for mobile
       setTimeout(() => {
           t.fit.fit();
+          this.socket.emit('terminal:resize', { id, cols: t.term.cols, rows: t.term.rows });
           t.term.scrollToBottom();
+          t.term.focus();
       }, 100);
     }, 200);
   }
 
   changeFontSize(delta) {
     this.fontSize = Math.max(8, Math.min(32, this.fontSize + delta));
-    this.terminals.forEach(t => {
+    this.terminals.forEach((t, id) => {
       t.term.options.fontSize = this.fontSize;
-      setTimeout(() => t.fit.fit(), 20);
+      setTimeout(() => {
+        t.fit.fit();
+        this.socket.emit('terminal:resize', { id, cols: t.term.cols, rows: t.term.rows });
+      }, 20);
     });
   }
 
@@ -516,12 +521,15 @@ export class TerminalManager {
       const t = this.terminals.get(this.activeId);
       if (t) {
         t.fit.fit();
+        this.socket.emit('terminal:resize', { id: this.activeId, cols: t.term.cols, rows: t.term.rows });
         t.term.scrollToBottom();
+        t.term.focus();
         // Robust resize for mobile
         setTimeout(() => {
           t.fit.fit();
-          t.term.scrollToBottom();
           this.socket.emit('terminal:resize', { id: this.activeId, cols: t.term.cols, rows: t.term.rows });
+          t.term.scrollToBottom();
+          t.term.focus();
         }, 100);
       }
     }

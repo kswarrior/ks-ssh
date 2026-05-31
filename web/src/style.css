@@ -444,6 +444,16 @@ body {
   flex: 1;
 }
 
+.terminal-instance {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.terminal-instance.active {
+  display: block;
+}
+
 /* ===== HUD COMPONENTS ===== */
 .hud-container { padding: 12px; display: flex; flex-direction: column; height: 100%; }
 
